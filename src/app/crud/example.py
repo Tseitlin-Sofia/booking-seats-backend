@@ -47,7 +47,9 @@
 #         user: User,
 #         session: AsyncSession,
 #     ) -> list[Reservation]:
-#         reservations = await session.execute(select(Reservation).where(Reservation.user_id == user.id))
+#         reservations = await session.execute(
+#             select(Reservation).where(Reservation.user_id == user.id)
+#         )
 #         return list(reservations.scalars().all())
 
 #     async def get_count_res_at_the_same_time(

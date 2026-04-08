@@ -1,6 +1,6 @@
 """Базовый класс для CRUD операций с базой данных."""
 
-from typing import Optional, Self, Mapping, Any
+from typing import Any, Mapping, Optional, Self
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select

@@ -62,7 +62,9 @@
 #     session: SessionDep,
 #     user: UserDep
 # ):
-#     reservation = await check_reservation_before_edit(reservation_id, session, user)
+#     reservation = await check_reservation_before_edit(
+#         reservation_id, session, user
+#     )
 #     reservation = await reservation_crud.remove(reservation, session)
 #     return reservation
 
