@@ -1,0 +1,109 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# IDE и редакторы
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.editorconfig
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+.docker/
+
+# Тестирование и покрытие
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Логи и временные файлы
+*.log
+*.pid
+*.seed
+*.pid.lock
+*.tmp
+*.temp
+logs/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Файлы окружения
+.env
+.env.*
+!.env.example
+
+# Утилиты и скрипты
+scripts/
+*.sh
+*.bat
+*.ps1
+
+# Документация
+docs/
+*.md
+!README.md
+mkdocs.yml
+
+# Файлы зависимостей (опционально, оставить можно)
+# requirements.txt уже скопирован отдельно
+# requirements-dev.txt
+
+# Node.js (если есть фронтенд)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Фронтенд сборки (если есть)
+dist/
+build/
+*.css.map
+*.js.map
+
+# Файлы данных
+*.db
+*.sqlite
+*.sqlite3
+*.csv
+*.xlsx
+*.parquet
+
+# Архивы
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Ключи и сертификаты
+*.pem
+*.key
+*.crt
+*.p12
