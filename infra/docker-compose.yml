@@ -40,7 +40,7 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ../src:/app
+      - ../media:/media
     restart: unless-stopped
     networks:
       - app_network
