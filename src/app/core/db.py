@@ -2,15 +2,8 @@
 
 from typing import Self
 
-# from sqlalchemy import Integer
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.orm import (
-    AsyncSession,
-    DeclarativeBase,
-    # Mapped,
-    # mapped_column,
-    declared_attr,
-)
+from sqlalchemy.orm import AsyncSession, DeclarativeBase, declared_attr
 
 from app.core.config import settings
 
