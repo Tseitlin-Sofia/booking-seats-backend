@@ -7,13 +7,13 @@ from sqlalchemy import Boolean, DateTime, Integer
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
-    create_async_engine
+    create_async_engine,
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
-    mapped_column,
     declared_attr,
+    mapped_column,
 )
 from sqlalchemy.sql import func
 
@@ -26,30 +26,31 @@ class Base(DeclarativeBase):
 
 class CommonMixin:
     """Миксин для общих полей моделей."""
+
     @declared_attr
-    def __tablename__(cls):
+    def __tablename__(cls) -> str: # noqa: N805
         return cls.__name__.lower()
 
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
-        autoincrement=True
+        autoincrement=True,
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        nullable=False
+        nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
-        nullable=False
+        nullable=False,
     )
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
-        default=True
+        default=True,
     )
 
 
