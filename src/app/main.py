@@ -23,3 +23,6 @@ app = FastAPI(
 )
 
 app.include_router(main_router)
+
+
+# Запуск через терминал по команде "uvicorn app.main:app --reload"
