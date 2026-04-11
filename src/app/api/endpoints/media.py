@@ -23,14 +23,20 @@ SessionDep = Annotated[AsyncSession, Depends(get_async_session)]
 
 @router.post('/')
 async def load_photo_to_server(image_bytes: bytes = Depends(validate_image)):
-    """Загрузка png/jpg изображений на сервер в папку src/media"""
+    """Загрузка png/jpg изображений на сервер в папку src/media/"""
     media_id = uuid.uuid4()
     filename = f"{media_id}.{IMAGE_EXTENSION}"
+    # Добавить преобразование в jpeg или узнать нужно ли это вообще
     file_path = MEDIA_DIR / filename
     MEDIA_DIR.mkdir(exist_ok=True)
     with open(file_path, "wb") as f:
         f.write(image_bytes)
     return {"media_id": media_id}
+
+@router.get('/{media_id}')
+async def get_photo_by_id(media_id: str):
+    """Получить изображение из папки src/media/ по id"""
+    pass
 
     
     

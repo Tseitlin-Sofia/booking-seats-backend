@@ -7,22 +7,22 @@ from fastapi import FastAPI
 
 from app.api.routers import main_router
 from app.core.config import settings
-from app.core.init_db import create_first_superuser
+# from app.core.init_db import create_first_superuser
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Управление жизненным циклом приложения."""
-    await create_first_superuser()
-    yield
+# @asynccontextmanager
+# async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+#     """Управление жизненным циклом приложения."""
+#     await create_first_superuser()
+#     yield
 
 
 app = FastAPI(
     title=settings.app_title,
-    lifespan=lifespan,
+    # lifespan=lifespan,
 )
 
 app.include_router(main_router)
 
 
-# Запуск через терминал по команде "uvicorn app.main:app --reload"
+# uvicorn app.main:app --reload
