@@ -15,7 +15,6 @@ class UserRole(StrEnum):
 
 class User(CommonMixin, Base):
     """Модель пользователя."""
-
     username: Mapped[str] = mapped_column(
         String(100),
         unique=True,
