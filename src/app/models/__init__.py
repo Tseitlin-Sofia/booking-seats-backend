@@ -1,3 +1,4 @@
 """Пакет моделей."""
 
-from app.models.cafe import Cafe  # noqa
+from .cafe import Cafe  # noqa
+from .user import User  # noqa
