@@ -28,7 +28,7 @@ class CommonMixin:
     """Миксин для общих полей моделей."""
 
     @declared_attr
-    def __tablename__(cls) -> str: # noqa: N805
+    def __tablename__(cls) -> str:  # noqa: N805
         return cls.__name__.lower()
 
     id: Mapped[int] = mapped_column(
