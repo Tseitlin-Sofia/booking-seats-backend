@@ -10,5 +10,5 @@ main_router = APIRouter()
 main_router.include_router(
     cafe_router,
     prefix='/cafes',
-    tags=['Кафе']
+    tags=['Кафе'],
 )

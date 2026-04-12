@@ -1,7 +1,7 @@
 """Базовый класс для CRUD операций с базой данных."""
 
-from typing import Any, Mapping, Optional, Self
 from http import HTTPStatus
+from typing import Any, Mapping, Optional, Self
 
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -22,17 +22,19 @@ class CRUDBase:
         self,
         obj_id: int,
         session: AsyncSession,
-    ) -> Optional[Self]:
+    ) -> Self:
         """Получает объект по его id."""
         result = await session.execute(
             select(self.model)
-            .where(self.model.id == obj_id)
+            .where(self.model.id == obj_id),
         )
         db_obj = result.scalars().first()
+        # NOTE: предлагаю здесь сделать проверку на наличие объекта в БД,
+        # чтобы не дублировать код.
         if db_obj is None:
             raise HTTPException(
                 status_code=HTTPStatus.NOT_FOUND,
-                detail='Объект не найден!'
+                detail='Объект не найден!',
             )
         return db_obj
 
@@ -41,6 +43,8 @@ class CRUDBase:
         session: AsyncSession,
     ) -> list[Self]:
         """Получает все объекты заданной модели."""
+        # NOTE: предлагаю здесь потом сделать фильтр по show_active, чтобы в
+        # зависимости от прав доступа вовзвращалась разная выборка объектов.
         db_objs = await session.execute(select(self.model))
         return db_objs.scalars().all()
 
