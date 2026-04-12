@@ -3,8 +3,8 @@ from enum import StrEnum
 from sqlalchemy import Enum, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.db import Base, CommonMixin
 from app.core.constants import UserConstants
+from app.core.db import Base, CommonMixin
 
 
 class UserRole(StrEnum):
