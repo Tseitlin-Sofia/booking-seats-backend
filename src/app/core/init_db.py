@@ -2,7 +2,11 @@
 
 # import contextlib
 
+<<<<<<< HEAD
 # # from fastapi_users.exceptions import UserAlreadyExists
+=======
+# from fastapi_users.exceptions import UserAlreadyExists
+>>>>>>> origin/develop
 # from pydantic import EmailStr
 
 # from app.core.config import settings

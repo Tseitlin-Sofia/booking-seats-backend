@@ -8,6 +8,39 @@
 4. В файле `srd/requirements.txt` прописываются базовые зависимости.
 5. В каталоге `infra` находятся настроечные файлы проекта. Здесь же размещать файлы для docker compose.
 
+## Запуск
+
+Требуется запущенное приложение Docker.
+
+```bash
+cd infra
+docker compose up [-d]
+```
+
+Для создания/применения миграций:
+```bash
+docker compose exec app alembic revision --autogenerate -m "Add UserModel"
+docker compose exec app alembic upgrade head
+```
+
+Проверка создания таблиц:
+```bash
+docker compose exec db psql -U user -d db -c "\dt"
+```
+
+Доступ к приложени находится по адресу:
+```
+http://localhost:10000/
+```
+
+Проверка доступа (эндпойнты документации):
+```
+http://localhost:10000/redoc
+http://localhost:10000/docs
+```
+
+!Обратите внимание на создание volume pgdata для БД в папке infra.
+
 ## Стилистика
 
 Для стилизации кода используется пакеты `Ruff` и `Pre-commit`
