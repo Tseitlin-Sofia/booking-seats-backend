@@ -1,7 +1,7 @@
 """Валидаторы для эндпоинтов столов."""
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.cafe import Cafe
@@ -11,18 +11,16 @@ from app.models.table import Table
 async def check_cafe_exists(
     cafe_id: int,
     session: AsyncSession,
-) -> Cafe:
+) -> None:
     """Проверяет, что кафе с данным ID существует."""
     result = await session.execute(
-        select(Cafe).where(Cafe.id == cafe_id),
+        select(exists().where(Cafe.id == cafe_id)),
     )
-    cafe = result.scalars().first()
-    if cafe is None:
+    if not result.scalar():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f'Кафе с id={cafe_id} не найдено.',
         )
-    return cafe
 
 
 async def check_table_exists_in_cafe(

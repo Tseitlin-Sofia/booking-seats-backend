@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.db import Base, CommonMixin
-
 if TYPE_CHECKING:
     from app.models.table import Table
+
+from app.core.db import Base, CommonMixin
 
 
 class Cafe(CommonMixin, Base):
@@ -38,11 +38,11 @@ class Cafe(CommonMixin, Base):
     )
 
     tables: Mapped[list[Table]] = relationship(
-        'Table',
-        back_populates='cafe',
-        lazy='selectin',
+        "Table",
+        back_populates="cafe",
+        lazy="selectin",
     )
 
     def __repr__(self) -> str:
         """Строковое представление кафе."""
-        return f'<Cafe {self.id}: {self.name}>'
+        return f"<Cafe {self.id}: {self.name}>"

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import CheckConstraint, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base, CommonMixin
@@ -16,15 +16,16 @@ if TYPE_CHECKING:
 class Table(CommonMixin, Base):
     """Стол для бронирования в кафе."""
 
-    __tablename__ = 'table'
+    __tablename__ = "table"
 
     cafe_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey('cafe.id'),
+        ForeignKey("cafe.id"),
         nullable=False,
     )
     seat_number: Mapped[int] = mapped_column(
         Integer,
+        CheckConstraint('seat_number > 0', name='ck_table_seat_number_positive'),
         nullable=False,
     )
     description: Mapped[str | None] = mapped_column(
@@ -33,13 +34,11 @@ class Table(CommonMixin, Base):
     )
 
     cafe: Mapped[Cafe] = relationship(
-        'Cafe',
-        back_populates='tables',
-        lazy='selectin',
+        "Cafe",
+        back_populates="tables",
+        lazy="selectin",
     )
 
     def __repr__(self) -> str:
         """Строковое представление стола."""
-        return (
-            f'<Table {self.id}: {self.seat_number} seats, cafe={self.cafe_id}>'
-        )
+        return f"<Table {self.id}: {self.seat_number} seats, cafe={self.cafe_id}>"

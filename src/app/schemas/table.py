@@ -1,9 +1,9 @@
 """Pydantic-схемы для столов."""
 
 import datetime
-from typing import Optional
+from typing import Optional, Self
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class CafeShortInfo(BaseModel):
@@ -42,6 +42,16 @@ class TableUpdate(BaseModel):
     is_active: Optional[bool] = None
 
     model_config = ConfigDict(extra='forbid')
+
+    @model_validator(mode='after')
+    def prevent_null_required_fields(self) -> Self:
+        """Запрещает явную передачу null для обязательных полей."""
+        not_nullable = {'seat_number'}
+        for field_name in not_nullable:
+            if field_name in self.model_fields_set and getattr(self, field_name) is None:
+                msg = f'Поле {field_name} не может быть null'
+                raise ValueError(msg)
+        return self
 
 
 class TableShortInfo(BaseModel):
