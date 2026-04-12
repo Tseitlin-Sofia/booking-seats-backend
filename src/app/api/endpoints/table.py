@@ -57,14 +57,10 @@ async def create_table(
 ) -> TableInfo:
     """Создаёт новый стол в указанном кафе."""
     await check_cafe_exists(cafe_id, session)
-    table = await table_crud.create_for_cafe(
+    return await table_crud.create_for_cafe(
         cafe_id=cafe_id,
         obj_in=table_in,
         session=session,
-    )
-    return await table_crud.get_with_cafe(
-        table.id,
-        session,
     )
 
 

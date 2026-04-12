@@ -58,8 +58,7 @@ class CRUDTable(CRUDBase):
         db_obj = self.model(**obj_data)
         session.add(db_obj)
         await session.commit()
-        await session.refresh(db_obj)
-        return db_obj
+        return await self.get_with_cafe(db_obj.id, session)
 
     async def get_table_in_cafe(
         self,
