@@ -8,7 +8,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# from app.models import User
+from app.models import User
 
 
 class CRUDBase:
@@ -52,7 +52,7 @@ class CRUDBase:
         self,
         obj_in: Mapping[str, Any],
         session: AsyncSession,
-        user: Optional[Any] = None,
+        user: Optional[User] = None,
     ) -> Self:
         """Создает новую запись в базе данных."""
         obj_in_data = obj_in.model_dump()
