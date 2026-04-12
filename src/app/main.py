@@ -10,7 +10,6 @@ from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
 from app.core.middleware import LoggingMiddleware
 
-# from app.core.init_db import create_first_superuser
 setup_logging(env=settings.environment, log_level=settings.log_level)
 
 logger = get_logger()
@@ -19,8 +18,6 @@ logger = get_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Управление жизненным циклом приложения."""
-    # await create_first_superuser()
-
     logger.info(
         'Инициализация запуска приложения.',
         version=settings.version,

@@ -1,4 +1,3 @@
-# src/app/core/logging.py
 """Модуль централизованного логирования приложения.
 
 Предоставляет единую систему логирования на базе loguru для всего проекта.
@@ -12,23 +11,94 @@
 import contextvars
 import logging
 import sys
-from pathlib import Path
 
 from loguru import logger
 from loguru._logger import Logger
 
+from app.core.constants import LoggingConstants
+
 trace_id_ctx: contextvars.ContextVar[str] = contextvars.ContextVar(
     'trace_id',
-    default='SYSTEM',
+    default=LoggingConstants.SYSTEM_MESSAGE_NAME_ALLIAS,
 )
 user_id_ctx: contextvars.ContextVar[str] = contextvars.ContextVar(
     'user_id',
-    default='SYSTEM',
+    default=LoggingConstants.SYSTEM_MESSAGE_NAME_ALLIAS,
 )
 username_ctx: contextvars.ContextVar[str] = contextvars.ContextVar(
     'username',
-    default='SYSTEM',
+    default=LoggingConstants.SYSTEM_MESSAGE_NAME_ALLIAS,
 )
+
+
+class InterceptHandler(logging.Handler):
+    """Обработчик для перехвата записей из стандартной библиотеки logging.
+
+    Необходим для интеграции логов от Uvicorn, SQLAlchemy и Alembic
+    в единую систему loguru с сохранением контекста.
+    """
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Обработка записи лога и перенаправление в loguru.
+
+        Автоматически определяет правильный уровень логирования
+        и вычисляет глубину стека вызовов, чтобы в логе
+        указывался реальный файл-источник сообщения, а не этот модуль.
+
+        Args:
+            record: Объект записи из стандартной библиотеки logging.
+
+        Returns:
+            None
+
+        """
+        try:
+            level = logger.level(record.levelname).name
+        except ValueError:
+            level = record.levelno
+
+        frame, depth = (
+            sys._getframe(LoggingConstants.INITIAL_STACK_FRAME_DEPTH),
+            LoggingConstants.INITIAL_STACK_FRAME_DEPTH,
+        )
+        while frame and frame.f_code.co_filename == logging.__file__:
+            frame = frame.f_back
+            depth += 1
+
+        extra = {
+            'user_id': getattr(
+                record,
+                'user_id',
+                LoggingConstants.SYSTEM_MESSAGE_NAME_ALLIAS,
+            ),
+            'username': getattr(
+                record,
+                'username',
+                LoggingConstants.SYSTEM_MESSAGE_NAME_ALLIAS,
+            ),
+            'trace_id': getattr(
+                record,
+                'trace_id',
+                LoggingConstants.SYSTEM_MESSAGE_NAME_ALLIAS,
+            ),
+        }
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level,
+            record.getMessage(),
+            **extra,
+        )
+
+
+def _configure_logger(name: str, level: str) -> None:
+    """Настраивает логгер.
+
+    Служебный метод, заменяющий хендлеры на InterceptHandler
+    и отключающий пропагацию.
+    """
+    log = logging.getLogger(name)
+    log.handlers = [InterceptHandler()]
+    log.propagate = False
+    log.setLevel(level)
 
 
 def setup_logging(env: str = 'dev', log_level: str = 'INFO') -> None:
@@ -56,109 +126,50 @@ def setup_logging(env: str = 'dev', log_level: str = 'INFO') -> None:
     """
     logger.remove()
 
-    log_format = (
-        '{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | '
-        'user_id={extra[user_id]} username={extra[username]} | '
-        '{message}'
-    )
-
     if env == 'prod':
         logger.add(
             sys.stdout,
-            format=log_format,
+            format=LoggingConstants.LOGGING_FORMAT_STRING,
             level=log_level,
-            colorize=False,
-            enqueue=True,
-            backtrace=False,
-            diagnose=False,
+            colorize=LoggingConstants.PROD_MODE_COLORIZE_LOGS,
+            enqueue=LoggingConstants.PROD_MODE_ENQUEUE_LOGS,
+            backtrace=LoggingConstants.PROD_MODE_BACKTRACE_LOGS,
+            diagnose=LoggingConstants.PROD_MODE_DIAGNOSE_LOGS,
         )
 
     else:
         logger.add(
             sys.stderr,
-            format=log_format,
+            format=LoggingConstants.LOGGING_FORMAT_STRING,
             level=log_level,
-            colorize=True,
-            enqueue=True,
-            backtrace=True,
-            diagnose=True,
+            colorize=LoggingConstants.DEV_MODE_COLORIZE_LOGS,
+            enqueue=LoggingConstants.DEV_MODE_ENQUEUE_LOGS,
+            backtrace=LoggingConstants.DEV_MODE_BACKTRACE_LOGS,
+            diagnose=LoggingConstants.DEV_MODE_DIAGNOSE_LOGS,
         )
-        log_folder = Path('logs')
-        log_folder.mkdir(exist_ok=True)
+        LoggingConstants.LOGGING_FOLDER.mkdir(exist_ok=True)
 
         logger.add(
-            log_folder / 'app.log',
-            format=log_format,
+            LoggingConstants.LOG_FILES_PATH,
+            format=LoggingConstants.LOGGING_FORMAT_STRING,
             level=log_level,
-            rotation='5 MB',
-            retention=3,
-            compression='zip',
-            enqueue=True,
-            backtrace=True,
-            diagnose=True,
+            rotation=LoggingConstants.ROTATION_FILE_SIZE,
+            retention=LoggingConstants.RETENTION_FILES_COUNT,
+            compression=LoggingConstants.LOG_FILES_COMPRESSION_TYPE,
+            enqueue=LoggingConstants.DEV_MODE_ENQUEUE_LOGS,
+            backtrace=LoggingConstants.DEV_MODE_BACKTRACE_LOGS,
+            diagnose=LoggingConstants.DEV_MODE_DIAGNOSE_LOGS,
         )
 
-    class InterceptHandler(logging.Handler):
-        """Обработчик для перехвата записей из стандартной библиотеки logging.
+    logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 
-        Необходим для интеграции логов от Uvicorn, SQLAlchemy и Alembic
-        в единую систему loguru с сохранением контекста.
-        """
+    for name in LoggingConstants.LOGGERS_TO_INTERCEPT:
+        _configure_logger(name, log_level)
 
-        def emit(self, record: logging.LogRecord) -> None:
-            """Обработка записи лога и перенаправление в loguru.
-
-            Автоматически определяет правильный уровень логирования
-            и вычисляет глубину стека вызовов, чтобы в логе
-            указывался реальный файл-источник сообщения, а не этот модуль.
-
-            Args:
-                record: Объект записи из стандартной библиотеки logging.
-
-            Returns:
-                None
-
-            """
-            try:
-                level = logger.level(record.levelname).name
-            except ValueError:
-                level = record.levelno
-
-            frame, depth = sys._getframe(6), 6
-            while frame and frame.f_code.co_filename == logging.__file__:
-                frame = frame.f_back
-                depth += 1
-
-            extra_for_loguru = {
-                'user_id': getattr(record, 'user_id', 'SYSTEM'),
-                'username': getattr(record, 'username', 'SYSTEM'),
-                'trace_id': getattr(record, 'trace_id', 'system'),
-            }
-            extra_for_loguru.update(getattr(record, 'extra', {}))
-
-            logger.opt(depth=depth, exception=record.exc_info).log(
-                level,
-                record.getMessage(),
-                **extra_for_loguru,
-            )
-
-    logging.basicConfig(handlers=[InterceptHandler()], level=0)
-
-    uvicorn_access = logging.getLogger('uvicorn.access')
-    uvicorn_access.handlers = []
-    uvicorn_access.propagate = False
-
-    for name in [
-        'uvicorn',
-        'uvicorn.access',
-        'uvicorn.error',
-        'sqlalchemy',
-        'alembic',
-    ]:
-        log = logging.getLogger(name)
-        log.handlers = [InterceptHandler()]  # Заменяем хендлеры на наш
-        log.propagate = False  # Отключаем дублирование в root-логгер
-        log.setLevel(log_level)  # Устанавливаем уровень
+    # Access-логи отключены отдельно, поскольку они дублируют функционал
+    # кастомного middleware не предоставляя при этом нужного контекста.
+    logging.getLogger('uvicorn.access').handlers = []
+    logging.getLogger('uvicorn.access').propagate = False
 
 
 def get_logger() -> Logger:
