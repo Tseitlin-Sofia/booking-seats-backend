@@ -6,3 +6,11 @@ class BookingConstants:
 
     MAX_GUESTS = 1000
     MIN_GUESTS = 1
+
+
+class UserConstants:
+    """Класс с константами для пользователей."""
+
+    MAX_USERNAME_LENGTH = 100
+    MAX_EMAIL_LENGTH = 255
+    MAX_PHONE_LENGTH = 20
