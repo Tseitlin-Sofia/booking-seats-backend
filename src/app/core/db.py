@@ -3,25 +3,11 @@
 from datetime import datetime
 from typing import AsyncGenerator
 
-<<<<<<< HEAD
-# from sqlalchemy import Integer
-from sqlalchemy.ext.asyncio import (
-    async_sessionmaker,
-    create_async_engine,
-    AsyncSession
-)
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    # Mapped,
-    # mapped_column,
-    declared_attr,
-=======
 from sqlalchemy import Boolean, DateTime, Integer
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
->>>>>>> origin/develop
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
