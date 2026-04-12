@@ -2,8 +2,13 @@
 
 from fastapi import APIRouter
 
+from app.api.endpoints import cafe_router
+
+
 main_router = APIRouter()
 
-# main_router.include_router(
-#     meeting_room_router, prefix='/meeting_rooms', tags=['Meeting Rooms']
-# )
+main_router.include_router(
+    cafe_router,
+    prefix='/cafes',
+    tags=['Кафе']
+)

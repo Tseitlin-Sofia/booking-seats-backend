@@ -1,12 +1,14 @@
 """Базовый класс для CRUD операций с базой данных."""
 
 from typing import Any, Mapping, Optional, Self
+from http import HTTPStatus
 
+from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import User
+# from app.models import User
 
 
 class CRUDBase:
@@ -22,12 +24,17 @@ class CRUDBase:
         session: AsyncSession,
     ) -> Optional[Self]:
         """Получает объект по его id."""
-        db_obj = await session.execute(
-            select(self.model).where(
-                self.model.id == obj_id,
-            ),
+        result = await session.execute(
+            select(self.model)
+            .where(self.model.id == obj_id)
         )
-        return db_obj.scalars().first()
+        db_obj = result.scalars().first()
+        if db_obj is None:
+            raise HTTPException(
+                status_code=HTTPStatus.NOT_FOUND,
+                detail='Объект не найден!'
+            )
+        return db_obj
 
     async def get_multi(
         self,
@@ -41,7 +48,7 @@ class CRUDBase:
         self,
         obj_in: Mapping[str, Any],
         session: AsyncSession,
-        user: Optional[User] = None,
+        user: Optional[Any] = None,
     ) -> Self:
         """Создает новую запись в базе данных."""
         obj_in_data = obj_in.model_dump()
