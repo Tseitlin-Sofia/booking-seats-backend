@@ -49,7 +49,7 @@ class TableUpdate(BaseModel):
         not_nullable = {'seat_number'}
         for field_name in not_nullable:
             if field_name in self.model_fields_set and getattr(
-                self, field_name
+                self, field_name,
             ) is None:
                 msg = f'Поле {field_name} не может быть null'
                 raise ValueError(msg)
