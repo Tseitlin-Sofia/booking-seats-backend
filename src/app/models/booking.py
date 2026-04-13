@@ -2,14 +2,12 @@
 
 from datetime import datetime
 
-from sqlalchemy import (
-    Boolean, DateTime, Integer, ForeignKey, Mapped, String
-)
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Mapped, String
 from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy.types import Enum
 
 from app.core import Base, CommonMixin
-from app.core.constants import BookingConstants as BC
+from app.core.constants import BookingConstants as Constants
 from app.schemas import BookingStatus
 
 
@@ -34,7 +32,7 @@ class BookingTableSlot(Base, CommonMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
-        default=datetime.now
+        default=datetime.now,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
@@ -63,8 +61,8 @@ class Booking(Base, CommonMixin):
         Integer,
         validate=(
             lambda value: (
-                value >= BC.MIN_GUESTS
-                and value <= BC.MAX_GUESTS
+                value >= Constants.MIN_GUESTS
+                and value <= Constants.MAX_GUESTS
             ),
         ),
     )
@@ -85,7 +83,7 @@ class Booking(Base, CommonMixin):
 
     def __repr__(self) -> str:
         return (
-            BC.REPR_FORMAT.format(
+            Constants.REPR_FORMAT.format(
                 self.id, self.status, self.user_id,
             )
         )

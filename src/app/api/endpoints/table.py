@@ -13,7 +13,6 @@ from app.schemas.table import (
     TableInfo,
     TableUpdate,
 )
-from app.api.dependencies import SessionDep
 
 router = APIRouter()
 
