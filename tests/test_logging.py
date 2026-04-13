@@ -17,7 +17,6 @@ import re
 import time
 from typing import List
 
-import pytest
 from loguru import logger
 
 from app.core.constants import LoggingConstants
@@ -149,10 +148,10 @@ def test_exception_logging_with_traceback(capture_sink: SinkType) -> None:
         backtrace=True,
     )
 
-    with pytest.raises(ZeroDivisionError):
-        1 / 0
+    try:
+        1 / 0  # noqa: B018  # Намеренно вызываем ошибку
+    except ZeroDivisionError:
         get_logger().exception('Ошибка вычисления')
-
     assert len(captured) > 0, 'Ни одного лога не получено в рамках теста.'
     log_output = '\n'.join(captured)
 
