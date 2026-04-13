@@ -5,7 +5,6 @@ from fastapi import APIRouter
 from app.api.endpoints import cafe_router
 from app.api.endpoints.table import router as table_router
 
-
 main_router = APIRouter()
 
 main_router.include_router(
