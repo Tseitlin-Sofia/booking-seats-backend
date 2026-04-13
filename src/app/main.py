@@ -20,8 +20,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Управление жизненным циклом приложения."""
     logger.info(
         'Инициализация запуска приложения.',
-        version=settings.version,
-        environment=settings.environment,
     )
     if settings.environment != 'prod':
         logger.warning(
