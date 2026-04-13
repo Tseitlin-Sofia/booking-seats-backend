@@ -2,10 +2,17 @@
 
 from fastapi import APIRouter
 
+from app.api.endpoints import cafe_router
 from app.api.endpoints.table import router as table_router
+
 
 main_router = APIRouter()
 
+main_router.include_router(
+    cafe_router,
+    prefix='/cafes',
+    tags=['Кафе'],
+)
 main_router.include_router(
     table_router,
     prefix='/cafes/{cafe_id}/tables',
