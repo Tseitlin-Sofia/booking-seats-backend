@@ -10,7 +10,6 @@ class Settings(BaseSettings):
     """Настройки приложения."""
 
     app_title: str = 'NAME'
-    version: str = '0.0.1'
     description: str = 'DESCRIPTION'
     secret: str = 'SECRET'
     first_superuser_email: Optional[EmailStr] = None
