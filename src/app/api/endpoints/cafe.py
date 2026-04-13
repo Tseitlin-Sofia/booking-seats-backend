@@ -12,6 +12,7 @@ from app.schemas.cafe import (
     CafeUpdate,
 )
 
+
 router = APIRouter()
 
 
