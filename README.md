@@ -17,6 +17,17 @@ cd infra
 docker compose up [-d]
 ```
 
+Для создания/применения миграций:
+```bash
+docker compose exec app alembic revision --autogenerate -m "Add UserModel"
+docker compose exec app alembic upgrade head
+```
+
+Проверка создания таблиц:
+```bash
+docker compose exec db psql -U user -d db -c "\dt"
+```
+
 Доступ к приложени находится по адресу:
 ```
 http://localhost:10000/
