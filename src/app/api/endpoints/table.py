@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 
+from app.api.dependencies import SessionDep
 from app.api.validators.table import (
     check_cafe_exists,
     check_table_exists_in_cafe,
@@ -12,7 +13,6 @@ from app.schemas.table import (
     TableInfo,
     TableUpdate,
 )
-from app.api.dependencies import SessionDep
 
 router = APIRouter()
 
