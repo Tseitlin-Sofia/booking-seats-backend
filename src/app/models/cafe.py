@@ -1,48 +1,52 @@
-"""Модель кафе."""
+from typing import List, Optional
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-from sqlalchemy import String
+# import uuid
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Integer,  # Временно для заглушки до создания модели Media.
+    String,
+    Table,
+    # UUID
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-if TYPE_CHECKING:
-    from app.models.table import Table
-
+from app.core.constants import CafeConstants
 from app.core.db import Base, CommonMixin
+from app.models.user import User
+
+TEMPORARY_ID = 1  # Временно для заглушки.
+
+
+cafe_managers = Table(
+    "cafe_managers",
+    Base.metadata,
+    Column(
+        "cafe_id",
+        ForeignKey("cafe.id"),
+        primary_key=True,
+    ),
+    Column(
+        "user_id",
+        ForeignKey("user.id"),
+        primary_key=True,
+    ),
+)
 
 
 class Cafe(CommonMixin, Base):
-    """Кафе, в котором можно бронировать столы."""
+    """Модель кафе."""
 
-    name: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    address: Mapped[str] = mapped_column(String, nullable=False)
+    phone: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String)
+    # photo: Mapped[Optional[uuid.UUID]] =
+    # mapped_column(UUID, ForeignKey('media.id'))
+    photo_id: Mapped[Optional[Integer]] = mapped_column(
+        Integer, default=TEMPORARY_ID,  # Заглушка.
     )
-    address: Mapped[str] = mapped_column(
-        String(500),
-        nullable=False,
-    )
-    phone: Mapped[str] = mapped_column(
-        String(20),
-        nullable=False,
-    )
-    description: Mapped[str | None] = mapped_column(
-        String(1000),
-        nullable=True,
-    )
-    photo_id: Mapped[str | None] = mapped_column(
-        String(36),
-        nullable=True,
-    )
-
-    tables: Mapped[list[Table]] = relationship(
-        "Table",
-        back_populates="cafe",
-        lazy="selectin",
-    )
+    managers_id: Mapped[List[User]] = relationship(secondary=cafe_managers)
 
     def __repr__(self) -> str:
-        """Строковое представление кафе."""
-        return f"<Cafe {self.id}: {self.name}>"
+        return self.name[:CafeConstants.NAME_RESTRICTION]
