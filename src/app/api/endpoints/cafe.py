@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from app.api.dependencies import SessionDep
 from app.api.validators.cafe import is_managers_id
-from app.crud import cafe_crud
+from app.crud.cafe import cafe_crud
 from app.schemas.cafe import (
     CafeCreate,
     CafeDB,
