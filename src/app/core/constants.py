@@ -4,6 +4,7 @@
 class BookingConstants:
     """Класс с константами для бронирования."""
 
+    REPR_FORMAT = 'Бронирование id:{} status:{} user_id:{}'
     MAX_GUESTS = 1000
     MIN_GUESTS = 1
 
