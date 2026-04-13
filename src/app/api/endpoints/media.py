@@ -1,15 +1,14 @@
 """Модуль эндпоинтов для загрузки на сервер и получения из него изображений."""
-from typing import Annotated
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
-# from sqlalchemy.ext.asyncio import AsyncSession
 
+# from sqlalchemy.ext.asyncio import AsyncSession
 # from app.core.db import get_async_session
 from app.api.validators.media_validators import validate_image
-from app.services.media_service import transform_to_jpeg
 from app.core.constants import MediaConstants
+from app.services.media_service import transform_to_jpeg
 
 router = APIRouter()
 
@@ -42,5 +41,5 @@ async def get_photo(media_id: str):
     return FileResponse(
         path=file_path,
         media_type="image/jpeg",
-        filename=filename
+        filename=filename,
     )

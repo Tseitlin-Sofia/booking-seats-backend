@@ -1,11 +1,10 @@
-from fastapi import HTTPException, File, UploadFile
+from fastapi import File, HTTPException, UploadFile
 
 from app.core.constants import MediaConstants
 
 
 async def validate_image(file: UploadFile = File(...)) -> bytes:
     """Валидирует и возвращает содержимое файла"""
-
     if (
         not file.content_type or
         file.content_type not in MediaConstants.VALID_TYPES

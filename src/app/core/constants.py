@@ -8,6 +8,7 @@ class BookingConstants:
     MAX_GUESTS = 1000
     MIN_GUESTS = 1
 
+
 class MediaConstants:
     """Класс констант для работы с media"""
 

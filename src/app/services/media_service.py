@@ -12,4 +12,3 @@ def transform_to_jpeg(image_bytes: bytes) -> bytes:
     output = io.BytesIO()
     image.save(output, format='JPEG', quality=85)
     return output.getvalue()
-
