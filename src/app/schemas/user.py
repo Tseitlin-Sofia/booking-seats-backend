@@ -1,0 +1,78 @@
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+
+from app.core.constants import UserConstants
+from app.models.user import UserRole
+
+
+class UserBase(BaseModel):
+    """Базовая схема пользователя с общими полями."""
+
+    username: str = Field(
+        ...,
+        max_length=UserConstants.MAX_USERNAME_LENGTH
+    )
+    email: EmailStr | None = Field(
+        None,
+        max_length=UserConstants.MAX_EMAIL_LENGTH
+    )
+    phone: str | None = Field(
+        None,
+        max_length=UserConstants.MAX_PHONE_LENGTH
+    )
+    tg_id: str | None = Field(
+        None,
+        max_length=UserConstants.MAX_TG_ID_LENGTH
+    )
+
+
+class UserCreate(BaseModel):
+    """Схема для создания пользователя."""
+
+    password: str = Field(
+        ...,
+        max_length=UserConstants.MAX_PASSWORD_LENGTH
+    )
+
+    @model_validator(mode='after')
+    def validate_email_or_phone_required(self) -> 'UserCreate':
+        """
+        Валидатор, который проверяет, 
+        что задано хотябы одно из полей email или phone.
+        """
+        if not self.email and not self.phone:
+            raise ValueError(
+                'Хотя бы одно из следующих полей '
+                'должно быть заполнено: email, phone'
+            )
+        return self
+
+
+class UserUpdate(BaseModel):
+    """Схема для обновления данных пользователя."""
+    
+    role: UserRole | None = Field(None,)
+    password: str | None = Field(
+        None,
+        max_length=UserConstants.MAX_PASSWORD_LENGTH
+    )
+    is_active: bool | None = Field(None,)
+
+
+class UserInfo(BaseModel):
+    """Схема для предоставления всех данных о пользователе."""
+
+    id: int = Field(...,)
+    role: UserRole = Field(...,)
+    is_active: bool = Field(...,)
+    created_at: datetime = Field(...,)
+    updated_at: datetime = Field(...,)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserShortInfo(BaseModel):
+    id: int = Field(...,)
+
+    model_config = ConfigDict(from_attributes=True)
