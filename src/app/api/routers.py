@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from .endpoints import media_router
+from app.api.endpoints import media_router
 
 main_router = APIRouter()
 

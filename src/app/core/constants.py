@@ -14,5 +14,6 @@ class MediaConstants:
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     MEDIA_DIR = BASE_DIR / "media"
     IMAGE_EXTENSION = "jpg"
-    MAX_PHOTO_SIZE = 1024 * 1024 * 5
+    CHUNK_SIZE_1MB = 1024 * 1024
+    MAX_PHOTO_SIZE_5MB = CHUNK_SIZE_1MB * 5
     VALID_TYPES = ["image/png", "image/jpeg"]
