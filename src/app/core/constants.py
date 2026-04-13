@@ -8,6 +8,13 @@ class BookingConstants:
     MIN_GUESTS = 1
 
 
+class CafeConstants:
+    """Класс с константами для модели кафе."""
+
+    NAME_RESTRICTION = 20
+    MOSCOW_HOURS = 3
+
+
 class UserConstants:
     """Класс с константами для пользователей."""
 
