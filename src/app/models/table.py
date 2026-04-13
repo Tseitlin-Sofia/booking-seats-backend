@@ -26,7 +26,7 @@ class Table(CommonMixin, Base):
     seat_number: Mapped[int] = mapped_column(
         Integer,
         CheckConstraint(
-            'seat_number > 0', name='ck_table_seat_number_positive'
+            'seat_number > 0', name='ck_table_seat_number_positive',
         ),
         nullable=False,
     )
