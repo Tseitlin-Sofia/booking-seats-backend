@@ -23,7 +23,7 @@ class User(CommonMixin, Base):
         unique=True,
         nullable=False,
     )
-    password: Mapped[str] = mapped_column(
+    password_hash: Mapped[str] = mapped_column(
         String(UserConstants.MAX_PASSWORD_LENGTH),
         nullable=False
     )
@@ -58,7 +58,7 @@ class User(CommonMixin, Base):
         CheckConstraint(
             'email is not null OR phone is not null',
             name='ch_user_email_or_phone_required'
-        )
+        ),
     )
 
     def __str__(self) -> str:
