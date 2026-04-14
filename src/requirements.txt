@@ -13,3 +13,4 @@ pillow==12.2.0
 loguru==0.7.3
 pytest==9.0.3
 httpx==0.28.1
+loguru
