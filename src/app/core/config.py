@@ -14,7 +14,8 @@ class Settings(BaseSettings):
     secret: str = 'SECRET'
     first_superuser_email: Optional[EmailStr] = None
     first_superuser_password: Optional[str] = None
-
+    environment: str = 'dev'
+    log_level: str = 'INFO'
     postgres_user: str
     postgres_password: str
     postgres_db: str
@@ -33,7 +34,7 @@ class Settings(BaseSettings):
             f'/{self.postgres_db}'
         )
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 
 
 settings = Settings()
