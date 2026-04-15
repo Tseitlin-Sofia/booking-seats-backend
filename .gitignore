@@ -169,3 +169,5 @@ cython_debug/
 pgdata/
 PGDATA/
 media/
+
+.DS_Store
