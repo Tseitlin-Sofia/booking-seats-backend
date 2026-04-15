@@ -62,4 +62,8 @@ AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """Асинхронный генератор сессий."""
     async with AsyncSessionLocal() as async_session:
-        yield async_session
+        try:
+            yield async_session
+        except Exception:
+            await async_session.rollback()
+            raise

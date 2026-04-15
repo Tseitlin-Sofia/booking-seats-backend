@@ -47,6 +47,11 @@ class Cafe(CommonMixin, Base):
         Integer, default=TEMPORARY_ID,  # Заглушка.
     )
     managers_id: Mapped[List[User]] = relationship(secondary=cafe_managers)
+    tables: Mapped[List["Table"]] = relationship(
+        "Table",
+        back_populates="cafe",
+        lazy="selectin",
+    )
 
     def __repr__(self) -> str:
         return self.name[:CafeConstants.NAME_RESTRICTION]
