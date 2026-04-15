@@ -25,7 +25,7 @@ class User(CommonMixin, Base):
     )
     password_hash: Mapped[str] = mapped_column(
         String(UserConstants.MAX_PASSWORD_LENGTH),
-        nullable=False
+        nullable=False,
     )
     email: Mapped[str | None] = mapped_column(
         String(UserConstants.MAX_EMAIL_LENGTH),
@@ -50,14 +50,14 @@ class User(CommonMixin, Base):
     )
     cafe_id: Mapped[int | None] = mapped_column(
         ForeignKey('cafe.id', ondelete='RESTRICT'),
-        nullable=True
+        nullable=True,
     )
     # TODO Добавить relationship для модели Cafe.
 
     __table_args__ = (
         CheckConstraint(
             'email is not null OR phone is not null',
-            name='ch_user_email_or_phone_required'
+            name='ch_user_email_or_phone_required',
         ),
     )
 

@@ -2,9 +2,9 @@
 
 from fastapi import APIRouter
 
+from app.api.endpoints import user_router
 from app.api.endpoints.cafe import router as cafe_router
 from app.api.endpoints.table import router as table_router
-from app.api.endpoints import user_router
 
 main_router = APIRouter()
 
