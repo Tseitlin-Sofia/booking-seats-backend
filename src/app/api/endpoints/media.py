@@ -16,7 +16,7 @@ router = APIRouter()
 # UserDep = Annotated[User, Depends(current_user)]
 
 
-@router.post('/')
+@router.post('/', summary="Загрузить png/jpeg на сервер")
 async def load_photo_to_server(image_bytes: bytes = Depends(validate_image)):
     """Загрузка png/jpg изображений на сервер в папку src/media/"""
     media_id = uuid.uuid4()
@@ -30,7 +30,7 @@ async def load_photo_to_server(image_bytes: bytes = Depends(validate_image)):
     return {"media_id": media_id}
 
 
-@router.get('/{media_id}')
+@router.get('/{media_id}', summary="Получить фото по его ID")
 async def get_photo(media_id: str):
     """Возврат клиенту фотографии"""
     filename = f"{media_id}.{MediaConstants.IMAGE_EXTENSION}"

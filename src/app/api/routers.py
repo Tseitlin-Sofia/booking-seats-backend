@@ -11,7 +11,7 @@ main_router = APIRouter()
 main_router.include_router(
     media_router,
     prefix='/media',
-    tags=['Media'],
+    tags=['Медиа'],
 )
 main_router.include_router(
     cafe_router,
