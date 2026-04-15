@@ -1,6 +1,7 @@
 """Модуль эндпоинтов для загрузки на сервер и получения из него изображений."""
 import uuid
 
+import aiofiles
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
@@ -17,22 +18,24 @@ router = APIRouter()
 
 
 @router.post('/', summary="Загрузить png/jpeg на сервер")
-async def load_photo_to_server(image_bytes: bytes = Depends(validate_image)):
-    """Загрузка png/jpg изображений на сервер в папку src/media/"""
+async def load_photo_to_server(
+    image_bytes: bytes = Depends(validate_image),
+) -> dict:
+    """Загрузка png/jpg изображений на сервер в папку src/media/."""
     media_id = uuid.uuid4()
     filename = f"{media_id}.{MediaConstants.IMAGE_EXTENSION}"
     jpeg_bytes = transform_to_jpeg(image_bytes)
 
     file_path = MediaConstants.MEDIA_DIR / filename
     MediaConstants.MEDIA_DIR.mkdir(exist_ok=True)
-    with open(file_path, "wb") as f:
-        f.write(jpeg_bytes)
+    async with aiofiles.open(file_path, "wb") as f:
+        await f.write(jpeg_bytes)
     return {"media_id": media_id}
 
 
 @router.get('/{media_id}', summary="Получить фото по его ID")
-async def get_photo(media_id: str):
-    """Возврат клиенту фотографии"""
+async def get_photo(media_id: str) -> FileResponse:
+    """Возврат клиенту фотографии."""
     filename = f"{media_id}.{MediaConstants.IMAGE_EXTENSION}"
     file_path = MediaConstants.MEDIA_DIR / filename
     if not file_path.exists():
