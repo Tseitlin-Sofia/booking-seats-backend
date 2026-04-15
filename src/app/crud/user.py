@@ -47,13 +47,13 @@ class CRUDUser(CRUDBase):
     ) -> None:
         """Проверяет поля email, phone и username на уникальность."""
         if email:
-            if self.get_by_email(session, email):
+            if await self.get_by_email(session, email):
                 raise ValueError('Пользователь с таким email уже существует.')
         if phone:
-            if self.get_by_phone(session, phone):
+            if await self.get_by_phone(session, phone):
                 raise ValueError('Пользователь с таким phone уже существует')
         if username:
-            if self.get_by_username(session, username):
+            if await self.get_by_username(session, username):
                 raise ValueError(
                     'Пользоваетль с таким username уже существует.'
                 )

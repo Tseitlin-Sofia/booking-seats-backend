@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     postgres_user: str
     postgres_password: str
     postgres_db: str
-    postgres_server: str
+    app_postgres_server: str
     postgres_port: int = 5432
 
     @computed_field
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
         return (
             f'postgresql+asyncpg://{self.postgres_user}'
             f':{self.postgres_password}'
-            f'@{self.postgres_server}'
+            f'@{self.app_postgres_server}'
             f':{self.postgres_port}'
             f'/{self.postgres_db}'
         )

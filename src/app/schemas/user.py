@@ -27,7 +27,7 @@ class UserBase(BaseModel):
     )
 
 
-class UserCreate(BaseModel):
+class UserCreate(UserBase):
     """Схема для создания пользователя."""
 
     password: str = Field(
@@ -49,7 +49,7 @@ class UserCreate(BaseModel):
         return self
 
 
-class UserUpdate(BaseModel):
+class UserUpdate(UserBase):
     """Схема для обновления данных пользователя."""
     
     role: UserRole | None = Field(None,)
@@ -60,7 +60,7 @@ class UserUpdate(BaseModel):
     is_active: bool | None = Field(None,)
 
 
-class UserInfo(BaseModel):
+class UserInfo(UserBase):
     """Схема для предоставления всех данных о пользователе."""
 
     id: int = Field(...,)
@@ -72,7 +72,7 @@ class UserInfo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class UserShortInfo(BaseModel):
+class UserShortInfo(UserBase):
     id: int = Field(...,)
 
     model_config = ConfigDict(from_attributes=True)
