@@ -1,15 +1,12 @@
 """Эндпоинты для управления столами в кафе."""
 
-from typing import Annotated
+from fastapi import APIRouter
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.api.dependencies import SessionDep
 from app.api.validators.table import (
     check_cafe_exists,
     check_table_exists_in_cafe,
 )
-from app.core.db import get_async_session
 from app.crud.table import table_crud
 from app.schemas.table import (
     TableCreate,
@@ -18,11 +15,6 @@ from app.schemas.table import (
 )
 
 router = APIRouter()
-
-SessionDep = Annotated[
-    AsyncSession,
-    Depends(get_async_session),
-]
 
 
 @router.get(

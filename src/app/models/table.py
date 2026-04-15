@@ -25,7 +25,9 @@ class Table(CommonMixin, Base):
     )
     seat_number: Mapped[int] = mapped_column(
         Integer,
-        CheckConstraint('seat_number > 0', name='ck_table_seat_number_positive'),
+        CheckConstraint(
+            'seat_number > 0', name='ck_table_seat_number_positive',
+        ),
         nullable=False,
     )
     description: Mapped[str | None] = mapped_column(
@@ -41,4 +43,7 @@ class Table(CommonMixin, Base):
 
     def __repr__(self) -> str:
         """Строковое представление стола."""
-        return f"<Table {self.id}: {self.seat_number} seats, cafe={self.cafe_id}>"
+        return (
+            f"<Table {self.id}: {self.seat_number} seats, "
+            f"cafe={self.cafe_id}>"
+        )

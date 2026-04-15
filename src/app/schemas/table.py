@@ -48,7 +48,9 @@ class TableUpdate(BaseModel):
         """Запрещает явную передачу null для обязательных полей."""
         not_nullable = {'seat_number'}
         for field_name in not_nullable:
-            if field_name in self.model_fields_set and getattr(self, field_name) is None:
+            if field_name in self.model_fields_set and getattr(
+                self, field_name,
+            ) is None:
                 msg = f'Поле {field_name} не может быть null'
                 raise ValueError(msg)
         return self
