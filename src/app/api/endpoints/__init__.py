@@ -1,3 +1,5 @@
 """Пакет эндпоинтов API."""
 
-from .cafe import router as cafe_router  # noqa
+from .user import router as user_router
+
+__all__ = ['user_router']

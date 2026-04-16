@@ -1,9 +1,7 @@
 """Базовый класс для CRUD операций с базой данных."""
 
-from http import HTTPStatus
 from typing import Any, Mapping, Optional, Self
 
-from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,31 +20,17 @@ class CRUDBase:
         self,
         obj_id: int,
         session: AsyncSession,
-    ) -> Self:
-        """Получает объект по его id."""
-        result = await session.execute(
-            select(self.model)
-            .where(self.model.id == obj_id),
+        is_active: Optional[bool] = True,
+    ) -> Optional[Self]:
+        """Получает объект по его id, с учетом статуса активности."""
+        is_active_check = is_active if is_active is not None else True
+        db_obj = await session.execute(
+            select(self.model).where(
+                self.model.id == obj_id,
+                self.model.is_active == is_active_check,
+            ),
         )
-        db_obj = result.scalars().first()
-        # NOTE: предлагаю здесь сделать проверку на наличие объекта в БД,
-        # чтобы не дублировать код.
-        if db_obj is None:
-            raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND,
-                detail='Объект не найден!',
-            )
-        return db_obj
-
-    async def get_multi(
-        self,
-        session: AsyncSession,
-    ) -> list[Self]:
-        """Получает все объекты заданной модели."""
-        # NOTE: предлагаю здесь потом сделать фильтр по show_active, чтобы в
-        # зависимости от прав доступа вовзвращалась разная выборка объектов.
-        db_objs = await session.execute(select(self.model))
-        return db_objs.scalars().all()
+        return db_obj.scalars().first()
 
     async def create(
         self,
@@ -82,23 +66,38 @@ class CRUDBase:
         await session.refresh(db_obj)
         return db_obj
 
-    # async def remove(
-    #     self,
-    #     db_obj,
-    #     session: AsyncSession,
-    # ):
-    #     await session.delete(db_obj)
-    #     await session.commit()
-    #     return db_obj
+    async def get_by_attribute(
+        self,
+        attr_name: str,
+        attr_value: str,
+        session: AsyncSession,
+        is_active: Optional[bool] = True,
+    ) -> Optional[Self]:
+        """Получает объект по атрибуту, с учетом статуса активности."""
+        is_active_check = is_active if is_active is not None else True
+        attr = getattr(self.model, attr_name)
+        db_obj = await session.execute(
+            select(self.model).where(
+                attr == attr_value,
+                self.model.is_active == is_active_check,
+            ),
+        )
+        return db_obj.scalars().first()
 
-    # async def get_by_attribute(
-    #     self,
-    #     attr_name: str,
-    #     attr_value: str,
-    #     session: AsyncSession,
-    # ):
-    #     attr = getattr(self.model, attr_name)
-    #     db_obj = await session.execute(
-    #         select(self.model).where(attr == attr_value)
-    #     )
-    #     return db_obj.scalars().first()
+    async def get_by_attribute_multi(
+        self,
+        attr_name: str,
+        attr_value: str,
+        session: AsyncSession,
+        is_active: Optional[bool] = True,
+    ) -> list[Self]:
+        """Получает объекты по атрибуту, с учетом статуса активности."""
+        is_active_check = is_active if is_active is not None else True
+        attr = getattr(self.model, attr_name)
+        db_obj = await session.execute(
+            select(self.model).where(
+                attr == attr_value,
+                self.model.is_active == is_active_check,
+            ),
+        )
+        return list(db_obj.scalars().all())

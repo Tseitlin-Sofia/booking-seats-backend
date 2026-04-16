@@ -1,14 +1,18 @@
-"""В этом модуле определены аутентификационные компоненты для приложения."""
+# """В этом модуле определены аутентификационные компоненты для приложения."""
 
 # from typing import Annotated, Optional, Union
 
 # from fastapi import Depends, Request
-
 # from fastapi_users import (
-#     BaseUserManager, FastAPIUsers, IntegerIDMixin, InvalidPasswordException
+#     BaseUserManager,
+#     FastAPIUsers,
+#     IntegerIDMixin,
+#     InvalidPasswordException,
 # )
 # from fastapi_users.authentication import (
-#     AuthenticationBackend, BearerTransport, JWTStrategy
+#     AuthenticationBackend,
+#     BearerTransport,
+#     JWTStrategy,
 # )
 # from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 # from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +24,7 @@
 
 
 # async def get_user_db(
-#     session: Annotated[AsyncSession, Depends(get_async_session)]
+#     session: Annotated[AsyncSession, Depends(get_async_session)],
 # ):
 #     yield SQLAlchemyUserDatabase(session, User)
 
@@ -49,21 +53,23 @@
 #         if len(password) < 3:
 #             error = 'Пароль должен содержать не менее 3 символов'
 #             raise InvalidPasswordException(
-#                 reason=error
+#                 reason=error,
 #             )
 #         if user.email in password:
 #             error = 'Пароль не может содержать ваш email'
 #             raise InvalidPasswordException(
-#                 reason=error
+#                 reason=error,
 #             )
 
 #     async def on_after_register(
-#             self, user: User, request: Optional[Request] = None
+#             self, user: User, request: Optional[Request] = None,
 #     ):
 #         print(f'Пользователь {user.email} зарегистрирован.')
 
+
 # async def get_user_manager(user_db=Depends(get_user_db)):
 #     yield UserManager(user_db)
+
 
 # fastapi_users = FastAPIUsers[User, int](
 #     get_user_manager,
