@@ -1,101 +1,158 @@
-from typing import Optional
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.user import AuthService
 from app.crud.base import CRUDBase
-from app.models.user import User, UserRole
-from app.schemas.users import UserCreate, UserUpdate
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate
+from app.services.user import get_password_hash
 
 
 class CRUDUser(CRUDBase):
-    """CRUD для объектов модели пользователя."""
+    """Круд для работы с пользователями."""
 
     async def get_by_email(
         self,
-        email: str,
         session: AsyncSession,
-    ) -> Optional[User]:
-        """Получает пользователя по email."""
-        result = await session.execute(
-            select(self.model).where(self.model.email == email),
+        email: str,
+    ) -> User | None:
+        """Получить пользователя по email."""
+        db_user = await session.execute(
+            select(User).where(User.email == email),
         )
-        return result.scalars().first()
+        return db_user.scalars().first()
 
     async def get_by_phone(
         self,
-        phone: str,
         session: AsyncSession,
-    ) -> Optional[User]:
-        """Получает пользователя по телефону."""
-        result = await session.execute(
-            select(self.model).where(self.model.phone == phone),
+        phone: str,
+    ) -> User | None:
+        """Получить пользователя по phone."""
+        db_user = await session.execute(
+            select(User).where(User.phone == phone),
         )
-        return result.scalars().first()
+        return db_user.scalars().first()
 
     async def get_by_username(
         self,
+        session: AsyncSession,
         username: str,
-        session: AsyncSession,
-    ) -> Optional[User]:
-        """Получает пользователя по username."""
-        result = await session.execute(
-            select(self.model).where(self.model.username == username),
+    ) -> User | None:
+        """Получить пользователя по username."""
+        db_user = await session.execute(
+            select(User).where(User.username == username),
         )
-        return result.scalars().first()
+        return db_user.scalars().first()
 
-    async def create_user(
+    async def check_unique_fields(
         self,
+        session: AsyncSession,
+        email: str | None = None,
+        phone: str | None = None,
+        username: str | None = None,
+    ) -> None:
+        """Проверяет поля email, phone и username на уникальность."""
+        if email:
+            if await self.get_by_email(session, email):
+                raise ValueError('Пользователь с таким email уже существует.')
+        if phone:
+            if await self.get_by_phone(session, phone):
+                raise ValueError('Пользователь с таким phone уже существует')
+        if username:
+            if await self.get_by_username(session, username):
+                raise ValueError(
+                    'Пользоваетль с таким username уже существует.',
+                )
+
+    @staticmethod
+    def check_email_or_phone_required(
         user_in: UserCreate,
-        session: AsyncSession,
-        role: UserRole = UserRole.USER,
-    ) -> User:
-        """Создает нового пользователя в базе данных."""
-        # Хэшируем пароль
-        password_hash = AuthService.hash_password(user_in.password)
-        # Подготавливаем данные
-        user_data = user_in.model_dump(exclude={'password'})
-        user_data['password_hash'] = password_hash
-        user_data['role'] = role
-
-        db_user = self.model(**user_data)
-        session.add(db_user)
-        await session.commit()
-        await session.refresh(db_user)
-        return db_user
-
-    async def update_user(
-        self,
-        db_user: User,
-        user_in: UserUpdate,
-        session: AsyncSession,
-    ) -> User:
-        """Обновляет существующего пользователя в базе данных."""
-        update_data = user_in.model_dump(exclude_unset=True)
-        # Если обновляется пароль, нужно его хэшировать
-        if 'password' in update_data:
-            update_data['password_hash'] = AuthService.hash_password(
-                update_data.pop('password'),
+    ) -> None:
+        """Метод для проверки наличия хотя бы одного из полей email, phone."""
+        if not user_in.email and not user_in.phone:
+            # TODO лог о некоректном предоставлении полей
+            raise ValueError(
+                'Хотя бы одно из полей email или phone должно быть заполено',
             )
 
-        for key, value in update_data.items():
-            setattr(db_user, key, value)
+    async def create(
+        self,
+        session: AsyncSession,
+        user_in: UserCreate,
+    ) -> User:
+        """Создаёт пользователя предварительно хешируя пароль."""
+        await self.check_unique_fields(
+            session,
+            email=user_in.email,
+            phone=user_in.phone,
+            username=user_in.username,
+        )
+        self.check_email_or_phone_required(user_in)
+
+        user_data = user_in.model_dump(exclude={'password'})
+        user_data['password_hash'] = get_password_hash(user_in.password)
+
+        user = self.model(**user_data)
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        # TODO лог о создании пользователя
+        return user
+
+    async def update(
+        self,
+        session: AsyncSession,
+        db_user: User,
+        user_in: UserUpdate,
+    ) -> User:
+        """Обновление данных пользователя."""
+        if user_in.email or user_in.phone or user_in.username:
+            await self.check_unique_fields(
+                session,
+                email=user_in.email,
+                phone=user_in.phone,
+                username=user_in.username,
+            )
+
+        if user_in.password:
+            user_update_data = user_in.model_dump(
+                exclude={'password'},
+                exclude_unset=True,
+            )
+            user_update_data['password_hash'] = get_password_hash(
+                user_in.password,
+            )
+        else:
+            user_update_data = user_in.model_dump(exclude_unset=True)
+
+        for field in user_update_data:
+            if hasattr(db_user, field):
+                setattr(db_user, field, user_update_data[field])
+
         session.add(db_user)
         await session.commit()
         await session.refresh(db_user)
+
         return db_user
 
-    async def get_multi_by_role(
+    async def deactivate_or_activate_user(
         self,
-        role: UserRole,
         session: AsyncSession,
-    ) -> list[User]:
-        """Получает всех пользователей с указанной ролью."""
-        result = await session.execute(
-            select(self.model).where(self.model.role == role),
+        user_id: int,
+        activate_flag: bool,
+    ) -> User:
+        """Активирует или деативирует пользователя."""
+        user = await self.get(
+            obj_id=user_id,
+            session=session,
         )
-        return result.scalars().all()
+        if not user:
+            # TODO логи
+            raise ValueError('Пользователь с таким id не найден')
+        user.is_activate = activate_flag
+        await session.commit()
+        await session.refresh(user)
+        # TODO можно бовить лог о деактивации пользователя
+        return user
 
 
 user_crud = CRUDUser(User)

@@ -1,49 +1,53 @@
-"""Инициализация базы данных."""
+# """Инициализация базы данных."""
 
-# import contextlib
+import argparse
+import asyncio
 
-# from fastapi_users.exceptions import UserAlreadyExists
-# from pydantic import EmailStr
+from sqlalchemy import select
 
-# from app.core.config import settings
-# from app.core.db import get_async_session
-# from app.core.user import get_user_db, get_user_manager
-# from app.schemas.user import UserCreate
-
-# get_async_session_context = contextlib.asynccontextmanager(get_async_session)
-# get_user_db_context = contextlib.asynccontextmanager(get_user_db)
-# get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
+from app.core.config import settings
+from app.core.db import get_async_session
+from app.crud.user import user_crud
+from app.models import User
+from app.schemas.user import AdminCreate
 
 
-# async def create_user(
-#         email: EmailStr,
-#         password: str,
-#         is_superuser: bool = False,
-# ) -> None:
-#     """Создание пользователя."""
-#     try:
-#         async with get_async_session_context() as session:
-#             async with get_user_db_context(session) as user_db:
-#                 async with get_user_manager_context(user_db) as user_manager:
-#                     await user_manager.create(
-#                         UserCreate(
-#                             email=email,
-#                             password=password,
-#                             is_superuser=is_superuser,
-#                             # TODO: maybe some another fields
-#                         ),
-#                     )
-#     except UserAlreadyExists:
-#         pass
+async def create_superuser() -> None:
+    """Создать суперпользователя."""
+    async for session in get_async_session():
+        try:
+            existing = await session.execute(
+                select(User).where(
+                    User.username == settings.first_superuser_username,
+                ),
+            )
+            if existing.scalar():
+                print(" Пользователь уже существует")
+                break
+
+            user_in = AdminCreate(
+                username=settings.first_superuser_username,
+                email=settings.first_superuser_email,
+                phone=settings.first_superuser_phone,
+                password=settings.first_superuser_password,
+            )
+            await user_crud.create(session=session, user_in=user_in)
+            print("Суперпользователь создан!")
+        except Exception as e:
+            print(f"Ошибка: {e}", err=True)
+        finally:
+            return
 
 
-# async def create_first_superuser() -> None:
-#     """Создание первого суперпользователя."""
-#     if (settings.first_superuser_email is not None
-#             and settings.first_superuser_password is not None):
-#         await create_user(
-#             email=settings.first_superuser_email,
-#             password=settings.first_superuser_password,
-#             is_superuser=True,
-#             # TODO: maybe some another fields
-#         )
+def main() -> None:
+    """Парсинг аргументов и запуск соответствующей команды."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command", choices=["create-superuser"])
+    args = parser.parse_args()
+
+    if args.command == "create-superuser":
+        asyncio.run(create_superuser())
+
+
+if __name__ == "__main__":
+    main()

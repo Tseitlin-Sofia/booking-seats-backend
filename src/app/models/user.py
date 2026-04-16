@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from sqlalchemy import Enum, String
+from sqlalchemy import CheckConstraint, Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.constants import UserConstants
@@ -23,6 +23,10 @@ class User(CommonMixin, Base):
         unique=True,
         nullable=False,
     )
+    password_hash: Mapped[str] = mapped_column(
+        String(UserConstants.MAX_PASSWORD_LENGTH),
+        nullable=False,
+    )
     email: Mapped[str | None] = mapped_column(
         String(UserConstants.MAX_EMAIL_LENGTH),
         unique=True,
@@ -33,19 +37,44 @@ class User(CommonMixin, Base):
         unique=True,
         nullable=True,
     )
-
     tg_id: Mapped[str | None] = mapped_column(
-        String(64),
+        String(UserConstants.MAX_TG_ID_LENGTH),
         unique=True,
         nullable=True,
     )
-
-    password_hash: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
-    )
-
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole),
-        default=UserRole.USER,
+        Enum(
+            UserRole,
+        ),
+        default=UserConstants.DEFAULT_USER_ROLE,
     )
+    cafe_id: Mapped[int | None] = mapped_column(
+        ForeignKey('cafe.id', ondelete='RESTRICT'),
+        nullable=True,
+    )
+    # TODO Добавить relationship для модели Cafe.
+
+    @property
+    def is_admin(self) -> bool:
+        """Является ли пользователь администратором."""
+        return self.role == UserRole.ADMIN
+
+    @property
+    def is_manager(self) -> bool:
+        """Является ли пользователь менеджером."""
+        return self.role == UserRole.MANAGER
+
+    @property
+    def is_user(self) -> bool:
+        """Является ли пользователем."""
+        return self.role == UserRole.USER
+
+    __table_args__ = (
+        CheckConstraint(
+            'email is not null OR phone is not null',
+            name='ch_user_email_or_phone_required',
+        ),
+    )
+
+    def __str__(self) -> str:
+        return self.username

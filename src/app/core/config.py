@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     secret: str = 'SECRET'
     first_superuser_email: Optional[EmailStr] = None
     first_superuser_password: Optional[str] = None
+    first_superuser_username: Optional[str] = None
+    first_superuser_phone: Optional[str] = None
     environment: str = 'dev'
     log_level: str = 'INFO'
     postgres_user: str

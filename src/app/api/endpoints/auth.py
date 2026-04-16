@@ -1,12 +1,20 @@
 """Эндпоинты аутентификации."""
 
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
 
-from app.api.dependencies import SessionDep
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.db import get_async_session
 from app.core.user import AuthService
 from app.schemas.auth import AuthData, AuthToken
 
 router = APIRouter()
+
+SessionDep = Annotated[
+    AsyncSession,
+    Depends(get_async_session),
+]
 
 
 @router.post(

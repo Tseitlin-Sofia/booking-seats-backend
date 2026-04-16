@@ -1,5 +1,5 @@
 """Модуль с константами приложения."""
-
+from datetime import datetime, timedelta
 from pathlib import Path
 
 
@@ -9,6 +9,17 @@ class BookingConstants:
     REPR_FORMAT = 'Бронирование id:{} status:{} user_id:{}'
     MAX_GUESTS = 1000
     MIN_GUESTS = 1
+
+
+class MediaConstants:
+    """Класс констант для работы с media."""
+
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+    MEDIA_DIR = BASE_DIR / "media"
+    IMAGE_EXTENSION = "jpg"
+    CHUNK_SIZE_1MB = 1024 * 1024
+    MAX_PHOTO_SIZE_5MB = CHUNK_SIZE_1MB * 5
+    VALID_TYPES = ["image/png", "image/jpeg"]
 
 
 class CafeConstants:
@@ -24,6 +35,9 @@ class UserConstants:
     MAX_USERNAME_LENGTH = 100
     MAX_EMAIL_LENGTH = 255
     MAX_PHONE_LENGTH = 20
+    MAX_PASSWORD_LENGTH = 255
+    MAX_TG_ID_LENGTH = 100
+    DEFAULT_USER_ROLE = 'user'
 
 
 class LoggingConstants:
@@ -39,11 +53,12 @@ class LoggingConstants:
     )
     LOGGING_FOLDER: Path = Path('logs')
     LOG_FILES_PATH: Path = LOGGING_FOLDER / 'app.log'
+    NOISE_ENDPOINTS: set[str] = {'/health', '/docs', '/openapi.json'}
     INITIAL_STACK_FRAME_DEPTH: int = 6
     ROTATION_FILE_SIZE: str = '5 MB'
     RETENTION_FILES_COUNT: int = 3
     LOG_FILES_COMPRESSION_TYPE: str = 'zip'
-    LOGGERS_TO_INTERCEPT: list = [
+    LOGGERS_TO_INTERCEPT: list[str] = [
         'uvicorn',
         'uvicorn.error',
         'sqlalchemy',
@@ -61,3 +76,11 @@ class LoggingConstants:
     PROD_MODE_ENQUEUE_LOGS: bool = True
     PROD_MODE_BACKTRACE_LOGS: bool = False
     PROD_MODE_DIAGNOSE_LOGS: bool = False
+
+
+class SlotConstants:
+    """Класс с константами для модели интервала времени бронирования столика."""
+
+    BASE_TIME = datetime.now() + timedelta(minutes=10)
+    FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')
+    TO_TIME = (BASE_TIME + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')

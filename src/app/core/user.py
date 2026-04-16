@@ -1,12 +1,12 @@
 """Модуль аутентификации приложения.
 
 Один JWT-токен (PyJWT), без refresh.
-В токене: sub, role, last_used, exp.
-Проверка: токен валиден, если с момента последнего запроса
-прошло не более TOKEN_INACTIVITY_MINUTES.
-Обновление токена через заголовок X-New-Token.
+В токене: sub, role, iat, exp.
+Sliding session: на каждый запрос выдаётся новый токен
+через заголовок X-New-Token.
 """
 
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -14,19 +14,20 @@ import jwt
 from fastapi import Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt import ExpiredSignatureError, InvalidTokenError
-from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.db import get_async_session
-from app.models.user import User, UserRole
+from app.models.user import User
+from app.services.user import ph
 
-pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')
 oauth2_scheme_optional = OAuth2PasswordBearer(
     tokenUrl='/auth/login', auto_error=False,
 )
+
+EMAIL_REGEX = re.compile(r'^[^@]+@[^@]+\.[^@]+$')
 
 
 class AuthService:
@@ -35,16 +36,6 @@ class AuthService:
     def __init__(self, session: AsyncSession) -> None:
         """Инициализация сервиса аутентификации."""
         self.session = session
-
-    @staticmethod
-    def verify_password(plain: str, hashed: str) -> bool:
-        """Проверяет соответствие пароля хэшу."""
-        return pwd_context.verify(plain, hashed)
-
-    @staticmethod
-    def hash_password(password: str) -> str:
-        """Хэширует пароль."""
-        return pwd_context.hash(password)
 
     @staticmethod
     def create_token(user_id: int, role: str) -> str:
@@ -74,11 +65,15 @@ class AuthService:
             )
         except ExpiredSignatureError:
             raise HTTPException(
-                status_code=401, detail='Token expired',
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Token expired',
+                headers={'WWW-Authenticate': 'Bearer'},
             )
         except InvalidTokenError:
             raise HTTPException(
-                status_code=401, detail='Invalid token',
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Invalid token',
+                headers={'WWW-Authenticate': 'Bearer'},
             )
 
     async def authenticate_user(
@@ -87,7 +82,7 @@ class AuthService:
         password: str,
     ) -> Optional[User]:
         """Аутентифицирует пользователя по логину и паролю."""
-        if '@' in login:
+        if EMAIL_REGEX.match(login):
             query = select(User).where(User.email == login)
         elif login.startswith('+'):
             query = select(User).where(User.phone == login)
@@ -99,7 +94,7 @@ class AuthService:
 
         if not user or not user.is_active:
             return None
-        if not self.verify_password(password, user.password_hash):
+        if not ph.verify(password, user.password_hash):
             return None
         return user
 
@@ -177,10 +172,10 @@ async def get_admin_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Проверяет, что пользователь — администратор."""
-    if current_user.role != UserRole.ADMIN:
+    if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Недостаточно прав (требуется роль администратора)',
+            detail='Недостаточно прав',
         )
     return current_user
 
@@ -189,12 +184,9 @@ async def get_manager_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Проверяет, что пользователь — менеджер или администратор."""
-    if current_user.role not in (UserRole.MANAGER, UserRole.ADMIN):
+    if not current_user.is_admin and not current_user.is_manager:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                'Недостаточно прав'
-                ' (требуется роль менеджера или администратора)'
-            ),
+            detail='Недостаточно прав',
         )
     return current_user
