@@ -9,9 +9,9 @@ def validate_phone_number(v: str | None) -> str | None:
     if v is None:
         return v
     try:
-        parsed = phonenumbers.parse(v, "RU")
+        parsed = phonenumbers.parse(v, 'RU')
         if not phonenumbers.is_valid_number(parsed):
-            raise ValueError("Invalid phone number")
+            raise ValueError('Invalid phone number')
         return phonenumbers.format_number(parsed, PhoneNumberFormat.E164)
     except NumberParseException:
-        raise ValueError("Invalid phone format")
+        raise ValueError('Invalid phone format')

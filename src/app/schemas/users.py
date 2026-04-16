@@ -1,9 +1,15 @@
 """Схемы для работы с пользователями."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Self
 
-from pydantic import BaseModel, ConfigDict, EmailStr, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    field_validator,
+    model_validator,
+)
 
 from app.models.user import UserRole
 from app.schemas.validators import validate_phone_number
@@ -19,15 +25,19 @@ class UserCreate(BaseModel):
     password: str
     role: Optional[UserRole] = None
 
-    @field_validator("phone")
+    @field_validator('phone')
     @classmethod
-    def validate_phone(cls, v):
+    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
+        """Валидирует номер телефона."""
         return validate_phone_number(v)
 
-    @model_validator(mode="after")
-    def check_one_credential(self):
+    @model_validator(mode='after')
+    def check_one_credential(self) -> Self:
+        """Проверяет наличие хотя бы одного контакта."""
         if not self.email and not self.phone:
-            raise ValueError("Either email or phone must be provided")
+            raise ValueError(
+                'Either email or phone must be provided',
+            )
         return self
 
 
@@ -57,7 +67,8 @@ class UserUpdate(BaseModel):
     role: Optional[UserRole] = None
     password: Optional[str] = None
 
-    @field_validator("phone")
+    @field_validator('phone')
     @classmethod
-    def validate_phone(cls, v):
+    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
+        """Валидирует номер телефона."""
         return validate_phone_number(v)

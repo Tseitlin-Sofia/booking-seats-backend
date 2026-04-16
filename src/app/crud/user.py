@@ -1,12 +1,12 @@
 from typing import Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.user import AuthService
 from app.crud.base import CRUDBase
 from app.models.user import User, UserRole
 from app.schemas.users import UserCreate, UserUpdate
-from app.core.user import AuthService
 
 
 class CRUDUser(CRUDBase):
@@ -19,7 +19,7 @@ class CRUDUser(CRUDBase):
     ) -> Optional[User]:
         """Получает пользователя по email."""
         result = await session.execute(
-            select(self.model).where(self.model.email == email)
+            select(self.model).where(self.model.email == email),
         )
         return result.scalars().first()
 
@@ -30,7 +30,7 @@ class CRUDUser(CRUDBase):
     ) -> Optional[User]:
         """Получает пользователя по телефону."""
         result = await session.execute(
-            select(self.model).where(self.model.phone == phone)
+            select(self.model).where(self.model.phone == phone),
         )
         return result.scalars().first()
 
@@ -41,7 +41,7 @@ class CRUDUser(CRUDBase):
     ) -> Optional[User]:
         """Получает пользователя по username."""
         result = await session.execute(
-            select(self.model).where(self.model.username == username)
+            select(self.model).where(self.model.username == username),
         )
         return result.scalars().first()
 
@@ -55,9 +55,9 @@ class CRUDUser(CRUDBase):
         # Хэшируем пароль
         password_hash = AuthService.hash_password(user_in.password)
         # Подготавливаем данные
-        user_data = user_in.model_dump(exclude={"password"})
-        user_data["password_hash"] = password_hash
-        user_data["role"] = role
+        user_data = user_in.model_dump(exclude={'password'})
+        user_data['password_hash'] = password_hash
+        user_data['role'] = role
 
         db_user = self.model(**user_data)
         session.add(db_user)
@@ -74,9 +74,9 @@ class CRUDUser(CRUDBase):
         """Обновляет существующего пользователя в базе данных."""
         update_data = user_in.model_dump(exclude_unset=True)
         # Если обновляется пароль, нужно его хэшировать
-        if "password" in update_data:
-            update_data["password_hash"] = AuthService.hash_password(
-                update_data.pop("password")
+        if 'password' in update_data:
+            update_data['password_hash'] = AuthService.hash_password(
+                update_data.pop('password'),
             )
 
         for key, value in update_data.items():
@@ -93,7 +93,7 @@ class CRUDUser(CRUDBase):
     ) -> list[User]:
         """Получает всех пользователей с указанной ролью."""
         result = await session.execute(
-            select(self.model).where(self.model.role == role)
+            select(self.model).where(self.model.role == role),
         )
         return result.scalars().all()
 
