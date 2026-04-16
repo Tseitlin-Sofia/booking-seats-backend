@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.api.endpoints.cafe import router as cafe_router
 from app.api.endpoints.table import router as table_router
+from app.api.endpoints.slot import router as slot_router
 
 main_router = APIRouter()
 
@@ -16,4 +17,9 @@ main_router.include_router(
     table_router,
     prefix='/cafes/{cafe_id}/tables',
     tags=['Столы'],
+)
+main_router.include_router(
+    slot_router,
+    prefix='/cafes/{cafe_id}/timeslots',
+    tags=['Слоты'],
 )
