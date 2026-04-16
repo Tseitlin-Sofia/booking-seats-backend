@@ -29,6 +29,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     logger.info('Инициализация приложения завершена.')
     yield
+    logger.complete()
     logger.info('Приложение остановлено.')
 
 

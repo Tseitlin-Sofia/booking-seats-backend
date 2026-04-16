@@ -5,6 +5,7 @@
 и логирование жизненного цикла каждого HTTP-запроса.
 """
 
+import time
 import uuid
 from typing import Awaitable, Callable
 
@@ -12,6 +13,7 @@ from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
+from app.core.constants import LoggingConstants
 from app.core.logging import (
     get_logger,
     trace_id_ctx,
@@ -56,6 +58,9 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             Response: Объект ответа, который будет отправлен клиенту.
 
         """
+        if request.url.path in LoggingConstants.NOISE_ENDPOINTS:
+            return await call_next(request)
+
         trace_id = request.headers.get('X-Trace-ID', str(uuid.uuid4()))
         trace_id_ctx.set(trace_id)
 
@@ -63,11 +68,22 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         username_ctx.set('SYSTEM')
 
         logger = get_logger()
-        logger.info(f'Request started: {request.method} {request.url.path}')
+        logger.info(
+            f'Отправлен запрос: {request.method} {request.url.path}',
+        )
 
+        start_time = time.perf_counter()
         response = await call_next(request)
-
+        duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
         response.headers['X-Trace-ID'] = trace_id
 
-        logger.info(f'Request finished: {response.status_code}')
+        logger.info(
+            f'Запрос выполнен: {response.status_code}'
+            + f' ({duration_ms}ms) | {request.method} {request.url.path}',
+        )
+        if duration_ms > 1000:
+            logger.warning(
+                'Медленный запрос: '
+                + f'{duration_ms}ms | {request.method} {request.url.path}',
+            )
         return response
