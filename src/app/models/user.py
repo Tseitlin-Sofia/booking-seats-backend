@@ -23,19 +23,29 @@ class User(CommonMixin, Base):
         unique=True,
         nullable=False,
     )
-    email: Mapped[str] = mapped_column(
+    email: Mapped[str | None] = mapped_column(
         String(UserConstants.MAX_EMAIL_LENGTH),
         unique=True,
-        nullable=False,
+        nullable=True,
     )
-    phone: Mapped[str] = mapped_column(
+    phone: Mapped[str | None] = mapped_column(
         String(UserConstants.MAX_PHONE_LENGTH),
         unique=True,
+        nullable=True,
+    )
+
+    tg_id: Mapped[str | None] = mapped_column(
+        String(64),
+        unique=True,
+        nullable=True,
+    )
+
+    password_hash: Mapped[str] = mapped_column(
+        String(255),
         nullable=False,
     )
+
     role: Mapped[UserRole] = mapped_column(
-        Enum(
-            UserRole,
-        ),
-        default='user',
+        Enum(UserRole),
+        default=UserRole.USER,
     )
