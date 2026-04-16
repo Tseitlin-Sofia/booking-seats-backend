@@ -22,14 +22,20 @@ async def load_photo_to_server(
     image_bytes: bytes = Depends(validate_image),
 ) -> dict:
     """Загрузка png/jpg изображений на сервер в папку src/media/."""
-    media_id = uuid.uuid4()
-    filename = f"{media_id}.{MediaConstants.IMAGE_EXTENSION}"
-    jpeg_bytes = transform_to_jpeg(image_bytes)
-
-    file_path = MediaConstants.MEDIA_DIR / filename
     MediaConstants.MEDIA_DIR.mkdir(exist_ok=True)
+
+    while True:
+        media_id = uuid.uuid4()
+        filename = f"{media_id}.{MediaConstants.IMAGE_EXTENSION}"
+        file_path = MediaConstants.MEDIA_DIR / filename
+
+        if not file_path.exists():
+            break
+
+    jpeg_bytes = transform_to_jpeg(image_bytes)
     async with aiofiles.open(file_path, "wb") as f:
         await f.write(jpeg_bytes)
+
     return {"media_id": media_id}
 
 
