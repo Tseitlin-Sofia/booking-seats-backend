@@ -240,7 +240,7 @@ def test_intercept_handler_stdlib(capture_sink: SinkType) -> None:
     )
     assert found, (
         f'Логи из logging неправильно перехватываются или форматируются.\n'
-        f'Captured logs: {captured}'
+        f'Полученные логи: {captured}'
     )
 
 
@@ -291,12 +291,12 @@ def test_dev_mode_creates_log_file(tmp_path, monkeypatch) -> None:
 
     content = fake_log_file.read_text()
     assert 'Проверка создания файла' in content, (
-        f'Log message not found in file. Content: {content}'
+        f'Сообщение лога не найдено в файле. Содержимое: {content}'
     )
 
 
 def test_prod_mode_does_create_file(tmp_path, monkeypatch) -> None:
-    """Проверяет, что в режиме prod файл логов НЕ создаётся."""
+    """Проверяет, что в режиме prod файл логов создаётся."""
     fake_log_folder = tmp_path / 'prod_logs'
     fake_log_file = fake_log_folder / 'app.log'
 
@@ -305,7 +305,7 @@ def test_prod_mode_does_create_file(tmp_path, monkeypatch) -> None:
 
     setup_logging(env='prod', log_level='INFO')
 
-    get_logger().info('Проверка НЕ создания файла')
+    get_logger().info('Проверка создания файла')
     time.sleep(LOG_WRITE_DELAY_SEC)
 
     assert fake_log_folder.exists(), (
@@ -350,14 +350,14 @@ def test_log_with_special_characters(capture_sink) -> None:
         format=LoggingConstants.LOGGING_FORMAT_STRING,
     )
 
-    test_message = 'Message with "quotes", \n newlines, and | pipes'
+    test_message = 'Сообщение с "кавычками", \n переносом строки, и | символом'
     get_logger().info(test_message)
 
-    assert len(captured) == 1, f'Expected 1 log, got {len(captured)}'
+    assert len(captured) == 1, f'Ожидается 1 лог, получено: {len(captured)}'
     assert 'user_id=SYSTEM' in captured[0], (
-        f'User context missing: {captured[0]}'
+        f'Потерян пользовательский контекст: {captured[0]}'
     )
-    assert 'Message with' in captured[0], f'Message truncated: {captured[0]}'
+    assert 'Сообщение с' in captured[0], f'Сообщение обрезано: {captured[0]}'
 
 
 def test_empty_message_does_not_crash(capture_sink) -> None:
@@ -373,7 +373,7 @@ def test_empty_message_does_not_crash(capture_sink) -> None:
     get_logger().info('')
 
     assert len(captured) == 1, (
-        f'Expected 1 log for empty message, got {len(captured)}'
+        f'Ожидается 1 лог для пустого сообщения, получено: {len(captured)}'
     )
     assert 'user_id=SYSTEM' in captured[0], (
         f'User context missing: {captured[0]}'
@@ -393,5 +393,5 @@ def test_very_long_message(capture_sink) -> None:
     long_message = 'A' * 10000
     get_logger().info(long_message)
 
-    assert len(captured) == 1, f'Expected 1 log, got {len(captured)}'
-    assert long_message in captured[0], 'Long message was truncated or lost'
+    assert len(captured) == 1, f'Ожидается 1 лог, получено: {len(captured)}'
+    assert long_message in captured[0], 'Длинное сообщение было повреждено.'
