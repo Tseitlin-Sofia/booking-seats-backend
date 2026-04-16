@@ -2,13 +2,13 @@
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Mapped, String
-from sqlalchemy.orm import mapped_column, relationship
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum
 
-from app.core import Base, CommonMixin
+from app.core.db import Base, CommonMixin
 from app.core.constants import BookingConstants as Constants
-from app.schemas import BookingStatus
+from app.schemas.booking import BookingStatus
 
 
 class BookingTableSlot(Base, CommonMixin):
@@ -16,16 +16,16 @@ class BookingTableSlot(Base, CommonMixin):
 
     table_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey('tables.id', name='fk_booking_table_slot_table_id_table'),
+        ForeignKey('table.id', name='fk_booking_table_slot_table_id_table'),
     )
     slot_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey('slots.id', name='fk_booking_table_slot_slot_id_slot'),
+        ForeignKey('slot.id', name='fk_booking_table_slot_slot_id_slot'),
     )
     booking_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey(
-            'bookings.id',
+            'booking.id',
             name='fk_booking_table_slot_booking_id_booking',
         ),
     )
@@ -38,6 +38,10 @@ class BookingTableSlot(Base, CommonMixin):
         DateTime,
         default=datetime.now,
         onupdate=datetime.now,
+    )
+    booking: Mapped['Booking'] = relationship(
+        'Booking',
+        back_populates='table_slots',
     )
     # TODO: validate unique according to is_active
 
@@ -55,16 +59,17 @@ class Booking(Base, CommonMixin):
     )
     cafe_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey('cafes.id', name='fk_booking_cafe_id_cafe'),
+        ForeignKey('cafe.id', name='fk_booking_cafe_id_cafe'),
     )
     guest_number: Mapped[int] = mapped_column(
         Integer,
-        validate=(
-            lambda value: (
-                value >= Constants.MIN_GUESTS
-                and value <= Constants.MAX_GUESTS
-            ),
-        ),
+        # метод validate ломает запуск проекта, нужно разобраться
+        # validate=(
+        #    lambda value: (
+        #        value >= Constants.MIN_GUESTS
+        #        and value <= Constants.MAX_GUESTS
+        #    ),
+        # ),
     )
     note: Mapped[str] = mapped_column(
         String,

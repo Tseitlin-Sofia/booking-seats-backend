@@ -1,6 +1,7 @@
 """Модуль с константами приложения."""
 
 from pathlib import Path
+from datetime import datetime, timedelta
 
 
 class BookingConstants:
@@ -64,3 +65,11 @@ class LoggingConstants:
     PROD_MODE_ENQUEUE_LOGS: bool = True
     PROD_MODE_BACKTRACE_LOGS: bool = False
     PROD_MODE_DIAGNOSE_LOGS: bool = False
+
+
+class SlotConstants:
+    """Класс с константами для модели интервала времени бронирования столика."""
+
+    BASE_TIME = datetime.now() + timedelta(minutes=10)
+    FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')
+    TO_TIME = (BASE_TIME + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')
