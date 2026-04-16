@@ -70,24 +70,3 @@ class CRUDBase:
         await session.commit()
         await session.refresh(db_obj)
         return db_obj
-
-    # async def remove(
-    #     self,
-    #     db_obj,
-    #     session: AsyncSession,
-    # ):
-    #     await session.delete(db_obj)
-    #     await session.commit()
-    #     return db_obj
-
-    # async def get_by_attribute(
-    #     self,
-    #     attr_name: str,
-    #     attr_value: str,
-    #     session: AsyncSession,
-    # ):
-    #     attr = getattr(self.model, attr_name)
-    #     db_obj = await session.execute(
-    #         select(self.model).where(attr == attr_value)
-    #     )
-    #     return db_obj.scalars().first()
