@@ -79,5 +79,8 @@ class UserShortInfo(UserBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class AdminCreate(UserCreate):
+    """Схема для создания суперпользователя."""
+
     role: UserRole = Field(UserRole.ADMIN, frozen=True)
