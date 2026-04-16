@@ -14,12 +14,14 @@ class Settings(BaseSettings):
     secret: str = 'SECRET'
     first_superuser_email: Optional[EmailStr] = None
     first_superuser_password: Optional[str] = None
+    first_superuser_username: Optional[str] = None
+    first_superuser_phone: Optional[str] = None
     environment: str = 'dev'
     log_level: str = 'INFO'
     postgres_user: str
     postgres_password: str
     postgres_db: str
-    app_postgres_server: str
+    postgres_server: str
     postgres_port: int = 5432
 
     @computed_field
@@ -29,12 +31,12 @@ class Settings(BaseSettings):
         return (
             f'postgresql+asyncpg://{self.postgres_user}'
             f':{self.postgres_password}'
-            f'@{self.app_postgres_server}'
+            f'@{self.postgres_server}'
             f':{self.postgres_port}'
             f'/{self.postgres_db}'
         )
 
-    model_config = SettingsConfigDict(env_file='.env', extra='ignore')
+    model_config = SettingsConfigDict(env_file='infra/.env', extra='ignore')
 
 
 settings = Settings()

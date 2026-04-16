@@ -78,3 +78,6 @@ class UserShortInfo(UserBase):
     id: int = Field(...)
 
     model_config = ConfigDict(from_attributes=True)
+
+class AdminCreate(UserCreate):
+    role: UserRole = Field(UserRole.ADMIN, frozen=True)
