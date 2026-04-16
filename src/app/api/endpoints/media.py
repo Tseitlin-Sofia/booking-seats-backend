@@ -5,23 +5,35 @@ import aiofiles
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
-# from sqlalchemy.ext.asyncio import AsyncSession
-# from app.core.db import get_async_session
 from app.api.validators.media_validators import validate_image
 from app.core.constants import MediaConstants
+from app.models.user import User
 from app.services.media_service import transform_to_jpeg
 
 router = APIRouter()
 
-# SessionDep = Annotated[AsyncSession, Depends(get_async_session)]
 # UserDep = Annotated[User, Depends(current_user)]
+
+def is_manager_or_admin(user: User) -> None:
+    """Проверка авторзованного юзера на роль админа/менеджера."""
+    if user.role not in ["admin", "manager"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Недостаточно прав для этого действия."
+        )
+    return
 
 
 @router.post('/', summary="Загрузить png/jpeg на сервер")
 async def load_photo_to_server(
     image_bytes: bytes = Depends(validate_image),
+    # user: UserDep
 ) -> dict:
-    """Загрузка png/jpg изображений на сервер в папку src/media/."""
+    """
+    Загрузка png/jpg изображений на сервер в папку src/media/.
+    Ограничение: объем не более 5MB
+    """
+    # is_manager_or_admin(user)
     MediaConstants.MEDIA_DIR.mkdir(exist_ok=True)
 
     while True:
