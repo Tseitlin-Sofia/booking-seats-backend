@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     postgres_server: str
     postgres_port: int = 5432
 
+    # Основные параметры JWT
+    jwt_secret_key: str = 'your-super-secret-key'
+    jwt_algorithm: str = 'HS256'
+    jwt_token_inactivity_minutes: int = 30
+
     @computed_field
     @property
     def database_url(self) -> str:
@@ -40,3 +45,8 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Константы для обратной совместимости
+SECRET_KEY = settings.jwt_secret_key
+ALGORITHM = settings.jwt_algorithm
+TOKEN_INACTIVITY_MINUTES = settings.jwt_token_inactivity_minutes
