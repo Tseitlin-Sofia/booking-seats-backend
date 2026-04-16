@@ -125,7 +125,7 @@ def setup_logging(env: str = 'dev', log_level: str = 'INFO') -> None:
 
     """
     logger.remove()
-
+    LoggingConstants.LOGGING_FOLDER.mkdir(parents=True, exist_ok=True)
     if env == 'prod':
         logger.add(
             sys.stdout,
@@ -136,7 +136,17 @@ def setup_logging(env: str = 'dev', log_level: str = 'INFO') -> None:
             backtrace=LoggingConstants.PROD_MODE_BACKTRACE_LOGS,
             diagnose=LoggingConstants.PROD_MODE_DIAGNOSE_LOGS,
         )
-
+        logger.add(
+            LoggingConstants.LOG_FILES_PATH,
+            format=LoggingConstants.LOGGING_FORMAT_STRING,
+            level=log_level,
+            rotation=LoggingConstants.ROTATION_FILE_SIZE,
+            retention=LoggingConstants.RETENTION_FILES_COUNT,
+            compression=LoggingConstants.LOG_FILES_COMPRESSION_TYPE,
+            enqueue=LoggingConstants.PROD_MODE_ENQUEUE_LOGS,
+            backtrace=LoggingConstants.PROD_MODE_BACKTRACE_LOGS,
+            diagnose=LoggingConstants.PROD_MODE_DIAGNOSE_LOGS,
+        )
     else:
         logger.add(
             sys.stderr,

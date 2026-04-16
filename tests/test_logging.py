@@ -6,7 +6,7 @@
 - Перехват логов от стандартной библиотеки logging (InterceptHandler).
 - Обработку исключений с сохранением трейсбека.
 - Создание файлов логов с ротацией в dev-режиме.
-- Отсутствие файлов и цветов в prod-режиме.
+- Отсутствие цветов в prod-режиме.
 
 Все тесты используют фикстуры для изоляции состояния loguru и contextvars,
 что гарантирует стабильность при параллельном запуске.
@@ -295,7 +295,7 @@ def test_dev_mode_creates_log_file(tmp_path, monkeypatch) -> None:
     )
 
 
-def test_prod_mode_does_not_create_file(tmp_path, monkeypatch) -> None:
+def test_prod_mode_does_create_file(tmp_path, monkeypatch) -> None:
     """Проверяет, что в режиме prod файл логов НЕ создаётся."""
     fake_log_folder = tmp_path / 'prod_logs'
     fake_log_file = fake_log_folder / 'app.log'
@@ -308,12 +308,10 @@ def test_prod_mode_does_not_create_file(tmp_path, monkeypatch) -> None:
     get_logger().info('Проверка НЕ создания файла')
     time.sleep(LOG_WRITE_DELAY_SEC)
 
-    assert not fake_log_folder.exists(), (
-        'Папка логов не должна создаваться в режиме продакшена'
+    assert fake_log_folder.exists(), (
+        'Папка логов должна создаваться в режиме продакшена'
     )
-    assert not fake_log_file.exists(), (
-        'Лог не должен создаваться в режиме продакшена'
-    )
+    assert fake_log_file.exists(), 'Лог должен создаваться в режиме продакшена'
 
 
 def test_dev_mode_log_structure(tmp_path, monkeypatch) -> None:

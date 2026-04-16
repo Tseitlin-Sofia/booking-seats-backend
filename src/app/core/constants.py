@@ -39,11 +39,12 @@ class LoggingConstants:
     )
     LOGGING_FOLDER: Path = Path('logs')
     LOG_FILES_PATH: Path = LOGGING_FOLDER / 'app.log'
+    NOISE_ENDPOINTS: set[str] = {'/health', '/docs', '/openapi.json'}
     INITIAL_STACK_FRAME_DEPTH: int = 6
     ROTATION_FILE_SIZE: str = '5 MB'
     RETENTION_FILES_COUNT: int = 3
     LOG_FILES_COMPRESSION_TYPE: str = 'zip'
-    LOGGERS_TO_INTERCEPT: list = [
+    LOGGERS_TO_INTERCEPT: list[str] = [
         'uvicorn',
         'uvicorn.error',
         'sqlalchemy',
