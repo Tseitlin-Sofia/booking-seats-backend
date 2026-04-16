@@ -54,6 +54,21 @@ class User(CommonMixin, Base):
     )
     # TODO Добавить relationship для модели Cafe.
 
+    @property
+    def is_admin(self) -> bool:
+        """Является ли пользователь администратором."""
+        return self.role == UserRole.ADMIN
+
+    @property
+    def is_manager(self) -> bool:
+        """Является ли пользователь менеджером."""
+        return self.role == UserRole.MANAGER
+
+    @property
+    def is_user(self) -> bool:
+        """Является ли пользователем."""
+        return self.role == UserRole.USER
+
     __table_args__ = (
         CheckConstraint(
             'email is not null OR phone is not null',
