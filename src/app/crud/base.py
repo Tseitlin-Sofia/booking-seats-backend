@@ -32,18 +32,6 @@ class CRUDBase:
         )
         return db_obj.scalars().first()
 
-    async def get_multi(
-        self,
-        session: AsyncSession,
-        is_active: Optional[bool] = True,
-    ) -> list[Self]:
-        """Получает объекты заданной модели, с учетом статуса активности."""
-        is_active_check = is_active if is_active is not None else True
-        db_objs = await session.execute(
-            select(self.model).where(self.model.is_active == is_active_check),
-        )
-        return list(db_objs.scalars().all())
-
     async def create(
         self,
         obj_in: Mapping[str, Any],
