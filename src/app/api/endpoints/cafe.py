@@ -3,14 +3,9 @@ from typing import List, Self
 from fastapi import APIRouter
 
 from app.api.dependencies import SessionDep
-from app.api.validators.cafe import is_managers_id
+from app.api.validators.cafe import is_managers_id, is_unique_name_address
 from app.crud.cafe import cafe_crud
-from app.schemas.cafe import (
-    CafeCreate,
-    CafeDB,
-    CafeInfo,
-    CafeUpdate,
-)
+from app.schemas.cafe import CafeCreate, CafeInfo, CafeUpdate
 
 router = APIRouter()
 
@@ -26,7 +21,7 @@ router = APIRouter()
         'для пользователей - только активные.'
     ),
     response_description='Подробный вывод всех кафе',
-    # TODO: добавить потом пермишены
+    # TODO: добавить потом пермишены + фильтрацию по show_active
 )
 async def get_all_cafes(session: SessionDep) -> Self:
     """Ручка multi-get."""
@@ -43,14 +38,15 @@ async def get_all_cafes(session: SessionDep) -> Self:
         'Только для администраторов и менеджеров.'
     ),
     response_description='Подробный вывод созданного кафе',
-    # TODO: добавить потом пермишены
+    # TODO: добавить потом пермишены + фильтрацию по show_active
 )
 async def create_new_cafe(
     new_cafe: CafeCreate,
     session: SessionDep,
 ) -> Self:
     """Ручка post."""
-    managers = None  # await is_managers_id(new_cafe, session)
+    await is_unique_name_address(new_cafe, session)
+    managers = await is_managers_id(new_cafe, session)
     return await cafe_crud.create_new_cafe(new_cafe, managers, session)
 
 
@@ -65,7 +61,7 @@ async def create_new_cafe(
         'для пользователей - только активные.'
     ),
     response_description='Подробный вывод одного кафе',
-    # TODO: добавить потом пермишены
+    # TODO: добавить потом пермишены + фильтрацию по show_active
 )
 async def get_cafe_by_id(cafe_id: int, session: SessionDep) -> Self:
     """Ручка id-get."""
@@ -82,7 +78,7 @@ async def get_cafe_by_id(cafe_id: int, session: SessionDep) -> Self:
         'Только для администраторов и менеджеров.'
     ),
     response_description='Подробный вывод измененного кафе',
-    # TODO: добавить потом пермишены
+    # TODO: добавить потом пермишены + фильтрацию по show_active
 )
 async def update_charity_project(
     cafe_id: int,
@@ -90,9 +86,12 @@ async def update_charity_project(
     session: SessionDep,
 ) -> Self:
     """Ручка patch."""
+    new_data = cafe_changed.model_dump(exclude_unset=True)
     db_cafe = await cafe_crud.get(cafe_id, session)
+    if 'name' or 'address' in new_data:
+        await is_unique_name_address(cafe_changed, session, db_cafe)
     managers = None
-    if 'managers_id' in cafe_changed.model_dump(exclude_unset=True):
+    if 'managers_id' in new_data:
         managers = await is_managers_id(cafe_changed, session)
     return await cafe_crud.update_db_cafe(
         db_cafe,

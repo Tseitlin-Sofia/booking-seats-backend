@@ -1,11 +1,13 @@
 from http import HTTPStatus
+import re
 from typing import List, Union
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import and_, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import User
+from app.core.constants import CafeConstants
+from app.models import Cafe, User
 from app.schemas.cafe import CafeCreate, CafeUpdate
 
 
@@ -30,3 +32,44 @@ async def is_managers_id(
         managers.append(db_user)
 
     return managers
+
+
+def is_correct_phone(phone: str) -> str:
+    """Проверка, указал ли правильный формат телефона."""
+    if not re.match(phone, CafeConstants.PHONE_FORMAT):
+        raise ValueError(CafeConstants.ERROR_PHONE)
+    return phone
+
+
+async def is_unique_name_address(
+    new_cafe: CafeCreate,
+    session: AsyncSession,
+    db_cafe: Cafe
+) -> None:
+    """Проверка, существует ли кафе с одинаковой парой name-address."""
+    if db_cafe:
+        if new_cafe.name and not new_cafe.address:
+            exists_criteria = select(
+                exists()
+                .where(and_(
+                    Cafe.name == new_cafe.name,
+                    Cafe.address == new_cafe.address
+                ))
+            )
+
+    exists_criteria = select(
+        exists()
+        .where(and_(
+            Cafe.name == new_cafe.name,
+            Cafe.address == new_cafe.address
+        ))
+    )
+    result = await session.execute(exists_criteria)
+    if result.scalar():
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=(
+                'Кафе с таким же названием и адресом уже существует! '
+                'Введите другое название или адрес!'
+            )
+        )

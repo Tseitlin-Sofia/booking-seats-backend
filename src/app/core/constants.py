@@ -14,7 +14,14 @@ class BookingConstants:
 class CafeConstants:
     """Класс с константами для модели кафе."""
 
+    ERROR_PHONE = (
+        "Номер телефона должен соответсвовать формату: \n"
+        "1) Всего 12 символов; \n"
+        "2) Первые два символа - '+7'. "
+        "Введите корректный номер телефона!"
+    )
     NAME_RESTRICTION = 20
+    PHONE_FORMAT = r'^\+7\d{10}$'
 
 
 class UserConstants:
