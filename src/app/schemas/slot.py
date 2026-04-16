@@ -59,3 +59,13 @@ class SlotDB(SlotBase):
 
     id: int = Field(..., description='ID интервала времени')
     model_config = ConfigDict(from_attributes=True)
+
+
+class TimeSlotShortInfo(BaseModel):
+    """Краткая информация о временном слоте."""
+
+    id: int = Field(..., description='ID временного слота')
+    start_time: datetime = Field(..., description='Время начала интервала')
+    end_time: datetime = Field(..., description='Время окончания интервала')
+
+    model_config = ConfigDict(from_attributes=True)

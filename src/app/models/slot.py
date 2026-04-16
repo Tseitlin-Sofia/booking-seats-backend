@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core import Base, CommonMixin
+from app.core.db import Base, CommonMixin
 from app.models.booking import BookingTableSlot
 
 
@@ -16,7 +16,8 @@ class Slot(Base, CommonMixin):
     end_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     cafe_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey('cafe.id', nullable=False),
+        ForeignKey('cafe.id'),
+        nullable=False
     )
     booking_table_slots: Mapped[list['BookingTableSlot']] = relationship(
         'BookingTableSlot',
