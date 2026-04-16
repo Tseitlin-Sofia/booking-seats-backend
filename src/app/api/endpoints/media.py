@@ -14,14 +14,14 @@ router = APIRouter()
 
 # UserDep = Annotated[User, Depends(current_user)]
 
+
 def is_manager_or_admin(user: User) -> None:
     """Проверка авторзованного юзера на роль админа/менеджера."""
     if user.role not in ["admin", "manager"]:
         raise HTTPException(
             status_code=403,
-            detail="Недостаточно прав для этого действия."
+            detail="Недостаточно прав для этого действия.",
         )
-    return
 
 
 @router.post('/', summary="Загрузить png/jpeg на сервер")
@@ -29,9 +29,9 @@ async def load_photo_to_server(
     image_bytes: bytes = Depends(validate_image),
     # user: UserDep
 ) -> dict:
-    """
-    Загрузка png/jpg изображений на сервер в папку src/media/.
-    Ограничение: объем не более 5MB
+    """Загрузка png/jpg изображений на сервер в папку src/media/.
+
+    Ограничение: объем не более 5MB.
     """
     # is_manager_or_admin(user)
     MediaConstants.MEDIA_DIR.mkdir(exist_ok=True)
