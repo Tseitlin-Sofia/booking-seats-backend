@@ -85,12 +85,12 @@ def test_middleware_generates_trace_id(
     )
 
     assert any(
-        f'Request started: GET {TEST_ENDPOINT}' in log_line
+        f'Отправлен запрос: GET {TEST_ENDPOINT}' in log_line
         for log_line in captured
-    ), f'Не найден лог "Запрос отправлен" в: {captured}'
+    ), f'Не найден лог "Отправлен запрос" в: {captured}'
 
-    assert any('Request finished: 200' in log_line for log_line in captured), (
-        f'Не найден лог "Запрос завершен" в: {captured}'
+    assert any('Запрос выполнен: 200' in log_line for log_line in captured), (
+        f'Не найден лог "Запрос выполнен:" в: {captured}'
     )
 
 
@@ -248,11 +248,11 @@ def test_middleware_logs_request_details(
     _ = client.post(TEST_NONEXISTENT)
 
     assert any(
-        f'Request started: POST {TEST_NONEXISTENT}' in log_line
+        f'Отправлен запрос: POST {TEST_NONEXISTENT}' in log_line
         for log_line in captured
     ), f'Не найден лог начала запроса в: {captured}'
 
-    assert any('Request finished: 404' in log_line for log_line in captured), (
+    assert any('Запрос выполнен: 404' in log_line for log_line in captured), (
         f'Не найден лог завершения с кодом 404 в: {captured}'
     )
 

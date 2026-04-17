@@ -7,24 +7,42 @@ from sqlalchemy import and_, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import CafeConstants
+from app.core.logging import get_logger
 from app.models import Cafe, User
 from app.schemas.cafe import CafeCreate, CafeUpdate
 
+logger = get_logger
+
 
 async def is_managers_id(
-        obj_in: Union[CafeCreate, CafeUpdate],
-        session: AsyncSession,
+    obj_in: Union[CafeCreate, CafeUpdate],
+    session: AsyncSession,
 ) -> List[User]:
     """Проверка, указал ли пользователь реальных менеджеров."""
     obj_in_data = obj_in.model_dump()
     managers = []  # NOTE: список менеджеров, чтобы добавить в cafe_managers.
     for manager_id in obj_in_data['managers_id']:
         result = await session.execute(
-            select(User)
-            .where(User.id == manager_id),
+            select(User).where(User.id == manager_id),
         )
         db_user = result.scalars().first()
+
+        if db_user is None:
+            logger.warning(
+                'Попытка назначить несуществующего пользователя менеджером!'
+                + f' manager_id: {manager_id}',
+            )
+            raise HTTPException(
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                detail='Пользователь не найден.',
+            )
+
         if db_user.role != 'manager':
+            logger.warning(
+                'Попытка назначения роли, не являющейся ролью менеджера,'
+                + ' для объекта "кафе"!'
+                + f' manager_id: {manager_id} | role: {db_user.role}',
+            )
             raise HTTPException(
                 status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                 detail='Введенные пользователи не являются менеджерами!',

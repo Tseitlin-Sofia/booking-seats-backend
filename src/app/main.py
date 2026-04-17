@@ -29,12 +29,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     logger.info('Инициализация приложения завершена.')
     yield
+    logger.complete()
     logger.info('Приложение остановлено.')
 
 
 app = FastAPI(
     title=settings.app_title,
-    lifespan=lifespan,
+    # lifespan=lifespan,
 )
 app.add_middleware(LoggingMiddleware)
 app.include_router(main_router)
+
+
+# uvicorn app.main:app --reload

@@ -6,9 +6,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.logging import get_logger
 from app.crud.base import CRUDBase
 from app.models.table import Table
 from app.schemas.table import TableCreate
+
+logger = get_logger
 
 
 class CRUDTable(CRUDBase):
@@ -58,6 +61,12 @@ class CRUDTable(CRUDBase):
         db_obj = self.model(**obj_data)
         session.add(db_obj)
         await session.commit()
+        await session.refresh(db_obj)
+        logger.info(
+            'Стол успешно создан!'
+            + f'table_id: {db_obj.id}| cafe_id: {cafe_id}'
+            + f' Номер стола:{getattr(db_obj, "number", None)}',
+        )
         return await self.get_with_cafe(db_obj.id, session)
 
     async def get_table_in_cafe(

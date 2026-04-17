@@ -2,9 +2,12 @@ from typing import List, Optional, Self
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging import get_logger
 from app.crud.base import CRUDBase
 from app.models import Cafe, User
 from app.schemas.cafe import CafeCreate, CafeUpdate
+
+logger = get_logger()
 
 
 class CRUDCafe(CRUDBase):
@@ -22,6 +25,11 @@ class CRUDCafe(CRUDBase):
         session.add(db_cafe)
         await session.commit()
         await session.refresh(db_cafe)
+        logger.info(
+            'Кафе успешно создано!',
+            f' | cafe_id: {db_cafe.id} | cafe_name: {db_cafe.name}'
+            + f' | количество менеджеров: {len(managers) if managers else 0}',
+        )
         return db_cafe
 
     async def update_db_cafe(
@@ -39,6 +47,10 @@ class CRUDCafe(CRUDBase):
                 new_value = managers
             setattr(db_cafe, key, new_value)
         session.add(db_cafe)
+        logger.info(
+            'Кафе успешно обновлено!',
+            f' | updated_fields: {list(update_data.keys())}',
+        )
         await session.commit()
         await session.refresh(db_cafe)
         return db_cafe
