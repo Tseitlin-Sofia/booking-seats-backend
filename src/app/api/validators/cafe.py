@@ -8,7 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import CafeConstants
 from app.core.logging import get_logger
-from app.models import Cafe, User
+from app.models.cafe import Cafe
+from app.models.cafe import User
 from app.schemas.cafe import CafeCreate, CafeUpdate
 
 logger = get_logger
