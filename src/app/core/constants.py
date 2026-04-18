@@ -1,6 +1,7 @@
 """Модуль с константами приложения."""
 from pathlib import Path
 from datetime import datetime, timedelta
+from app.core.config import settings
 
 
 class BookingConstants:
@@ -14,8 +15,7 @@ class BookingConstants:
 class MediaConstants:
     """Класс констант для работы с media."""
 
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent
-    MEDIA_DIR = BASE_DIR / "media"
+    MEDIA_DIR = settings.base_dir / "media"
     IMAGE_EXTENSION = "jpg"
     CHUNK_SIZE_1MB = 1024 * 1024
     MAX_PHOTO_SIZE_5MB = CHUNK_SIZE_1MB * 5

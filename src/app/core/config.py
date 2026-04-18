@@ -1,6 +1,7 @@
 """Настройки приложения."""
 
 from typing import Optional
+from pathlib import Path
 
 from pydantic import EmailStr, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,6 +11,7 @@ class Settings(BaseSettings):
     """Настройки приложения."""
 
     app_title: str = 'NAME'
+    base_dir: Path = Path(__file__).resolve().parent.parent.parent
     description: str = 'DESCRIPTION'
     secret: str = 'SECRET'
     first_superuser_email: Optional[EmailStr] = None
