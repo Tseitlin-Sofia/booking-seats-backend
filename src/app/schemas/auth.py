@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel, field_validator
 
+from app.schemas.validators.auth import validate_login_not_empty
+
 
 class AuthData(BaseModel):
     """Схема для входа пользователя."""
@@ -13,9 +15,7 @@ class AuthData(BaseModel):
     @classmethod
     def validate_login(cls, v: str) -> str:
         """Проверяет, что логин не пустой."""
-        if not v or not v.strip():
-            raise ValueError('Login is required')
-        return v.strip()
+        return validate_login_not_empty(v)
 
 
 class AuthToken(BaseModel):
