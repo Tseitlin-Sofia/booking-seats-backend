@@ -57,4 +57,5 @@ websockets==16.0
 loguru==0.7.3
 pytest==9.0.3
 httpx==0.28.1
+aiofiles==25.1.0
 loguru

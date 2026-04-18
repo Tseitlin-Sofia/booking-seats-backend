@@ -1,17 +1,13 @@
-from fastapi import APIRouter
 from typing import Optional
 
-from app.api.dependencies import SessionDep
-from app.crud.slot import slot_crud
-from app.crud.base import CRUDBase
-from app.api.validators.table import (
-    check_cafe_exists
-)
-from app.api.validators.slot import (
-    check_slots_intersections
-)
-from app.schemas.slot import SlotCreate, SlotDB
+from fastapi import APIRouter
 
+from app.api.dependencies import SessionDep
+from app.api.validators.slot import check_slots_intersections
+from app.api.validators.table import check_cafe_exists
+from app.crud.base import CRUDBase
+from app.crud.slot import slot_crud
+from app.schemas.slot import SlotCreate, SlotDB
 
 router = APIRouter()
 
@@ -35,16 +31,16 @@ async def get_slots(
 
 
 @router.post(
-        '/', response_model=SlotDB,
-        summary='Создание нового слота для бронирования столика'
+    '/', response_model=SlotDB,
+    summary='Создание нового слота для бронирования столика',
 )
 async def create_slot(
     slot_data: SlotCreate,
     session: SessionDep,
-):
+) -> SlotDB:
+    """Создание нового слота для бронирования столика."""
     await check_cafe_exists(slot_data.cafe_id, session)
     await check_slots_intersections(
-        **slot_data.model_dump(), session=session
+        **slot_data.model_dump(), session=session,
     )
-    new_slot = await slot_crud.create(slot_data, session)
-    return new_slot
+    return await slot_crud.create(slot_data, session)
