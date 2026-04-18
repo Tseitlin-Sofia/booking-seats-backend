@@ -23,6 +23,11 @@ docker compose exec app alembic revision --autogenerate -m "Add UserModel"
 docker compose exec app alembic upgrade head
 ```
 
+Для создания 1 суперпользователя:
+```bash
+docker compose exec app python -m app.core.init_db create-superuser
+```
+
 Проверка создания таблиц:
 ```bash
 docker compose exec db psql -U user -d db -c "\dt"
