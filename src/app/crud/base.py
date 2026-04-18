@@ -1,6 +1,6 @@
 """Базовый класс для CRUD операций с базой данных."""
 
-from typing import Any, Mapping, Optional, Self
+from typing import TYPE_CHECKING, Any, Mapping, Optional, Self
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
@@ -8,11 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import User
 
+if TYPE_CHECKING:
+    from app.models import Base
+
 
 class CRUDBase:
     """Базовый класс для CRUD операций с базой данных."""
 
-    def __init__(self, model: type[Self]) -> None:
+    def __init__(self, model: type['Base']) -> None:
         """Инициализатор класса."""
         self.model = model
 
@@ -23,14 +26,27 @@ class CRUDBase:
         is_active: Optional[bool] = True,
     ) -> Optional[Self]:
         """Получает объект по его id, с учетом статуса активности."""
-        is_active_check = is_active if is_active is not None else True
-        db_obj = await session.execute(
-            select(self.model).where(
+        stmt = select(self.model).where(
                 self.model.id == obj_id,
-                self.model.is_active == is_active_check,
-            ),
-        )
-        return db_obj.scalars().first()
+            )
+        if is_active is not None:
+            stmt = stmt.where(
+                self.model.is_active == is_active,
+            )
+        return await session.execute(stmt).scalars().first()
+
+    async def get_multi(
+        self,
+        session: AsyncSession,
+        is_active: Optional[bool] = True,
+    ) -> list[Self]:
+        """Получает все объекты, с учетом статуса активности."""
+        stmt = select(self.model)
+        if is_active is not None:
+            stmt = stmt.where(
+                self.model.is_active == is_active,
+            )
+        return list(await session.execute(stmt).scalars().all())
 
     async def create(
         self,
@@ -69,35 +85,27 @@ class CRUDBase:
     async def get_by_attribute(
         self,
         attr_name: str,
-        attr_value: str,
+        attr_value: Any,
         session: AsyncSession,
         is_active: Optional[bool] = True,
     ) -> Optional[Self]:
         """Получает объект по атрибуту, с учетом статуса активности."""
-        is_active_check = is_active if is_active is not None else True
         attr = getattr(self.model, attr_name)
-        db_obj = await session.execute(
-            select(self.model).where(
-                attr == attr_value,
-                self.model.is_active == is_active_check,
-            ),
-        )
-        return db_obj.scalars().first()
+        stmt = select(self.model).where(attr == attr_value)
+        if is_active is not None:
+            stmt = stmt.where(self.model.is_active == is_active)
+        return await session.execute(stmt).scalars().first()
 
     async def get_by_attribute_multi(
         self,
         attr_name: str,
-        attr_value: str,
+        attr_value: Any,
         session: AsyncSession,
         is_active: Optional[bool] = True,
     ) -> list[Self]:
         """Получает объекты по атрибуту, с учетом статуса активности."""
-        is_active_check = is_active if is_active is not None else True
         attr = getattr(self.model, attr_name)
-        db_obj = await session.execute(
-            select(self.model).where(
-                attr == attr_value,
-                self.model.is_active == is_active_check,
-            ),
-        )
-        return list(db_obj.scalars().all())
+        stmt = select(self.model).where(attr == attr_value)
+        if is_active is not None:
+            stmt = stmt.where(self.model.is_active == is_active)
+        return list(await session.execute(stmt).scalars().all())

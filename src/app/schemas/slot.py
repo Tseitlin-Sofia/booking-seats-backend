@@ -1,8 +1,13 @@
 """Схема для модели интервала времени бронирования столика."""
 
 from datetime import datetime
+
 from pydantic import (
-    BaseModel, ConfigDict, model_validator, Field, field_validator
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
 )
 from typing_extensions import Self
 
@@ -15,12 +20,12 @@ class SlotBase(BaseModel):
     start_time: datetime = Field(
         ...,
         examples=[SlotConstants.FROM_TIME],
-        description='Время начала интервала'
+        description='Время начала интервала',
     )
     end_time: datetime = Field(
         ...,
         examples=[SlotConstants.TO_TIME],
-        description='Время окончания интервала'
+        description='Время окончания интервала',
     )
 
     model_config = ConfigDict(extra='forbid')
@@ -30,7 +35,7 @@ class SlotBase(BaseModel):
         """Проверяет, что end_time больше start_time."""
         if self.end_time <= self.start_time:
             raise ValueError(
-                'Конечное время должно быть больше начального времени'
+                'Конечное время должно быть больше начального времени',
             )
         return self
 

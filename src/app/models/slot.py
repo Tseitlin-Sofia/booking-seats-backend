@@ -17,7 +17,7 @@ class Slot(Base, CommonMixin):
     cafe_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey('cafe.id'),
-        nullable=False
+        nullable=False,
     )
     booking_table_slots: Mapped[list['BookingTableSlot']] = relationship(
         'BookingTableSlot',

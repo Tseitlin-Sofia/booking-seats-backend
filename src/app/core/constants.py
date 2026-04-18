@@ -1,6 +1,6 @@
 """Модуль с константами приложения."""
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
 
 
 class BookingConstants:
@@ -9,6 +9,11 @@ class BookingConstants:
     REPR_FORMAT = 'Бронирование id:{} status:{} user_id:{}'
     MAX_GUESTS = 1000
     MIN_GUESTS = 1
+
+    GUEST_NUMBER_ERROR = 'Количество гостей должно быть между {} и {}'
+    SLOT_ALREADY_BOOKED = (
+        'Попытка забронировать уже забронированный слот {} на стол {}.'
+    )
 
 
 class MediaConstants:
