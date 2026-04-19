@@ -40,6 +40,7 @@ class SlotBase(BaseModel):
         return self
 
     @field_validator('start_time', 'end_time')
+    @classmethod
     def validate_future_time(cls, value: datetime) -> datetime:
         """Проверяет, что время не в прошлом."""
         if value < datetime.now():
