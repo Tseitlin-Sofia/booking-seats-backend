@@ -376,7 +376,7 @@ def test_empty_message_does_not_crash(capture_sink) -> None:
         f'Ожидается 1 лог для пустого сообщения, получено: {len(captured)}'
     )
     assert 'user_id=SYSTEM' in captured[0], (
-        f'User context missing: {captured[0]}'
+        f'Контекст пользователя отсутствует: {captured[0]}'
     )
 
 
