@@ -25,14 +25,8 @@ class MediaConstants:
 class CafeConstants:
     """Класс с константами для модели кафе."""
 
-    ERROR_PHONE = (
-        "Номер телефона должен соответсвовать формату: "
-        "1) Всего 12 символов; "
-        "2) Первые два символа - '+7'. "
-        "Введите корректный номер телефона!"
-    )
     NAME_RESTRICTION = 20
-    PHONE_FORMAT = r'^\+7\d{10}$'
+    MOSCOW_HOURS = 3
 
 
 class UserConstants:
@@ -85,7 +79,7 @@ class LoggingConstants:
 
 
 class SlotConstants:
-    """Класс с константами для модели интервала времени бронирования столика."""
+    """Класс для констант модели интервала времени бронирования столика."""
 
     BASE_TIME = datetime.now() + timedelta(minutes=10)
     FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')
