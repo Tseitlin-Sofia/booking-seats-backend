@@ -38,7 +38,7 @@ class Cafe(CommonMixin, Base):
         UniqueConstraint(
             "name",
             "address",
-            name="cafe_unique_name_and_address"
+            name="cafe_unique_name_and_address",
         ),
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
@@ -59,7 +59,7 @@ class Cafe(CommonMixin, Base):
     )
 
     @validates("phone")
-    def validate_phone(self, key, value: str) -> str:
+    def validate_phone(self, key: str, value: str) -> str:
         """Проверка, указал ли правильный формат телефона."""
         if not re.match(CafeConstants.PHONE_FORMAT, value):
             raise ValueError(CafeConstants.ERROR_PHONE)

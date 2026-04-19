@@ -1,5 +1,5 @@
-from datetime import datetime
 import re
+from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
@@ -9,8 +9,10 @@ from app.core.constants import CafeConstants
 
 
 class ValidatePhoneMixin:
+    """Миксин с валидатором телефона."""
+
     @field_validator("phone")
-    def is_correct_phone(cls, value: str) -> str:
+    def is_correct_phone(cls, value: str) -> str:  # noqa: N805
         """Проверка, указал ли правильный формат телефона."""
         if not re.match(CafeConstants.PHONE_FORMAT, value):
             raise ValueError(CafeConstants.ERROR_PHONE)
@@ -48,7 +50,7 @@ class CafeManagers(BaseModel):
 class CafeInfo(CafeShortInfo):
     """Схема для метода GET (multi + id) и POST."""
 
-    # managers: list[CafeManagers]
+    managers: list[CafeManagers]
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -73,4 +75,4 @@ class CafeUpdate(ValidatePhoneMixin, BaseModel):
 class CafeCreate(ValidatePhoneMixin, CafeBase):
     """Схема для метода POST."""
 
-    managers_id: Optional[List[int]] = None
+    managers_id: List[int]
