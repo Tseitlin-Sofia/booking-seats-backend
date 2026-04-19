@@ -1,5 +1,7 @@
 """Модель бронирования."""
 
+from __future__ import annotations
+
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
@@ -8,6 +10,8 @@ from sqlalchemy.types import Enum
 
 from app.core.constants import BookingConstants as Constants
 from app.core.db import Base, CommonMixin
+from app.models.slot import Slot
+from app.models.table import Table
 from app.schemas.booking import BookingStatus
 
 
@@ -42,6 +46,15 @@ class BookingTableSlot(Base, CommonMixin):
     booking: Mapped['Booking'] = relationship(
         'Booking',
         back_populates='table_slots',
+    )
+    slot: Mapped['Slot'] = relationship(
+        'Slot',
+        back_populates='booking_table_slots',
+        lazy='selectin',
+    )
+    table: Mapped['Table'] = relationship(
+        'Table',
+        lazy='selectin',
     )
     # TODO: validate unique according to is_active
 
