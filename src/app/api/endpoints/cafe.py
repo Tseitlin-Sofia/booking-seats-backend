@@ -5,10 +5,13 @@ from fastapi import APIRouter  # Depends, HTTPException
 
 from app.api.dependencies import SessionDep
 from app.api.validators.cafe import (
-    check_name_address, get_cafe_or_404, is_managers_id,
+    check_name_address,
+    get_cafe_or_404,
+    is_managers_id,
 )
+
 # from app.core.user import get_admin_user, get_current_user, get_manager_user
-from app.crud.cafe import cafe_crud, CRUDCafe
+from app.crud.cafe import CRUDCafe, cafe_crud
 from app.models import Cafe  # User
 from app.schemas.cafe import CafeCreate, CafeInfo, CafeUpdate
 
