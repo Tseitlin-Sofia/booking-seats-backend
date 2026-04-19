@@ -1,7 +1,6 @@
 """Модуль с константами приложения."""
-from pathlib import Path
 from datetime import datetime, timedelta
-from app.core.config import settings
+from pathlib import Path
 
 
 class BookingConstants:
@@ -15,7 +14,8 @@ class BookingConstants:
 class MediaConstants:
     """Класс констант для работы с media."""
 
-    MEDIA_DIR = settings.base_dir / "media"
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+    MEDIA_DIR = BASE_DIR / "media"
     IMAGE_EXTENSION = "jpg"
     CHUNK_SIZE_1MB = 1024 * 1024
     MAX_PHOTO_SIZE_5MB = CHUNK_SIZE_1MB * 5
@@ -79,7 +79,7 @@ class LoggingConstants:
 
 
 class SlotConstants:
-    """Класс с константами для модели интервала времени бронирования столика."""
+    """Класс для констант модели интервала времени бронирования столика."""
 
     BASE_TIME = datetime.now() + timedelta(minutes=10)
     FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')
