@@ -1,10 +1,15 @@
-from typing import List, Self
+from http import HTTPStatus
+from typing import Annotated, List, Optional, Sequence
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import SessionDep
-from app.api.validators.cafe import is_managers_id, is_unique_name_address
-from app.crud.cafe import cafe_crud
+from app.api.validators.cafe import (
+    check_name_address, get_cafe_or_404, is_managers_id
+)
+# from app.core.user import get_admin_user, get_current_user, get_manager_user
+from app.crud.cafe import cafe_crud, CRUDCafe
+from app.models import Cafe, User
 from app.schemas.cafe import CafeCreate, CafeInfo, CafeUpdate
 
 router = APIRouter()
@@ -21,33 +26,16 @@ router = APIRouter()
         'для пользователей - только активные.'
     ),
     response_description='Подробный вывод всех кафе',
-    # TODO: добавить потом пермишены + фильтрацию по show_active
 )
-async def get_all_cafes(session: SessionDep) -> Self:
-    """Ручка multi-get."""
-    return await cafe_crud.get_multi(session)
-
-
-@router.post(
-    '/',
-    response_model=CafeDB,
-    response_model_exclude_none=True,
-    summary='Создание нового кафе',
-    description=(
-        'Создает новое кафе. '
-        'Только для администраторов и менеджеров.'
-    ),
-    response_description='Подробный вывод созданного кафе',
-    # TODO: добавить потом пермишены + фильтрацию по show_active
-)
-async def create_new_cafe(
-    new_cafe: CafeCreate,
+async def get_cafes(
     session: SessionDep,
-) -> Self:
-    """Ручка post."""
-    await is_unique_name_address(new_cafe, session)
-    managers = await is_managers_id(new_cafe, session)
-    return await cafe_crud.create_new_cafe(new_cafe, managers, session)
+    show_active: Optional[bool] = None,
+    # user: Annotated[User, Depends(get_current_user)]
+) -> Sequence[Cafe]:
+    """Ручка multi-get."""
+    # if user.is_admin or user.is_manager:
+    #     return await cafe_crud.get_all_cafes(session, show_active)
+    return await cafe_crud.get_all_cafes(session, show_active=True)
 
 
 @router.get(
@@ -61,16 +49,46 @@ async def create_new_cafe(
         'для пользователей - только активные.'
     ),
     response_description='Подробный вывод одного кафе',
-    # TODO: добавить потом пермишены + фильтрацию по show_active
 )
-async def get_cafe_by_id(cafe_id: int, session: SessionDep) -> Self:
+async def get_cafe(
+    session: SessionDep,
+    cafe_id: int,
+    # user: Annotated[User, Depends(get_current_user)]
+) -> Cafe:
     """Ручка id-get."""
-    return await cafe_crud.get(cafe_id, session)
+    cafe = await get_cafe_or_404(session, cafe_id)
+    # if not (user.is_admin or user.is_manager) and not cafe.is_active:
+    #     raise HTTPException(HTTPStatus.FORBIDDEN, detail='Доступ запрещен!')
+    return cafe
+
+
+@router.post(
+    '/',
+    response_model=CafeInfo,
+    response_model_exclude_none=True,
+    summary='Создание нового кафе',
+    description=(
+        'Создает новое кафе. '
+        'Только для администраторов.'
+    ),
+    response_description='Подробный вывод созданного кафе',
+    # NOTE: в документации доступ указан и для менеджеров, но в таблице CRUD
+    # указан только админ, поэтому сделал по таблице.
+    # dependencies=[Depends(get_admin_user)]
+)
+async def create_new_cafe(
+    new_cafe: CafeCreate,
+    session: SessionDep,
+) -> CRUDCafe:
+    """Ручка post."""
+    await check_name_address(session, new_cafe)
+    managers = await is_managers_id(session, new_cafe)
+    return await cafe_crud.create_new_cafe(session, new_cafe, managers)
 
 
 @router.patch(
     '/{cafe_id}',
-    response_model=CafeDB,
+    response_model=CafeInfo,
     response_model_exclude_none=True,
     summary='Обновление информации о кафе по его ID',
     description=(
@@ -78,24 +96,17 @@ async def get_cafe_by_id(cafe_id: int, session: SessionDep) -> Self:
         'Только для администраторов и менеджеров.'
     ),
     response_description='Подробный вывод измененного кафе',
-    # TODO: добавить потом пермишены + фильтрацию по show_active
+    # dependencies=[Depends(get_manager_user)]
 )
-async def update_charity_project(
+async def update_cafe(
     cafe_id: int,
-    cafe_changed: CafeUpdate,
+    new_cafe: CafeUpdate,
     session: SessionDep,
-) -> Self:
+) -> CRUDCafe:
     """Ручка patch."""
-    new_data = cafe_changed.model_dump(exclude_unset=True)
-    db_cafe = await cafe_crud.get(cafe_id, session)
-    if 'name' or 'address' in new_data:
-        await is_unique_name_address(cafe_changed, session, db_cafe)
-    managers = None
-    if 'managers_id' in new_data:
-        managers = await is_managers_id(cafe_changed, session)
+    db_cafe = await get_cafe_or_404(session, cafe_id)
+    await check_name_address(session, new_cafe, db_cafe)
+    managers = await is_managers_id(session, new_cafe)
     return await cafe_crud.update_db_cafe(
-        db_cafe,
-        cafe_changed,
-        managers,
-        session,
+        session, db_cafe, new_cafe,  managers
     )

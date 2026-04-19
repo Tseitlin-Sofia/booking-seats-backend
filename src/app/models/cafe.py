@@ -1,24 +1,18 @@
-from typing import List, Optional
+import re
+from typing import List, Optional, TYPE_CHECKING
+import uuid
 
-# import uuid
 from sqlalchemy import (
-    Column,
-    ForeignKey,
-    Integer,  # Временно для заглушки до создания модели Media.
-    String,
-    Table as MtM_Model,
-    UniqueConstraint
-    # UUID
+    Column, ForeignKey, String, Table as MtM_Model,  UniqueConstraint, UUID,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
-from app.api.validators.cafe import is_correct_phone
 from app.core.constants import CafeConstants
 from app.core.db import Base, CommonMixin
-from app.models import Table as TableModel, User
 
-
-TEMPORARY_ID = 1  # Временно для заглушки.
+if TYPE_CHECKING:
+    from app.models.table import Table as TableModel
+    from app.models.user import User
 
 
 cafe_managers = MtM_Model(
@@ -51,25 +45,25 @@ class Cafe(CommonMixin, Base):
     address: Mapped[str] = mapped_column(String, nullable=False)
     phone: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String)
-    # photo: Mapped[Optional[uuid.UUID]] =
-    # mapped_column(UUID, ForeignKey('media.id'))
-    photo_id: Mapped[Optional[Integer]] = mapped_column(
-        Integer, default=TEMPORARY_ID,  # Заглушка.
-    )
-    managers_id: Mapped[List[User]] = relationship(
+    photo_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID)
+    managers_id: Mapped[List['User']] = relationship(
+        "User",
         secondary=cafe_managers,
-        back_populates="cafe",
+        back_populates="cafes",
         lazy="selectin",
     )
-    tables: Mapped[List[TableModel]] = relationship(
-        TableModel,
+    tables: Mapped[List['TableModel']] = relationship(
+        'Table',
         back_populates="cafe",
         lazy="selectin",
     )
 
     @validates("phone")
     def validate_phone(self, key, value: str) -> str:
-        return is_correct_phone(value)
+        """Проверка, указал ли правильный формат телефона."""
+        if not re.match(CafeConstants.PHONE_FORMAT, value):
+            raise ValueError(CafeConstants.ERROR_PHONE)
+        return value
 
     def __repr__(self) -> str:
         return self.name[:CafeConstants.NAME_RESTRICTION]

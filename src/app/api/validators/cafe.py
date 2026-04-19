@@ -1,33 +1,59 @@
 from http import HTTPStatus
-import re
-from typing import List, Union
+from typing import List, Optional, Self, Union
 
 from fastapi import HTTPException
-from sqlalchemy import and_, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.constants import CafeConstants
 from app.core.logging import get_logger
-from app.models.cafe import Cafe
-from app.models.cafe import User
+from app.crud.cafe import cafe_crud
+from app.models import Cafe, User
 from app.schemas.cafe import CafeCreate, CafeUpdate
 
 logger = get_logger
 
 
-async def is_managers_id(
-    obj_in: Union[CafeCreate, CafeUpdate],
-    session: AsyncSession,
-) -> List[User]:
-    """Проверка, указал ли пользователь реальных менеджеров."""
-    obj_in_data = obj_in.model_dump()
-    managers = []  # NOTE: список менеджеров, чтобы добавить в cafe_managers.
-    for manager_id in obj_in_data['managers_id']:
-        result = await session.execute(
-            select(User).where(User.id == manager_id),
-        )
-        db_user = result.scalars().first()
+async def get_cafe_or_404(session: AsyncSession, obj_id: int) -> Self:
+    """Возвращает объект по id и выдает 404, если он не найден."""
+    db_cafe = await cafe_crud.get_obj_by_id(session, obj_id)
+    # db_cafe = await cafe_crud.get(session, obj_id)  До фикса базового круда.
+    if db_cafe is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Объект не найден!')
+    return db_cafe
 
+
+async def check_name_address(
+    session: AsyncSession,
+    new_cafe: Union[CafeCreate, CafeUpdate],
+    db_cafe: Optional[Cafe] = None
+) -> None:
+    """Проверка, существует ли кафе с одинаковой парой name-address."""
+    new_data = new_cafe.model_dump(exclude_unset=True)
+    name = new_data['name'] if 'name' in new_data else None
+    address = new_data['address'] if 'address' in new_data else None
+    is_exist = await cafe_crud.is_unique_name_address(
+        session, db_cafe, name, address
+    )
+    if is_exist:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=(
+                'Кафе с таким же названием и адресом уже существует! '
+                'Введите другое название или адрес!'
+            )
+        )
+
+
+async def is_managers_id(
+    session: AsyncSession,
+    new_cafe: Union[CafeCreate, CafeUpdate],
+) -> Optional[List[User]]:
+    """Проверка, указаны ли реальные менеджеры и их передача для POST."""
+    new_data = new_cafe.model_dump(exclude_unset=True)
+    if 'managers_id' not in new_data:
+        return None
+    managers = []  # Cписок менеджеров, чтобы добавить в cafe_managers.
+    for manager_id in new_data['managers_id']:
+        db_user = await cafe_crud.get_obj_by_id(session, manager_id)
         if db_user is None:
             logger.warning(
                 'Попытка назначить несуществующего пользователя менеджером!'
@@ -37,8 +63,7 @@ async def is_managers_id(
                 status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                 detail='Пользователь не найден.',
             )
-
-        if db_user.role != 'manager':
+        if not db_user.is_manager:
             logger.warning(
                 'Попытка назначения роли, не являющейся ролью менеджера,'
                 + ' для объекта "кафе"!'
@@ -46,49 +71,10 @@ async def is_managers_id(
             )
             raise HTTPException(
                 status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                detail='Введенные пользователи не являются менеджерами!',
+                detail=(
+                    f'Пользователь c id {manager_id} не является менеджером!'
+                )
             )
         managers.append(db_user)
 
     return managers
-
-
-def is_correct_phone(phone: str) -> str:
-    """Проверка, указал ли правильный формат телефона."""
-    if not re.match(phone, CafeConstants.PHONE_FORMAT):
-        raise ValueError(CafeConstants.ERROR_PHONE)
-    return phone
-
-
-async def is_unique_name_address(
-    new_cafe: CafeCreate,
-    session: AsyncSession,
-    db_cafe: Cafe
-) -> None:
-    """Проверка, существует ли кафе с одинаковой парой name-address."""
-    if db_cafe:
-        if new_cafe.name and not new_cafe.address:
-            exists_criteria = select(
-                exists()
-                .where(and_(
-                    Cafe.name == new_cafe.name,
-                    Cafe.address == new_cafe.address
-                ))
-            )
-
-    exists_criteria = select(
-        exists()
-        .where(and_(
-            Cafe.name == new_cafe.name,
-            Cafe.address == new_cafe.address
-        ))
-    )
-    result = await session.execute(exists_criteria)
-    if result.scalar():
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail=(
-                'Кафе с таким же названием и адресом уже существует! '
-                'Введите другое название или адрес!'
-            )
-        )

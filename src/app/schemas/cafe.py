@@ -1,10 +1,19 @@
 from datetime import datetime
+import re
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.api.validators.cafe import is_correct_phone
+from app.core.constants import CafeConstants
+
+
+class ValidatePhoneMixin:
+    @field_validator("phone")
+    def is_correct_phone(cls, value: str) -> str:
+        if not re.match(CafeConstants.PHONE_FORMAT, value):
+            raise ValueError(CafeConstants.ERROR_PHONE)
+        return value
 
 
 class CafeBase(BaseModel):
@@ -12,7 +21,7 @@ class CafeBase(BaseModel):
 
     name: str
     address: str
-    phone: str
+    phone: str = Field(examples=['+78005553535'])
     description: Optional[str] = None
     photo_id: Optional[UUID] = None
 
@@ -38,7 +47,7 @@ class CafeManagers(BaseModel):
 class CafeInfo(CafeShortInfo):
     """Схема для метода GET (multi + id) и POST."""
 
-    managers: list[CafeManagers]
+    # managers: list[CafeManagers]
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -46,7 +55,7 @@ class CafeInfo(CafeShortInfo):
     model_config = ConfigDict(from_attributes=True)
 
 
-class CafeUpdate(BaseModel):
+class CafeUpdate(ValidatePhoneMixin, BaseModel):
     """Схема для метода PATCH."""
 
     name: Optional[str] = None
@@ -59,18 +68,8 @@ class CafeUpdate(BaseModel):
 
     model_config = ConfigDict(extra='forbid')
 
-    @field_validator("phone")
-    @classmethod
-    def validate_phone(cls, value: str) -> str:
-        return is_correct_phone(value)
 
-
-class CafeCreate(CafeBase):
+class CafeCreate(ValidatePhoneMixin, CafeBase):
     """Схема для метода POST."""
 
-    managers_id: List[int]
-
-    @field_validator("phone")
-    @classmethod
-    def validate_phone(cls, value: str) -> str:
-        return is_correct_phone(value)
+    managers_id: Optional[List[int]] = None
