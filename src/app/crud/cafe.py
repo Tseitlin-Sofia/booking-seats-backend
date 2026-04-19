@@ -34,7 +34,7 @@ class CRUDCafe(CRUDBase):
     async def get_obj_by_id(
         self,
         session: AsyncSession,
-        obj_id: int
+        obj_id: int,
     ) -> Optional[Self]:
         """До фикса базового круда."""
         result = await session.execute(
@@ -46,7 +46,7 @@ class CRUDCafe(CRUDBase):
         self,
         session: AsyncSession,
         new_cafe: CafeCreate,
-        managers: List[User]
+        managers: List[User],
     ) -> Self:
         """Создает новое кафе в базе данных."""
         db_cafe = self.model(**new_cafe.model_dump())
@@ -89,7 +89,7 @@ class CRUDCafe(CRUDBase):
         session: AsyncSession,
         db_cafe: Optional[Cafe] = None,
         name: Optional[str] = None,
-        address: Optional[str] = None
+        address: Optional[str] = None,
     ) -> bool:
         """Проверяет, есть ли в бд кафе с тем же названием-адресом."""
         if db_cafe is None:
@@ -100,7 +100,7 @@ class CRUDCafe(CRUDBase):
             stmt = and_(
                 Cafe.name == name,
                 Cafe.address == address,
-                Cafe.id != db_cafe.id
+                Cafe.id != db_cafe.id,
             )
         result = await session.scalar(select(exists().where(stmt)))
         return bool(result)

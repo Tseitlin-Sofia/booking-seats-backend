@@ -1,9 +1,16 @@
 import re
-from typing import List, Optional, TYPE_CHECKING
 import uuid
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import (
-    Column, ForeignKey, String, Table as MtM_Model,  UniqueConstraint, UUID,
+    UUID,
+    Column,
+    ForeignKey,
+    String,
+    UniqueConstraint,
+)
+from sqlalchemy import (
+    Table as MtM_Model,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
