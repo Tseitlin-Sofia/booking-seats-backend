@@ -24,14 +24,14 @@ async def get_cafe_or_404(session: AsyncSession, obj_id: int) -> Self:
 async def check_name_address(
     session: AsyncSession,
     new_cafe: Union[CafeCreate, CafeUpdate],
-    db_cafe: Optional[Cafe] = None
+    db_cafe: Optional[Cafe] = None,
 ) -> None:
     """Проверка, существует ли кафе с одинаковой парой name-address."""
     new_data = new_cafe.model_dump(exclude_unset=True)
     name = new_data['name'] if 'name' in new_data else None
     address = new_data['address'] if 'address' in new_data else None
     is_exist = await cafe_crud.is_unique_name_address(
-        session, db_cafe, name, address
+        session, db_cafe, name, address,
     )
     if is_exist:
         raise HTTPException(
@@ -39,7 +39,7 @@ async def check_name_address(
             detail=(
                 'Кафе с таким же названием и адресом уже существует! '
                 'Введите другое название или адрес!'
-            )
+            ),
         )
 
 
@@ -73,7 +73,7 @@ async def is_managers_id(
                 status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                 detail=(
                     f'Пользователь c id {manager_id} не является менеджером!'
-                )
+                ),
             )
         managers.append(db_user)
 

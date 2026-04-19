@@ -19,9 +19,9 @@ class CRUDCafe(CRUDBase):
         session: AsyncSession,
         show_active: Optional[bool],
     ) -> Sequence[Cafe]:
-        """
-        Возвращает список кафе в соответствии с правами доступа
-        и установленным менеджером/админом show_active.
+        """Возвращает список кафе в соответствии с правами доступа.
+
+        Учитывается установленный менеджером/админом show_active.
         """
         stmt = select(Cafe)
         if show_active is True:
@@ -38,7 +38,7 @@ class CRUDCafe(CRUDBase):
     ) -> Optional[Self]:
         """До фикса базового круда."""
         result = await session.execute(
-            select(self.model).where(self.model.id == obj_id)
+            select(self.model).where(self.model.id == obj_id),
         )
         return result.scalars().first()
 

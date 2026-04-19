@@ -1,6 +1,6 @@
 """Модуль с константами приложения."""
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
 
 
 class BookingConstants:
