@@ -7,6 +7,8 @@ from app.api.endpoints.media import router as media_router
 from app.api.endpoints.slot import router as slot_router
 from app.api.endpoints.table import router as table_router
 from app.api.endpoints.user import router as user_router
+from app.api.endpoints.auth import router as auth_router
+
 
 main_router = APIRouter()
 
@@ -36,7 +38,7 @@ main_router.include_router(
     tags=['Пользователи'],
 )
 main_router.include_router(
-    user_router,
+    auth_router,
     prefix='/auth',
     tags=['Аутентификация'],
 )
