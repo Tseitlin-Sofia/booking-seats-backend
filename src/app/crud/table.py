@@ -11,7 +11,7 @@ from app.crud.base import CRUDBase
 from app.models.table import Table
 from app.schemas.table import TableCreate
 
-logger = get_logger
+logger = get_logger()
 
 
 class CRUDTable(CRUDBase):
