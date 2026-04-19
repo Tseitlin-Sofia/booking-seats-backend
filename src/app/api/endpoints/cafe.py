@@ -30,7 +30,11 @@ router = APIRouter()
 )
 async def get_all_cafes(session: SessionDep) -> Self:
     """Ручка multi-get."""
-    return await cafe_crud.get_multi(session)
+    return await cafe_crud.get_by_attribute_multi(
+        attr_name='is_active',
+        attr_value=True,
+        session=session,
+    )
 
 
 @router.post(

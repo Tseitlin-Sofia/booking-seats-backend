@@ -7,8 +7,8 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.cafe import CafeShortInfo
-from app.schemas.table import TableShortInfo
 from app.schemas.slot import TimeSlotShortInfo
+from app.schemas.table import TableShortInfo
 from app.schemas.user import UserShortInfo
 
 
