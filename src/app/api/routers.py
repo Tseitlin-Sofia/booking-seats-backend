@@ -35,3 +35,8 @@ main_router.include_router(
     prefix='/users',
     tags=['Пользователи'],
 )
+main_router.include_router(
+    user_router,
+    prefix='/auth',
+    tags=['Аутентификация'],
+)
