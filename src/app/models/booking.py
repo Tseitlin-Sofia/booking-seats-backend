@@ -6,8 +6,8 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum
 
-from app.core.db import Base, CommonMixin
 from app.core.constants import BookingConstants as Constants
+from app.core.db import Base, CommonMixin
 from app.schemas.booking import BookingStatus
 
 

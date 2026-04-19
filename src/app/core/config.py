@@ -1,7 +1,7 @@
 """Настройки приложения."""
 
-from typing import Optional
 from pathlib import Path
+from typing import Optional
 
 from pydantic import EmailStr, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
