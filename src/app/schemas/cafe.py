@@ -11,6 +11,7 @@ from app.core.constants import CafeConstants
 class ValidatePhoneMixin:
     @field_validator("phone")
     def is_correct_phone(cls, value: str) -> str:
+        """Проверка, указал ли правильный формат телефона."""
         if not re.match(CafeConstants.PHONE_FORMAT, value):
             raise ValueError(CafeConstants.ERROR_PHONE)
         return value
