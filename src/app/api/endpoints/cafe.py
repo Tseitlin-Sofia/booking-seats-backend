@@ -1,15 +1,15 @@
-from http import HTTPStatus
-from typing import Annotated, List, Optional, Sequence
+# from http import HTTPStatus
+from typing import List, Optional, Sequence  # Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter  # Depends, HTTPException
 
 from app.api.dependencies import SessionDep
 from app.api.validators.cafe import (
-    check_name_address, get_cafe_or_404, is_managers_id
+    check_name_address, get_cafe_or_404, is_managers_id,
 )
 # from app.core.user import get_admin_user, get_current_user, get_manager_user
 from app.crud.cafe import cafe_crud, CRUDCafe
-from app.models import Cafe, User
+from app.models import Cafe  # User
 from app.schemas.cafe import CafeCreate, CafeInfo, CafeUpdate
 
 router = APIRouter()
@@ -57,9 +57,10 @@ async def get_cafe(
 ) -> Cafe:
     """Ручка id-get."""
     cafe = await get_cafe_or_404(session, cafe_id)
+    # NOTE: уберу noqe, когда будут смержены зависимости с юзерами.
     # if not (user.is_admin or user.is_manager) and not cafe.is_active:
     #     raise HTTPException(HTTPStatus.FORBIDDEN, detail='Доступ запрещен!')
-    return cafe
+    return cafe  # noqa: RET504
 
 
 @router.post(
@@ -108,5 +109,5 @@ async def update_cafe(
     await check_name_address(session, new_cafe, db_cafe)
     managers = await is_managers_id(session, new_cafe)
     return await cafe_crud.update_db_cafe(
-        session, db_cafe, new_cafe,  managers
+        session, db_cafe, new_cafe,  managers,
     )
