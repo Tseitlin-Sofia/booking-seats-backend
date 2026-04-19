@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -11,6 +10,8 @@ from sqlalchemy.types import Enum
 
 from app.core.constants import BookingConstants as Constants
 from app.core.db import Base, CommonMixin
+from app.models.slot import Slot
+from app.models.table import Table
 from app.schemas.booking import BookingStatus
 
 

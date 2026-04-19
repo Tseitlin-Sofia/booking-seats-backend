@@ -13,7 +13,7 @@ from app.api.validators.cafe import (
 # from app.core.user import get_admin_user, get_current_user, get_manager_user
 from app.crud.cafe import CRUDCafe, cafe_crud
 from app.models import Cafe  # User
-from app.schemas.cafe import CafeCreate, CafeInfo, CafeUpdate
+from app.schemas.cafe import CafeBase, CafeCreate, CafeInfo, CafeUpdate
 
 router = APIRouter()
 
@@ -30,7 +30,7 @@ router = APIRouter()
     ),
     response_description='Подробный вывод всех кафе',
 )
-async def get_all_cafes(session: SessionDep) -> Self:
+async def get_all_cafes(session: SessionDep) -> List[CafeInfo]:
     """Ручка multi-get."""
     return await cafe_crud.get_by_attribute_multi(
         attr_name='is_active',
@@ -41,7 +41,7 @@ async def get_all_cafes(session: SessionDep) -> Self:
 
 @router.post(
     '/',
-    response_model=CafeDB,
+    response_model=CafeBase,
     response_model_exclude_none=True,
     summary='Создание нового кафе',
     description=(
