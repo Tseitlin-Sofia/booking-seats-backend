@@ -1,24 +1,28 @@
-from typing import List, Optional
+import re
+import uuid
+from typing import TYPE_CHECKING, List, Optional
 
-# import uuid
 from sqlalchemy import (
+    UUID,
     Column,
     ForeignKey,
-    Integer,  # Временно для заглушки до создания модели Media.
     String,
-    Table,
-    # UUID
+    UniqueConstraint,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import (
+    Table as MtM_Model,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.constants import CafeConstants
 from app.core.db import Base, CommonMixin
-from app.models.user import User
 
-TEMPORARY_ID = 1  # Временно для заглушки.
+if TYPE_CHECKING:
+    from app.models.table import Table as TableModel
+    from app.models.user import User
 
 
-cafe_managers = Table(
+cafe_managers = MtM_Model(
     "cafe_managers",
     Base.metadata,
     Column(
@@ -37,21 +41,36 @@ cafe_managers = Table(
 class Cafe(CommonMixin, Base):
     """Модель кафе."""
 
+    __table_args__ = (
+        UniqueConstraint(
+            "name",
+            "address",
+            name="cafe_unique_name_and_address",
+        ),
+    )
     name: Mapped[str] = mapped_column(String, nullable=False)
     address: Mapped[str] = mapped_column(String, nullable=False)
     phone: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String)
-    # photo: Mapped[Optional[uuid.UUID]] =
-    # mapped_column(UUID, ForeignKey('media.id'))
-    photo_id: Mapped[Optional[Integer]] = mapped_column(
-        Integer, default=TEMPORARY_ID,  # Заглушка.
+    photo_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID)
+    managers_id: Mapped[List['User']] = relationship(
+        "User",
+        secondary=cafe_managers,
+        back_populates="cafes",
+        lazy="selectin",
     )
-    managers_id: Mapped[List[User]] = relationship(secondary=cafe_managers)
-    tables: Mapped[List["Table"]] = relationship(
-        "Table",
+    tables: Mapped[List['TableModel']] = relationship(
+        'Table',
         back_populates="cafe",
         lazy="selectin",
     )
+
+    @validates("phone")
+    def validate_phone(self, key: str, value: str) -> str:
+        """Проверка, указал ли правильный формат телефона."""
+        if not re.match(CafeConstants.PHONE_FORMAT, value):
+            raise ValueError(CafeConstants.ERROR_PHONE)
+        return value
 
     def __repr__(self) -> str:
         return self.name[:CafeConstants.NAME_RESTRICTION]

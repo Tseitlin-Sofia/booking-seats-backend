@@ -9,10 +9,6 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum
 
-if TYPE_CHECKING:
-    from app.models.slot import Slot  # noqa: F401
-    from app.models.table import Table  # noqa: F401
-
 from app.core.constants import BookingConstants as Constants
 from app.core.db import Base, CommonMixin
 from app.schemas.booking import BookingStatus

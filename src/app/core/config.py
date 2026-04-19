@@ -1,5 +1,6 @@
 """Настройки приложения."""
 
+from pathlib import Path
 from typing import Optional
 
 from pydantic import EmailStr, computed_field
@@ -10,6 +11,7 @@ class Settings(BaseSettings):
     """Настройки приложения."""
 
     app_title: str = 'NAME'
+    base_dir: Path = Path(__file__).resolve().parent.parent.parent
     description: str = 'DESCRIPTION'
     secret: str = 'SECRET'
     first_superuser_email: Optional[EmailStr] = None
@@ -23,6 +25,11 @@ class Settings(BaseSettings):
     postgres_db: str
     postgres_server: str
     postgres_port: int = 5432
+
+    # Основные параметры JWT
+    jwt_secret_key: str = 'your-super-secret-key'
+    jwt_algorithm: str = 'HS256'
+    jwt_token_inactivity_minutes: int = 30
 
     @computed_field
     @property
@@ -40,3 +47,8 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Константы для обратной совместимости
+SECRET_KEY = settings.jwt_secret_key
+ALGORITHM = settings.jwt_algorithm
+TOKEN_INACTIVITY_MINUTES = settings.jwt_token_inactivity_minutes
