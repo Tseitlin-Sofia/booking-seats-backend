@@ -7,7 +7,6 @@ from pydantic import EmailStr, computed_field
 from pydantic.types import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
