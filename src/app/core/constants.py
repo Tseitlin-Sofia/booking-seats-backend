@@ -10,6 +10,7 @@ class BookingConstants:
     MAX_GUESTS = 1000  # TODO: возможно стоит вычислять по вместимости столов.
     MIN_GUESTS = 1
 
+    DATE_ERROR = 'Дата бронирования не может быть в прошлом.'
     GUEST_NUMBER_ERROR = 'Количество гостей должно быть между {} и {}'
     SLOT_ALREADY_BOOKED = (
         'Попытка забронировать уже забронированный слот {} на стол {}.'
@@ -22,6 +23,10 @@ class BookingConstants:
     CAFE_DOES_NOT_EXIST = 'Кафе c id {} не существует.'
     USER_RIGHTS_ERROR = 'У вас нет прав для просмотра чужих бронирований.'
     BOOKING_NOT_FOUND = 'Бронирование c id {} не найдено.'
+    SLOT_INACTIVE = 'Временной слот с ID {} неактивен'
+    TABLE_INACTIVE = 'Стол с ID {} неактивен'
+    USER_NOT_AUTHENTICATED = 'Пользователь не авторизован'
+    SLOTS_UNAVAILABLE = 'Выбранные временные слоты уже забронированы'
 
 
 class MediaConstants:

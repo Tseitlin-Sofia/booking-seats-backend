@@ -12,6 +12,8 @@ from app.core.constants import BookingConstants as Constants
 from app.core.db import Base, CommonMixin
 from app.models.slot import Slot
 from app.models.table import Table
+from app.models.user import User
+from app.models.cafe import Cafe
 from app.schemas.booking import BookingStatus
 
 
@@ -79,6 +81,18 @@ class Booking(Base, CommonMixin):
     table_slots: Mapped[list['BookingTableSlot']] = relationship(
         'BookingTableSlot',
         back_populates='booking',
+        cascade='all, delete-orphan',
+        lazy='selectin',
+    )
+    user: Mapped['User'] = relationship(
+        'User',
+        back_populates='bookings',
+        lazy='selectin',
+    )
+    cafe: Mapped['Cafe'] = relationship(
+        'Cafe',
+        back_populates='bookings',
+        lazy='selectin',
     )
 
     @validates('guest_number')
@@ -92,6 +106,13 @@ class Booking(Base, CommonMixin):
         raise ValueError(Constants.GUEST_NUMBER_ERROR.format(
             Constants.MIN_GUESTS, Constants.MAX_GUESTS,
         ))
+
+    @validates('booking_date')
+    def validate_booking_date(self, key: str, value: date) -> date:
+        """Валидация даты бронирования (нельзя бронировать в прошлом)."""
+        if value >= date.today():
+            return value
+        raise ValueError(Constants.DATE_ERROR)
 
     def __repr__(self) -> str:
         return (
