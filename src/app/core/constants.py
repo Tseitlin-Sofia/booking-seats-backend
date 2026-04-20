@@ -1,19 +1,27 @@
 """Модуль с константами приложения."""
 from datetime import datetime, timedelta
 from pathlib import Path
+from site import USER_BASE
 
 
 class BookingConstants:
     """Класс с константами для бронирования."""
 
     REPR_FORMAT = 'Бронирование id:{} status:{} user_id:{}'
-    MAX_GUESTS = 1000
+    MAX_GUESTS = 1000  # TODO: возможно стоит вычислять по вместимости столов.
     MIN_GUESTS = 1
 
     GUEST_NUMBER_ERROR = 'Количество гостей должно быть между {} и {}'
     SLOT_ALREADY_BOOKED = (
         'Попытка забронировать уже забронированный слот {} на стол {}.'
     )
+    SLOTS_UNAVAILABLE = 'Некоторые слоты недоступны для бронирования.'
+    SLOT_CAFE_MISMATCH = 'Слот и стол должны принадлежать одному кафе.'
+    SLOT_DOES_NOT_EXIST = 'Слот c id {} не существует.'
+    TABLE_DOES_NOT_EXIST = 'Стол c id {} не существует.'
+    USER_DOES_NOT_EXIST = 'Пользователь c id {} не существует.'
+    CAFE_DOES_NOT_EXIST = 'Кафе c id {} не существует.'
+    USER_RIGHTS_ERROR = 'У вас нет прав для просмотра чужих бронирований.'
 
 
 class MediaConstants:

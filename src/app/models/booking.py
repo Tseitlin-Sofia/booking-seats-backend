@@ -1,17 +1,16 @@
 """Модель бронирования."""
 
-from datetime import datetime
+from datetime import date
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, Integer, String, Date
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from sqlalchemy.types import Enum
 
 from app.core.constants import BookingConstants as Constants
 from app.core.db import Base, CommonMixin
+from app.models import Slot, Table
 from app.schemas.booking import BookingStatus
-
-# from app.models import Table, Slot, User, Cafe
 
 
 class BookingTableSlot(Base, CommonMixin):
@@ -36,6 +35,15 @@ class BookingTableSlot(Base, CommonMixin):
         'Booking',
         back_populates='table_slots',
     )
+    table: Mapped['Table'] = relationship(
+        'Table',
+        back_populates='table_slots',
+    )
+    slot: Mapped['Slot'] = relationship(
+        'Slot',
+        back_populates='table_slots',
+    )
+    # TODO: Добавить repr
 
 
 class Booking(Base, CommonMixin):
@@ -60,14 +68,16 @@ class Booking(Base, CommonMixin):
         String,
         nullable=True,
     )
+    booking_date: Mapped[date] = mapped_column(
+        Date,
+    )
+    # TODO: Рассмотреть создание промежуточной таблицы в императивном стиле,
+    # дабы избежать значения в виде списка
     table_slots: Mapped[list['BookingTableSlot']] = relationship(
+        'BookingTableSlot',
         back_populates='booking',
     )
 
-    @hybrid_property
-    def date(self) -> datetime:
-        """Дата бронирования (первая дата из table_slots)."""
-        return sorted(self.table_slots)[0].start_time.date()
 
     @validates('guest_number')
     def validate_guest_number(self, key: str, value: int) -> int:
@@ -87,3 +97,5 @@ class Booking(Base, CommonMixin):
                 self.id, self.status, self.user_id,
             )
         )
+    # TODO: возможно стоит добавить property для статусов (
+    # in_active, in_booked, in_canceled, in_completed)

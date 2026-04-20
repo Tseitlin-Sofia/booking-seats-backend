@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.api.endpoints import user_router
 from app.api.endpoints.cafe import router as cafe_router
+from app.api.endpoints.booking import router as booking_router
 from app.api.endpoints.media import router as media_router
 from app.api.endpoints.slot import router as slot_router
 from app.api.endpoints.table import router as table_router
@@ -34,4 +35,9 @@ main_router.include_router(
     user_router,
     prefix='/users',
     tags=['Пользователи'],
+)
+main_router.include_router(
+    booking_router,
+    prefix='/booking',
+    tags=['Бронирования'],
 )
