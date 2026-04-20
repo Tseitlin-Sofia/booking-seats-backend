@@ -5,7 +5,7 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, status
 from fastapi.param_functions import Query
 
-from app.api.dependencies import SessionDep  #  , get_current_user
+from app.api.dependencies import SessionDep, UserDep
 from app.api.validators.booking import (
     validate_booking_exists,
     validate_booking_slots,
@@ -17,7 +17,6 @@ from app.schemas.booking import (
     BookingCreate,
     BookingInfo,
     BookingStatus,
-    BookingUpdate,
 )
 
 router = APIRouter()
@@ -38,8 +37,7 @@ router = APIRouter()
 )
 async def get_bookings(
     session: SessionDep,
-    # current_user: User = Depends(get_current_user),
-    current_user: dict,
+    current_user: UserDep,
     show_active: Annotated[
         bool, Query(description="Показывать активные бронирования?"),
     ] = True,
@@ -80,8 +78,7 @@ async def get_bookings(
 async def get_booking(
     session: SessionDep,
     booking_id: int,
-    # current_user: User = Depends(get_current_user),
-    current_user: dict,
+    current_user: UserDep,
 ) -> BookingInfo:
     """Получение бронирования по его ID."""
     booking_db = await validate_booking_exists(booking_id, session)
@@ -103,8 +100,7 @@ async def get_booking(
 async def create_booking(
     session: SessionDep,
     booking: BookingCreate,
-    # current_user: User = Depends(get_current_user),
-    current_user: dict,
+    current_user: UserDep,
 ) -> BookingInfo:
     """Создание бронирования."""
     await validate_booking_slots(
@@ -129,6 +125,7 @@ async def create_booking(
     for table_slot in booking.tables_slots:
         await booking_table_slot_crud.create(
             session=session,
+            # TODO: сделать схему создания
             obj_in={
                 'booking_id': new_booking.id,
                 'table_id': table_slot.table_id,
@@ -139,47 +136,49 @@ async def create_booking(
     return new_booking
 
 
-@router.patch(
-    '/{booking_id}',
-    response_model=BookingInfo,
-    summary='Обновление информации о бронировании по его ID',
-    description=(
-        'Обновление информации о бронировании по его ID. '
-        'Для администраторов и менеджеров - все бронирования, '
-        'для пользователей - только свои.'
-    ),
-    response_description='Подробный вывод обновленного бронирования',
-)
-async def update_booking(
-    session: SessionDep,
-    booking_id: int,
-    booking: BookingUpdate,
-    # current_user: User = Depends(get_current_user),
-    current_user: dict,
-) -> BookingInfo:
-    """Обновление бронирования."""
-    booking_db = await validate_booking_exists(booking_id, session)
-    await validate_user_rights(current_user, booking_db.user_id)
+# @router.patch(
+#     '/{booking_id}',
+#     response_model=BookingInfo,
+#     summary='Обновление информации о бронировании по его ID',
+#     description=(
+#         'Обновление информации о бронировании по его ID. '
+#         'Для администраторов и менеджеров - все бронирования, '
+#         'для пользователей - только свои.'
+#     ),
+#     response_description='Подробный вывод обновленного бронирования',
+# )
+# async def update_booking(
+#     session: SessionDep,
+#     booking_id: int,
+#     booking: BookingUpdate,
+#     current_user: UserDep,
+# ) -> BookingInfo:
+#     """Обновление бронирования."""
+#     booking_db = await validate_booking_exists(booking_id, session)
+#     booking_table_slots_db = await booking_table_slot_crud.get(
+#         session=session,
+#         id=booking_id,
+#     )
+#     await validate_user_rights(current_user, booking_db.user_id)
 
-    if booking.tables_slots is not None:
-        await validate_booking_slots(
-            slots=booking.tables_slots,
-            booking_date=booking.booking_date or booking_db.booking_date,
-            session=session,
-        )
-        await validate_cafe_slot_table(
-            cafe_id=booking_db.cafe_id,
-            slots=booking.tables_slots,
-            session=session,
-        )
-        await booking_table_slot_crud.update_by_booking(
-            session=session,
-            booking_id=booking_id,
-            slots=booking.tables_slots,
-            booking_date=booking.booking_date or booking_db.booking_date,
-        )
-    return await booking_crud.update(
-        session=session,
-        db_obj=booking_db,
-        obj_in=booking.model_dump(exclude_unset=True),
-    )
+#     if booking.tables_slots is not None:
+#         await validate_booking_slots(
+#             slots=booking.tables_slots,
+#             booking_date=booking.booking_date or booking_db.booking_date,
+#             session=session,
+#         )
+#         await validate_cafe_slot_table(
+#             cafe_id=booking_db.cafe_id,
+#             slots=booking.tables_slots,
+#             session=session,
+#         )
+#         await booking_table_slot_crud.update(
+#             session=session,
+#             db_obj=booking_table_slots_db,
+#             obj_in=booking.tables_slots,
+#         )
+#     return await booking_crud.update(
+#         session=session,
+#         db_obj=booking_db,
+#         obj_in=booking.model_dump(exclude_unset=True),
+#     )

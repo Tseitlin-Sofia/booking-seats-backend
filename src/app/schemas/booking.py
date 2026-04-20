@@ -1,24 +1,15 @@
 """Pydantic схемы для бронирований."""
 
 from datetime import date, datetime
-from enum import StrEnum
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.booking import BookingStatus
 from app.schemas.cafe import CafeShortInfo
 from app.schemas.slot import TimeSlotShortInfo
 from app.schemas.table import TableShortInfo
 from app.schemas.user import UserShortInfo
-
-
-class BookingStatus(StrEnum):
-    """Статус бронирования."""
-
-    BOOKING = "BOOKING"
-    CANCELED = "CANCELED"
-    ACTIVE = "ACTIVE"
-    COMPLETED = "COMPLETED"
 
 
 class BookingTableSlot(BaseModel):
