@@ -31,16 +31,16 @@ async def get_slots(
 
 
 @router.post(
-        '/', response_model=SlotDB,
-        summary='Создание нового слота для бронирования столика',
+    '/', response_model=SlotDB,
+    summary='Создание нового слота для бронирования столика',
 )
 async def create_slot(
     slot_data: SlotCreate,
     session: SessionDep,
-):
+) -> SlotDB:
+    """Создание нового слота для бронирования столика."""
     await check_cafe_exists(slot_data.cafe_id, session)
     await check_slots_intersections(
         **slot_data.model_dump(), session=session,
     )
-    new_slot = await slot_crud.create(slot_data, session)
-    return new_slot
+    return await slot_crud.create(slot_data, session)

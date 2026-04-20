@@ -17,7 +17,7 @@ class CRUDSlot:
     async def get_slots_by_cafe(
         self,
         cafe_id: int,
-        session,
+        session: AsyncSession,
     ) -> list[Slot]:
         """Получает все слоты для заданного кафе."""
         db_slots = await session.execute(
@@ -27,8 +27,8 @@ class CRUDSlot:
 
     async def create(
         self,
-        slot_data,
-        session,
+        slot_data: datetime,
+        session: AsyncSession,
     ) -> Slot:
         """Создает новый слот для бронирования столика."""
         new_slot = self.model(**slot_data.model_dump())
@@ -45,7 +45,7 @@ class CRUDSlot:
             table_id: int,
             session: AsyncSession,
     ) -> list[Slot]:
-        """Получает все слоты, пересекающиеся по времени с заданным интервалом."""
+        """Возвращает слоты, пересекающиеся с заданным интервалом."""
         statement = select(Slot).where(
             Slot.table_id == table_id,
             and_(

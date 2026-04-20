@@ -1,5 +1,7 @@
 """Модель бронирования."""
 
+from __future__ import annotations
+
 from datetime import date
 
 from sqlalchemy import ForeignKey, Integer, String, Date
@@ -9,7 +11,8 @@ from sqlalchemy.types import Enum
 
 from app.core.constants import BookingConstants as Constants
 from app.core.db import Base, CommonMixin
-from app.models import Slot, Table
+from app.models.slot import Slot
+from app.models.table import Table
 from app.schemas.booking import BookingStatus
 
 
@@ -35,15 +38,16 @@ class BookingTableSlot(Base, CommonMixin):
         'Booking',
         back_populates='table_slots',
     )
-    table: Mapped['Table'] = relationship(
-        'Table',
-        back_populates='table_slots',
-    )
     slot: Mapped['Slot'] = relationship(
         'Slot',
-        back_populates='table_slots',
+        back_populates='booking_table_slots',
+        lazy='selectin',
     )
-    # TODO: Добавить repr
+    table: Mapped['Table'] = relationship(
+        'Table',
+        lazy='selectin',
+    )
+    # TODO: validate unique according to is_active
 
 
 class Booking(Base, CommonMixin):
@@ -68,7 +72,7 @@ class Booking(Base, CommonMixin):
         String,
         nullable=True,
     )
-    booking_date: Mapped[date] = mapped_column(
+    booking_date: Mapped['date'] = mapped_column(
         Date,
     )
     # TODO: Рассмотреть создание промежуточной таблицы в императивном стиле,

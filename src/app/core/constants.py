@@ -1,7 +1,6 @@
 """Модуль с константами приложения."""
 from datetime import datetime, timedelta
 from pathlib import Path
-from site import USER_BASE
 
 
 class BookingConstants:
@@ -92,7 +91,7 @@ class LoggingConstants:
 
 
 class SlotConstants:
-    """Класс с константами для модели интервала времени бронирования столика."""
+    """Класс для констант модели интервала времени бронирования столика."""
 
     BASE_TIME = datetime.now() + timedelta(minutes=10)
     FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')

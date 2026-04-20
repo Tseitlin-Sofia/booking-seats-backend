@@ -3,10 +3,9 @@
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base, CommonMixin
-from app.models.booking import BookingTableSlot
 
 
 class Slot(Base, CommonMixin):
@@ -18,11 +17,14 @@ class Slot(Base, CommonMixin):
         Integer,
         ForeignKey('cafe.id'),
         nullable=False,
+<<<<<<< HEAD
     )
     booking_table_slots: Mapped[list['BookingTableSlot']] = relationship(
         'BookingTableSlot',
         back_populates='slot',
         lazy='selectin',
+=======
+>>>>>>> origin
     )
 
     def __repr__(self) -> str:
