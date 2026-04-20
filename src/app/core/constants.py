@@ -1,4 +1,5 @@
 """Модуль с константами приложения."""
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -56,6 +57,7 @@ class UserConstants:
     MAX_PASSWORD_LENGTH = 255
     MAX_TG_ID_LENGTH = 100
     DEFAULT_USER_ROLE = 'user'
+    PHONE_REGEX = re.compile(r'^(\+7|8)\d{10}$')
 
 
 class LoggingConstants:
