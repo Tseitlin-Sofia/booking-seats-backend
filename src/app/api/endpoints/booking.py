@@ -5,23 +5,21 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, status
 from fastapi.param_functions import Query
 
-from app.api.dependencies import SessionDep #  , get_current_user
+from app.api.dependencies import SessionDep  #  , get_current_user
 from app.api.validators.booking import (
+    validate_booking_exists,
     validate_booking_slots,
     validate_cafe_slot_table,
     validate_user_rights,
-    validate_booking_exists,
 )
-from app.core.constants import BookingConstants as Constants
+from app.crud.booking import booking_crud, booking_table_slot_crud
 from app.models import User
 from app.schemas.booking import (
     BookingCreate,
     BookingInfo,
-    BookingUpdate,
     BookingStatus,
+    BookingUpdate,
 )
-
-from app.crud.booking import booking_crud, booking_table_slot_crud
 
 router = APIRouter()
 
@@ -37,7 +35,7 @@ get_current_user = 'MOCK'
         'Получение списка бронирований. '
         'Для администраторов и менеджеров - все бронирования '
         '(с возможностью выбора), '
-        'для пользователей - только свои (параметры игнорируются, кроме ID кафе).'
+        'для пользователей - только свои.'
     ),
     response_description='Подробный вывод всех бронирований',
 )
@@ -130,14 +128,12 @@ async def create_booking(
                 'booking_id': None,
                 'table_id': table_slot.table_id,
                 'slot_id': table_slot.slot_id,
-            }
+            },
         )
-    new_booking = await booking_crud.create(
+    return await booking_crud.create(
         session=session,
         obj_in=booking_data,
     )
-
-    return new_booking
 
 
 @router.patch(
@@ -178,10 +174,8 @@ async def update_booking(
             slots=booking.tables_slots,
             booking_date=booking.booking_date or booking_db.booking_date,
         )
-    updated_booking = await booking_crud.update(
+    return await booking_crud.update(
         session=session,
         db_obj=booking_db,
         obj_in=booking.model_dump(exclude_unset=True),
     )
-
-    return updated_booking

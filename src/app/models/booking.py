@@ -10,10 +10,10 @@ from sqlalchemy.types import Enum
 
 from app.core.constants import BookingConstants as Constants
 from app.core.db import Base, CommonMixin
+from app.models.cafe import Cafe
 from app.models.slot import Slot
 from app.models.table import Table
 from app.models.user import User
-from app.models.cafe import Cafe
 from app.schemas.booking import BookingStatus
 
 
