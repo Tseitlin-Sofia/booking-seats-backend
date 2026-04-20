@@ -2,13 +2,12 @@
 
 from fastapi import APIRouter
 
+from app.api.endpoints.auth import router as auth_router
 from app.api.endpoints.cafe import router as cafe_router
 from app.api.endpoints.media import router as media_router
 from app.api.endpoints.slot import router as slot_router
 from app.api.endpoints.table import router as table_router
 from app.api.endpoints.user import router as user_router
-from app.api.endpoints.auth import router as auth_router
-
 
 main_router = APIRouter()
 

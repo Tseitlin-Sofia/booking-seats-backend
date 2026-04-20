@@ -1,6 +1,13 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 from app.core.constants import UserConstants
 from app.models.user import UserRole
@@ -25,6 +32,17 @@ class UserBase(BaseModel):
         None,
         max_length=UserConstants.MAX_TG_ID_LENGTH,
     )
+
+    @field_validator('phone')
+    @classmethod
+    def validate_email(cls, phone: str | None) -> str | None:
+        """Проверяет корректность ввода телефона."""
+        if phone is not None:
+            if not UserConstants.PHONE_REGEX.match(phone):
+                raise ValueError(
+                    'Телефон должен начинаться +7 и содержать 10 цифр.',
+                )
+        return phone
 
 
 class UserCreate(UserBase):
@@ -52,10 +70,12 @@ class UserCreate(UserBase):
 class UserUpdate(UserBase):
     """Схема для обновления данных пользователя."""
 
+    username: str | None = Field(
+        None, max_length=UserConstants.MAX_USERNAME_LENGTH,
+    )
     role: UserRole | None = Field(None)
     password: str | None = Field(
-        None,
-        max_length=UserConstants.MAX_PASSWORD_LENGTH,
+        None, max_length=UserConstants.MAX_PASSWORD_LENGTH,
     )
     is_active: bool | None = Field(None)
 

@@ -1,4 +1,3 @@
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
@@ -10,57 +9,38 @@ from app.services.user import get_password_hash
 class CRUDUser(CRUDBase):
     """Круд для работы с пользователями."""
 
-    async def get_by_email(
-        self,
-        session: AsyncSession,
-        email: str,
-    ) -> User | None:
-        """Получить пользователя по email."""
-        db_user = await session.execute(
-            select(User).where(User.email == email),
-        )
-        return db_user.scalars().first()
-
-    async def get_by_phone(
-        self,
-        session: AsyncSession,
-        phone: str,
-    ) -> User | None:
-        """Получить пользователя по phone."""
-        db_user = await session.execute(
-            select(User).where(User.phone == phone),
-        )
-        return db_user.scalars().first()
-
-    async def get_by_username(
-        self,
-        session: AsyncSession,
-        username: str,
-    ) -> User | None:
-        """Получить пользователя по username."""
-        db_user = await session.execute(
-            select(User).where(User.username == username),
-        )
-        return db_user.scalars().first()
-
     async def check_unique_fields(
         self,
         session: AsyncSession,
         email: str | None = None,
         phone: str | None = None,
         username: str | None = None,
+        tg_id: str | None = None,
     ) -> None:
         """Проверяет поля email, phone и username на уникальность."""
         if email:
-            if await self.get_by_email(session, email):
+            if await self.get_by_attribute(
+                attr_name='email', attr_value=email, session=session,
+            ):
                 raise ValueError('Пользователь с таким email уже существует.')
         if phone:
-            if await self.get_by_phone(session, phone):
+            if await self.get_by_attribute(
+                attr_name='phone', attr_value=phone, session=session,
+            ):
                 raise ValueError('Пользователь с таким phone уже существует')
         if username:
-            if await self.get_by_username(session, username):
+            if await self.get_by_attribute(
+                attr_name='username', attr_value=username, session=session,
+            ):
                 raise ValueError(
                     'Пользоваетль с таким username уже существует.',
+                )
+        if tg_id:
+            if await self.get_by_attribute(
+                attr_name='tg_id', attr_value=tg_id, session=session,
+            ):
+                raise ValueError(
+                    'Пользоваетль с таким tg_id уже существует.',
                 )
 
     @staticmethod
@@ -85,6 +65,7 @@ class CRUDUser(CRUDBase):
             email=user_in.email,
             phone=user_in.phone,
             username=user_in.username,
+            tg_id=user_in.tg_id,
         )
         self.check_email_or_phone_required(user_in)
 
@@ -111,6 +92,7 @@ class CRUDUser(CRUDBase):
                 email=user_in.email,
                 phone=user_in.phone,
                 username=user_in.username,
+                tg_id=user_in.tg_id,
             )
 
         if user_in.password:
@@ -133,26 +115,6 @@ class CRUDUser(CRUDBase):
         await session.refresh(db_user)
 
         return db_user
-
-    async def deactivate_or_activate_user(
-        self,
-        session: AsyncSession,
-        user_id: int,
-        activate_flag: bool,
-    ) -> User:
-        """Активирует или деативирует пользователя."""
-        user = await self.get(
-            obj_id=user_id,
-            session=session,
-        )
-        if not user:
-            # TODO логи
-            raise ValueError('Пользователь с таким id не найден')
-        user.is_activate = activate_flag
-        await session.commit()
-        await session.refresh(user)
-        # TODO можно бовить лог о деактивации пользователя
-        return user
 
 
 user_crud = CRUDUser(User)
