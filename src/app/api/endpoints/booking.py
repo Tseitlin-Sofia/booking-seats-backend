@@ -23,8 +23,6 @@ from app.schemas.booking import (
 
 router = APIRouter()
 
-get_current_user = 'MOCK'
-
 
 @router.get(
     '/',
@@ -41,7 +39,8 @@ get_current_user = 'MOCK'
 )
 async def get_bookings(
     session: SessionDep,
-    current_user: User = Depends(get_current_user),
+    # current_user: User = Depends(get_current_user),
+    current_user: dict,
     show_active: Annotated[
         bool, Query(description="Показывать активные бронирования?"),
     ] = True,
@@ -82,7 +81,8 @@ async def get_bookings(
 async def get_booking(
     session: SessionDep,
     booking_id: int,
-    current_user: User = Depends(get_current_user),
+    # current_user: User = Depends(get_current_user),
+    current_user: dict,
 ) -> BookingInfo:
     """Получение бронирования по его ID."""
     booking_db = await validate_booking_exists(booking_id, session)
@@ -104,7 +104,8 @@ async def get_booking(
 async def create_booking(
     session: SessionDep,
     booking: BookingCreate,
-    current_user: User = Depends(get_current_user),
+    # current_user: User = Depends(get_current_user),
+    current_user: dict,
 ) -> BookingInfo:
     """Создание бронирования."""
     await validate_booking_slots(
@@ -154,7 +155,8 @@ async def update_booking(
     session: SessionDep,
     booking_id: int,
     booking: BookingUpdate,
-    current_user: User = Depends(get_current_user),
+    # current_user: User = Depends(get_current_user),
+    current_user: dict,
 ) -> BookingInfo:
     """Обновление бронирования."""
     booking_db = await validate_booking_exists(booking_id, session)
