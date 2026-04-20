@@ -1,5 +1,5 @@
 # from http import HTTPStatus
-from typing import List, Optional, Sequence  # Annotated
+from typing import List  # Annotated
 
 from fastapi import APIRouter  # Depends, HTTPException
 
@@ -13,7 +13,7 @@ from app.api.validators.cafe import (
 # from app.core.user import get_admin_user, get_current_user, get_manager_user
 from app.crud.cafe import CRUDCafe, cafe_crud
 from app.models import Cafe  # User
-from app.schemas.cafe import CafeBase, CafeCreate, CafeInfo, CafeUpdate
+from app.schemas.cafe import CafeCreate, CafeInfo, CafeUpdate
 
 router = APIRouter()
 
