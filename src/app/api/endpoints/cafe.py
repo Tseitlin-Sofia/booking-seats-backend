@@ -39,30 +39,6 @@ async def get_all_cafes(session: SessionDep) -> List[CafeInfo]:
     )
 
 
-@router.post(
-    '/',
-    response_model=CafeBase,
-    response_model_exclude_none=True,
-    summary='Создание нового кафе',
-    description=(
-        'Создает новое кафе. '
-        'Только для администраторов и менеджеров.'
-    ),
-    response_description='Подробный вывод созданного кафе',
-    # TODO: добавить потом пермишены
-)
-async def create_new_cafe(
-    new_cafe: CafeCreate,
-    session: SessionDep,
-    show_active: Optional[bool] = None,
-    # user: Annotated[User, Depends(get_current_user)]
-) -> Sequence[Cafe]:
-    """Ручка multi-get."""
-    # if user.is_admin or user.is_manager:
-    #     return await cafe_crud.get_all_cafes(session, show_active)
-    return await cafe_crud.get_all_cafes(session, show_active=True)
-
-
 @router.get(
     '/{cafe_id}',
     response_model=CafeInfo,
