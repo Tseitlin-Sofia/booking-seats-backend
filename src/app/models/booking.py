@@ -103,7 +103,7 @@ class Booking(Base, CommonMixin):
     @validates('booking_date')
     def validate_booking_date(self, key: str, value: date) -> date:
         """Валидация даты бронирования (нельзя бронировать в прошлом)."""
-        if value >= date.today():
+        if value >= date.today():  # replace datetime with fastapi func
             return value
         raise ValueError(Constants.DATE_ERROR)
 

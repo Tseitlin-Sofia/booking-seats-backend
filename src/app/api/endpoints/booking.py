@@ -135,7 +135,7 @@ async def create_booking(
     await session.refresh(new_booking)
     return new_booking
 
-
+# TODO: Можно удалить слоты и создать заново! cascade inactive
 # @router.patch(
 #     '/{booking_id}',
 #     response_model=BookingInfo,

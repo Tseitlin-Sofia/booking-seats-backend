@@ -37,6 +37,7 @@ class BookingCommon(BaseModel):
     guest_number: int = Field(..., gt=0, title="Guest Number")
     note: Optional[str] = Field(None, title="Note")
     booking_date: date = Field(..., title="Booking Date")
+    # TODO: validate booking_date is in the future, slots arent empty, gn>0
 
 
 class BookingCreate(BookingCommon):
