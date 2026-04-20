@@ -121,19 +121,22 @@ async def create_booking(
     booking_data['status'] = BookingStatus.BOOKING
     booking_data['user_id'] = current_user.id
 
+    new_booking = await booking_crud.create(
+        session=session,
+        obj_in=booking_data,
+    )
+
     for table_slot in booking.tables_slots:
         await booking_table_slot_crud.create(
             session=session,
             obj_in={
-                'booking_id': None,
+                'booking_id': new_booking.id,
                 'table_id': table_slot.table_id,
                 'slot_id': table_slot.slot_id,
             },
         )
-    return await booking_crud.create(
-        session=session,
-        obj_in=booking_data,
-    )
+    await session.refresh(new_booking)
+    return new_booking
 
 
 @router.patch(
