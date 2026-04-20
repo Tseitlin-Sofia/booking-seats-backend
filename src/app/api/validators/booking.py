@@ -1,7 +1,7 @@
 """Валидаторы для эндпоинтов бронирования."""
 
 from datetime import date
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,10 +13,8 @@ from app.crud.cafe import cafe_crud
 from app.crud.slot import slot_crud
 from app.crud.table import table_crud
 from app.models import User
+from app.models.booking import Booking
 from app.schemas.booking import BookingTableSlot as BookingTableSlotSchema
-
-if TYPE_CHECKING:
-    from app.models.booking import Booking
 
 logger = get_logger()
 

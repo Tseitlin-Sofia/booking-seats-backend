@@ -2,7 +2,7 @@
 
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 from fastapi.param_functions import Query
 
 from app.api.dependencies import SessionDep  #  , get_current_user
@@ -13,7 +13,6 @@ from app.api.validators.booking import (
     validate_user_rights,
 )
 from app.crud.booking import booking_crud, booking_table_slot_crud
-from app.models import User
 from app.schemas.booking import (
     BookingCreate,
     BookingInfo,
