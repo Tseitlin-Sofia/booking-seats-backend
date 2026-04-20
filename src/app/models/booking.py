@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Date, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from sqlalchemy.types import Enum
 
 from app.core.constants import BookingConstants as Constants
 from app.core.db import Base, CommonMixin
+from app.models.cafe import Cafe
 from app.models.slot import Slot
 from app.models.table import Table
+from app.models.user import User
 from app.schemas.booking import BookingStatus
 
 
@@ -33,19 +35,10 @@ class BookingTableSlot(Base, CommonMixin):
             name='fk_booking_table_slot_booking_id_booking',
         ),
     )
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.now,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.now,
-        onupdate=datetime.now,
-    )
     booking: Mapped['Booking'] = relationship(
         'Booking',
         back_populates='table_slots',
+        lazy='selectin',
     )
     slot: Mapped['Slot'] = relationship(
         'Slot',
@@ -56,7 +49,6 @@ class BookingTableSlot(Base, CommonMixin):
         'Table',
         lazy='selectin',
     )
-    # TODO: validate unique according to is_active
 
 
 class Booking(Base, CommonMixin):
@@ -76,28 +68,51 @@ class Booking(Base, CommonMixin):
     )
     guest_number: Mapped[int] = mapped_column(
         Integer,
-        # метод validate ломает запуск проекта, нужно разобраться
-        # validate=(
-        #    lambda value: (
-        #        value >= Constants.MIN_GUESTS
-        #        and value <= Constants.MAX_GUESTS
-        #    ),
-        # ),
     )
     note: Mapped[str] = mapped_column(
         String,
         nullable=True,
     )
-    table_slots: Mapped[list['BookingTableSlot']] = relationship(
-        back_populates='booking',
+    booking_date: Mapped['date'] = mapped_column(
+        Date,
     )
-    #  TODO:
-        #  TableSlots backref check
-        #  computed date (from 1st table_slot)
-        #  Нужна валидация консистентности is_active на статусы BOOKING, ACTIVE
-        #  is_active = True
-        #  Остальные статусы (CANCELLED, COMPLETED) должны иметь
-        #  is_active = False
+    # TODO: Рассмотреть создание промежуточной таблицы в императивном стиле,
+    # дабы избежать значения в виде списка
+    table_slots: Mapped[list['BookingTableSlot']] = relationship(
+        'BookingTableSlot',
+        back_populates='booking',
+        cascade='all, delete-orphan',
+        lazy='selectin',
+    )
+    user: Mapped['User'] = relationship(
+        'User',
+        back_populates='bookings',
+        lazy='selectin',
+    )
+    cafe: Mapped['Cafe'] = relationship(
+        'Cafe',
+        back_populates='bookings',
+        lazy='selectin',
+    )
+
+    @validates('guest_number')
+    def validate_guest_number(self, key: str, value: int) -> int:
+        """Валидация количества гостей."""
+        if (
+            value >= Constants.MIN_GUESTS
+            and value <= Constants.MAX_GUESTS
+        ):
+            return value
+        raise ValueError(Constants.GUEST_NUMBER_ERROR.format(
+            Constants.MIN_GUESTS, Constants.MAX_GUESTS,
+        ))
+
+    @validates('booking_date')
+    def validate_booking_date(self, key: str, value: date) -> date:
+        """Валидация даты бронирования (нельзя бронировать в прошлом)."""
+        if value >= date.today():
+            return value
+        raise ValueError(Constants.DATE_ERROR)
 
     def __repr__(self) -> str:
         return (
@@ -105,3 +120,5 @@ class Booking(Base, CommonMixin):
                 self.id, self.status, self.user_id,
             )
         )
+    # TODO: возможно стоит добавить property для статусов (
+    # in_active, in_booked, in_canceled, in_completed)

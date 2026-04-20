@@ -1,6 +1,6 @@
 """Базовый класс для CRUD операций с базой данных."""
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
@@ -9,6 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import Base
 from app.models import User
+
+if TYPE_CHECKING:
+    from pydantic import BaseModel
+
+    from app.core.db import Base
 
 
 class CRUDBase:

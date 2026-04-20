@@ -52,7 +52,6 @@ class BookingCreate(BookingCommon):
     """Схема для создания бронирования."""
 
     cafe_id: int = Field(..., title="Cafe Id")
-    status: BookingStatus = Field(default=BookingStatus.BOOKING, exclude=True)
 
     model_config = ConfigDict(extra='forbid')
 
