@@ -7,12 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import BookingConstants as Constants
 from app.core.logging import get_logger
-from app.models import User, Cafe, Table, Slot
-from app.schemas.booking import BookingTableSlot as BookingTableSlotSchema
-from app.crud.booking import booking_crud, booking_table_slot_crud
+from app.crud.booking import booking_table_slot_crud
 from app.crud.cafe import cafe_crud
 from app.crud.slot import slot_crud
 from app.crud.table import table_crud
+from app.models import User
+from app.schemas.booking import BookingTableSlot as BookingTableSlotSchema
 
 logger = get_logger()
 
@@ -61,7 +61,7 @@ async def validate_cafe_slot_table(
                 detail=Constants.CAFE_DOES_NOT_EXIST.format(cafe_id),
             )
 
-        if (id := slot_db.cafe_id) != table_db.cafe_id or id != cafe_id:
+        if (idd := slot_db.cafe_id) != table_db.cafe_id or idd != cafe_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=Constants.SLOT_CAFE_MISMATCH,

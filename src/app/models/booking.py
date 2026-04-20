@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from sqlalchemy import ForeignKey, Integer, String, Date
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import Date, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from sqlalchemy.types import Enum
 
@@ -37,6 +36,7 @@ class BookingTableSlot(Base, CommonMixin):
     booking: Mapped['Booking'] = relationship(
         'Booking',
         back_populates='table_slots',
+        lazy='selectin',
     )
     slot: Mapped['Slot'] = relationship(
         'Slot',
@@ -47,7 +47,6 @@ class BookingTableSlot(Base, CommonMixin):
         'Table',
         lazy='selectin',
     )
-    # TODO: validate unique according to is_active
 
 
 class Booking(Base, CommonMixin):
@@ -81,7 +80,6 @@ class Booking(Base, CommonMixin):
         'BookingTableSlot',
         back_populates='booking',
     )
-
 
     @validates('guest_number')
     def validate_guest_number(self, key: str, value: int) -> int:

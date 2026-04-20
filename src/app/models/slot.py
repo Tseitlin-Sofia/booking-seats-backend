@@ -17,14 +17,6 @@ class Slot(Base, CommonMixin):
         Integer,
         ForeignKey('cafe.id'),
         nullable=False,
-<<<<<<< HEAD
-    )
-    booking_table_slots: Mapped[list['BookingTableSlot']] = relationship(
-        'BookingTableSlot',
-        back_populates='slot',
-        lazy='selectin',
-=======
->>>>>>> origin
     )
 
     def __repr__(self) -> str:

@@ -21,6 +21,7 @@ class BookingConstants:
     USER_DOES_NOT_EXIST = 'Пользователь c id {} не существует.'
     CAFE_DOES_NOT_EXIST = 'Кафе c id {} не существует.'
     USER_RIGHTS_ERROR = 'У вас нет прав для просмотра чужих бронирований.'
+    BOOKING_NOT_FOUND = 'Бронирование c id {} не найдено.'
 
 
 class MediaConstants:

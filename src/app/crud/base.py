@@ -1,10 +1,6 @@
 """Базовый класс для CRUD операций с базой данных."""
 
-<<<<<<< HEAD
 from typing import TYPE_CHECKING, Any, Optional
-=======
-from typing import Any, Optional
->>>>>>> origin
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
