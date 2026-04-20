@@ -1,32 +1,31 @@
-from typing import Annotated
-
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_async_session
+from app.api.dependencies import (
+    ManagerDep,
+    OptionalUserDep,
+    SessionDep,
+    UserDep,
+)
+from app.core.user import get_current_user, get_manager_user
 from app.crud.user import user_crud
+from app.models.user import UserRole
 from app.schemas.user import UserCreate, UserInfo, UserUpdate
 
 router = APIRouter()
-
-SessionDep = Annotated[
-    AsyncSession,
-    Depends(get_async_session),
-]
-# UserDep = Annotated[User, Depends(current_user)]
 
 
 @router.get(
     '/',
     response_model=list[UserInfo],
+    summary='Получение списка пользователей',
     description=(
         'Возвращает информацию о всех пользователях.'
         'Только для администраторов или менеджеров'
     ),
+    dependencies=(Depends(get_manager_user),),
 )
 async def get_users(
     session: SessionDep,
-    # TODO добавить пермишены
 ) -> list[UserInfo]:
     """Возвращает список всех пользователей."""
     return await user_crud.get_multi(session=session)
@@ -35,6 +34,7 @@ async def get_users(
 @router.post(
     '/',
     response_model=UserInfo,
+    summary='Регистрация нового пользователя',
     description=(
         'Создает нового пользователя с указанными данными.'
         'Регистрировать пользователя может или не авторизированный '
@@ -44,8 +44,17 @@ async def get_users(
 async def create_user(
     session: SessionDep,
     user_in: UserCreate,
+    current_user: OptionalUserDep,
 ) -> UserInfo:
     """Создает нового пользователя."""
+    if current_user and current_user.role == UserRole.USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                'Авторизированный пользователь не'
+                'может создать нового пользователя'
+            ),
+        )
     try:
         user = await user_crud.create(session=session, user_in=user_in)
     except ValueError as e:
@@ -57,17 +66,62 @@ async def create_user(
 
 
 @router.get(
+    '/me',
+    response_model=UserInfo,
+    summary='Получение информации о текущем пользователе',
+    description=(
+        'Возвращает информацию о текущем пользователе.'
+        ' Только для авторизированных пользователей'
+    ),
+    dependencies=(Depends(get_current_user),),
+)
+async def get_me_info(
+    user: UserDep,
+) -> UserInfo:
+    """Возвращает данные текущего авторизованного пользователя."""
+    return UserInfo.model_validate(user)
+
+
+@router.patch(
+    '/me',
+    response_model=UserInfo,
+    summary='Обновление информации о текущем пользователе',
+    description=(
+        'Возвращает обновленную информацию о пользователе. '
+        'Только для авторизированных пользователей'
+    ),
+)
+async def patch_me(
+    user_in: UserUpdate,
+    session: SessionDep,
+    current_user: UserDep,
+) -> UserInfo:
+    """Возвращает обновленные даные текущего пользователя."""
+    if user_in.role is not None or user_in.is_active is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Вы не можете поменять поля role и is_active самому себе.',
+        )
+    return await user_crud.update(
+        session=session,
+        db_user=current_user,
+        user_in=user_in,
+    )
+
+
+@router.get(
     '/{user_id}',
     response_model=UserInfo,
+    summary='Получение информации о пользователе по его ID',
     description=(
         'Возвращает информацию о пользователе по его ID. '
         'Только для администраторов или менеджеров'
     ),
+    dependencies=(Depends(get_manager_user),),
 )
 async def get_user(
     user_id: int,
     session: SessionDep,
-    # TODO добавить пермишены
 ) -> UserInfo:
     """Возвращает сведения о конкретном пользователе."""
     user = await user_crud.get(obj_id=user_id, session=session)
@@ -82,31 +136,50 @@ async def get_user(
 @router.patch(
     '/{user_id}',
     response_model=UserInfo,
+    summary='Обновление информации о пользователе по его ID',
     description=(
         'Возвращает обновленную информацию о пользователе по его ID. '
         'Только для администраторов или менеджеров'
     ),
 )
 async def update_user(
-    # user_id: int,
+    user_id: int,
     user_in: UserUpdate,
     session: SessionDep,
-    # TODO добавить пермишены
+    current_user: ManagerDep,
 ) -> UserInfo:
     """Изменяет данные конкретного ползователя."""
-    return await user_crud.update(user_in=user_in, session=session)
+    target_user = await user_crud.get(
+        obj_id=user_id, session=session, is_active=None,
+    )
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Пользователь с таким id не найден',
+        )
 
+    if not current_user.is_admin:
+        if target_user.is_admin or target_user.is_manager:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='Менеджер может изменять только обычных пользователей',
+            )
 
-# @router.get(
-#     '/me',
-#     response_model=UserInfo,
-#     description=(
-#         'Возвращает информацию о текущем пользователе.'
-#         ' Только для авторизированных пользователей'
-#     ),
-# )
-# async def get_me_info(
-#     user: UserDep,
-# ) -> UserInfo:
-#     """Возвращает данные текущего авторизованного пользователя."""
-#     return UserInfo.model_validate(user)
+    if (
+        user_in.is_active is not None
+        and ((current_user.is_admin and current_user.id == target_user.id)
+        or (current_user.is_manager and current_user.id == target_user.id))
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Нельзя менять поле is_active самому себе.',
+        )
+    try:
+        return await user_crud.update(
+            session=session, db_user=target_user, user_in=user_in,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
