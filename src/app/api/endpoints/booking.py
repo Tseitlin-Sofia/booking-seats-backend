@@ -20,7 +20,7 @@ from app.schemas.booking import (
     BookingUpdate,
 )
 
-from src.app.crud.booking import booking_crud, booking_table_slot_crud
+from app.crud.booking import booking_crud, booking_table_slot_crud
 
 router = APIRouter()
 
