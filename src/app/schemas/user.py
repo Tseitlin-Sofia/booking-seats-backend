@@ -35,7 +35,7 @@ class UserBase(BaseModel):
 
     @field_validator('phone')
     @classmethod
-    def validate_email(cls, phone: str | None) -> str | None:
+    def validate_phone(cls, phone: str | None) -> str | None:
         """Проверяет корректность ввода телефона."""
         if phone is not None:
             if not UserConstants.PHONE_REGEX.match(phone):
