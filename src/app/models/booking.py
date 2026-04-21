@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
@@ -11,8 +12,10 @@ from sqlalchemy.types import Enum
 
 from app.core.constants import BookingConstants as Constants
 from app.core.db import Base, CommonMixin
-from app.models.cafe import Cafe
-from app.models.user import User
+
+if TYPE_CHECKING:
+    from app.models.cafe import Cafe
+    from app.models.user import User
 
 
 class BookingStatus(StrEnum):
@@ -42,6 +45,7 @@ class BookingTableSlot(Base, CommonMixin):
             name='fk_booking_table_slot_booking_id_booking',
         ),
     )
+    booking = relationship('Booking', back_populates='table_slots')
 
 
 class Booking(Base, CommonMixin):

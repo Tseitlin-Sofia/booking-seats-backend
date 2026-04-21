@@ -1,7 +1,7 @@
 """recreate initial migrations
 
 Revision ID: 8ed6bcbc6a32
-Revises: 
+Revises:
 Create Date: 2026-04-21 11:47:22.572651
 
 """

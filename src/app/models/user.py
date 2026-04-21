@@ -8,6 +8,7 @@ from app.core.constants import UserConstants
 from app.core.db import Base, CommonMixin
 
 if TYPE_CHECKING:
+    from app.models.booking import Booking
     from app.models.cafe import Cafe
 
 
@@ -56,6 +57,11 @@ class User(CommonMixin, Base):
         "Cafe",
         secondary="cafe_managers",
         back_populates="managers_id",
+        lazy="selectin",
+    )
+    bookings: Mapped[list["Booking"]] = relationship(
+        "Booking",
+        back_populates="user",
         lazy="selectin",
     )
 
