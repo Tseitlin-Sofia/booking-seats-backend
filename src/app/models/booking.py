@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from enum import StrEnum
 
 from sqlalchemy import Date, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
@@ -11,10 +12,16 @@ from sqlalchemy.types import Enum
 from app.core.constants import BookingConstants as Constants
 from app.core.db import Base, CommonMixin
 from app.models.cafe import Cafe
-from app.models.slot import Slot
-from app.models.table import Table
 from app.models.user import User
-from app.schemas.booking import BookingStatus
+
+
+class BookingStatus(StrEnum):
+    """Статус бронирования."""
+
+    BOOKING = "BOOKING"
+    CANCELED = "CANCELED"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
 
 
 class BookingTableSlot(Base, CommonMixin):
@@ -34,20 +41,6 @@ class BookingTableSlot(Base, CommonMixin):
             'booking.id',
             name='fk_booking_table_slot_booking_id_booking',
         ),
-    )
-    booking: Mapped['Booking'] = relationship(
-        'Booking',
-        back_populates='table_slots',
-        lazy='selectin',
-    )
-    slot: Mapped['Slot'] = relationship(
-        'Slot',
-        back_populates='booking_table_slots',
-        lazy='selectin',
-    )
-    table: Mapped['Table'] = relationship(
-        'Table',
-        lazy='selectin',
     )
 
 
@@ -110,7 +103,7 @@ class Booking(Base, CommonMixin):
     @validates('booking_date')
     def validate_booking_date(self, key: str, value: date) -> date:
         """Валидация даты бронирования (нельзя бронировать в прошлом)."""
-        if value >= date.today():
+        if value >= date.today():  # replace datetime with fastapi func
             return value
         raise ValueError(Constants.DATE_ERROR)
 

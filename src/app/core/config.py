@@ -4,7 +4,10 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic import EmailStr, computed_field
+from pydantic.types import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class Settings(BaseSettings):
@@ -21,7 +24,7 @@ class Settings(BaseSettings):
     environment: str = 'dev'
     log_level: str = 'INFO'
     postgres_user: str
-    postgres_password: str
+    postgres_password: SecretStr
     postgres_db: str
     postgres_server: str
     postgres_port: int = 5432
@@ -43,7 +46,10 @@ class Settings(BaseSettings):
             f'/{self.postgres_db}'
         )
 
-    model_config = SettingsConfigDict(env_file='.env', extra='ignore')
+    model_config = SettingsConfigDict(
+        env_file=BASE_DIR / '../infra/.env',
+        extra='ignore',
+    )
 
 
 settings = Settings()

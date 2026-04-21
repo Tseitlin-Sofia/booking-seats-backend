@@ -20,7 +20,7 @@ async def check_cafe_exists(
         select(exists().where(Cafe.id == cafe_id)),
     )
     if not result.scalar():
-        logger.debug('Кафе не найдено! cafe_id: {cafe_id}')
+        logger.debug(f'Кафе не найдено! cafe_id: {cafe_id}')
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f'Кафе с id={cafe_id} не найдено.',
