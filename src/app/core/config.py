@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Optional
 
-from pydantic import EmailStr, computed_field
+from pydantic import EmailStr
 from pydantic.types import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     """Настройки приложения."""
 
     app_title: str = 'NAME'
-    base_dir: Path = Path(__file__).resolve().parent.parent.parent
+    base_dir: Path = BASE_DIR
     description: str = 'DESCRIPTION'
     secret: str = 'SECRET'
     first_superuser_email: Optional[EmailStr] = None
@@ -34,13 +34,12 @@ class Settings(BaseSettings):
     jwt_algorithm: str = 'HS256'
     jwt_token_inactivity_minutes: int = 30
 
-    @computed_field
     @property
     def database_url(self) -> str:
         """Строка подключения к PostgreSQL."""
         return (
             f'postgresql+asyncpg://{self.postgres_user}'
-            f':{self.postgres_password}'
+            f':{self.postgres_password.get_secret_value()}'
             f'@{self.postgres_server}'
             f':{self.postgres_port}'
             f'/{self.postgres_db}'
