@@ -1,7 +1,7 @@
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, Enum, String
+from sqlalchemy import CheckConstraint, Enum, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import UserConstants
@@ -52,11 +52,15 @@ class User(CommonMixin, Base):
         ),
         default=UserConstants.DEFAULT_USER_ROLE,
     )
-    cafes: Mapped[list["Cafe"]] = relationship(
-        "Cafe",
-        secondary="cafe_managers",
-        back_populates="managers_id",
-        lazy="selectin",
+    cafe_id: Mapped[int | None] = mapped_column(
+        ForeignKey('cafe.id', ondelete='RESTRICT'),
+        nullable=True,
+    )
+    cafes: Mapped[list['Cafe']] = relationship(
+        'Cafe',
+        secondary='cafe_managers',
+        back_populates='managers_id',
+        lazy='selectin',
     )
 
     @property
