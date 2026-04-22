@@ -1,9 +1,7 @@
 """Настройки приложения."""
 
 from pathlib import Path
-from typing import Optional
 
-from pydantic import EmailStr
 from pydantic.types import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
