@@ -27,7 +27,6 @@ class CRUDUser(CRUDBase):
         user_update_data: dict,
     ) -> User:
         """Обновление данных пользователя."""
-
         for field in user_update_data:
             if hasattr(db_user, field):
                 setattr(db_user, field, user_update_data[field])

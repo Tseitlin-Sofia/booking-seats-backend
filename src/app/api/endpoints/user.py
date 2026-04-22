@@ -6,16 +6,16 @@ from app.api.dependencies import (
     SessionDep,
     UserDep,
 )
-from app.api.validators.user import(
+from app.api.validators.user import (
     validate_admin_or_manager_cannot_deactivate_self,
     validate_cannot_deactivate_last_manager,
     validate_manager_can_only_edit_users,
 )
 from app.core.user import get_current_user, get_manager_user
 from app.crud.user import user_crud
-from app.services.user import user_service
 from app.models.user import UserRole
 from app.schemas.user import UserCreate, UserInfo, UserUpdate
+from app.services.user import user_service
 
 router = APIRouter()
 
@@ -108,11 +108,15 @@ async def patch_me(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Вы не можете поменять поля role и is_active самому себе.',
         )
-    return await user_service.update_user(
-        session=session,
-        user=current_user,
-        user_in=user_in,
-    )
+    try:
+        return await user_service.update_user(
+            session=session, user=current_user, user_in=user_in,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
 
 
 @router.get(
@@ -168,11 +172,11 @@ async def update_user(
         validate_admin_or_manager_cannot_deactivate_self(
             current_user=current_user,
             target_user=target_user,
-            is_active=user_in.is_active
+            is_active=user_in.is_active,
         )
         validate_manager_can_only_edit_users(
             current_user=current_user,
-            target_user=target_user
+            target_user=target_user,
         )
         await validate_cannot_deactivate_last_manager(
             session=session,
