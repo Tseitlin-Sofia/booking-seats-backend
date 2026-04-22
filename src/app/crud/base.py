@@ -81,7 +81,7 @@ class CRUDBase:
         update_data = obj_in.model_dump(exclude_unset=True)
 
         for field in obj_data:
-            if field in update_data:
+            if field in update_data and field in db_obj:
                 setattr(db_obj, field, update_data[field])
         session.add(db_obj)
         await session.commit()
@@ -96,6 +96,10 @@ class CRUDBase:
         is_active: Optional[bool] = True,
     ) -> Optional[Base]:
         """Получает объект по атрибуту, с учетом статуса активности."""
+        if not hasattr(self.model, attr_name):
+            raise AttributeError(
+                f"У модели {self.model.__name__} нет атрибута {attr_name}.",
+            )
         attr = getattr(self.model, attr_name)
         stmt = select(self.model).where(attr == attr_value)
         if is_active is not None:

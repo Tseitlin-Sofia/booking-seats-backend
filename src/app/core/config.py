@@ -3,15 +3,18 @@
 from pathlib import Path
 from typing import Optional
 
-from pydantic import EmailStr, computed_field
+from pydantic import EmailStr
+from pydantic.types import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class Settings(BaseSettings):
     """Настройки приложения."""
 
     app_title: str = 'NAME'
-    base_dir: Path = Path(__file__).resolve().parent.parent.parent
+    base_dir: Path = BASE_DIR
     description: str = 'DESCRIPTION'
     secret: str = 'SECRET'
     first_superuser_email: Optional[EmailStr] = None
@@ -21,7 +24,7 @@ class Settings(BaseSettings):
     environment: str = 'dev'
     log_level: str = 'INFO'
     postgres_user: str
-    postgres_password: str
+    postgres_password: SecretStr
     postgres_db: str
     postgres_server: str
     postgres_port: int = 5432
@@ -31,19 +34,21 @@ class Settings(BaseSettings):
     jwt_algorithm: str = 'HS256'
     jwt_token_inactivity_minutes: int = 30
 
-    @computed_field
     @property
     def database_url(self) -> str:
         """Строка подключения к PostgreSQL."""
         return (
             f'postgresql+asyncpg://{self.postgres_user}'
-            f':{self.postgres_password}'
+            f':{self.postgres_password.get_secret_value()}'
             f'@{self.postgres_server}'
             f':{self.postgres_port}'
             f'/{self.postgres_db}'
         )
 
-    model_config = SettingsConfigDict(env_file='.env', extra='ignore')
+    model_config = SettingsConfigDict(
+        env_file=BASE_DIR / '../infra/.env',
+        extra='ignore',
+    )
 
 
 settings = Settings()

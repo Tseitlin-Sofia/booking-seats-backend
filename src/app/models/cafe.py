@@ -18,6 +18,7 @@ from app.core.constants import CafeConstants
 from app.core.db import Base, CommonMixin
 
 if TYPE_CHECKING:
+    from app.models.booking import Booking
     from app.models.table import Table as TableModel
     from app.models.user import User
 
@@ -61,6 +62,11 @@ class Cafe(CommonMixin, Base):
     )
     tables: Mapped[List['TableModel']] = relationship(
         'Table',
+        back_populates="cafe",
+        lazy="selectin",
+    )
+    bookings: Mapped[List['Booking']] = relationship(
+        'Booking',
         back_populates="cafe",
         lazy="selectin",
     )
