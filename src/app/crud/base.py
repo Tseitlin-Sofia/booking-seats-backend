@@ -2,7 +2,6 @@
 
 from typing import TYPE_CHECKING, Any, Optional
 
-from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -77,12 +76,11 @@ class CRUDBase:
         session: AsyncSession,
     ) -> Base:
         """Обновляет существующую запись в базе данных."""
-        obj_data = jsonable_encoder(db_obj)
         update_data = obj_in.model_dump(exclude_unset=True)
 
-        for field in obj_data:
-            if field in update_data and field in db_obj:
-                setattr(db_obj, field, update_data[field])
+        for field, value in update_data.items():
+            if hasattr(db_obj, field):
+                setattr(db_obj, field, value)
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
