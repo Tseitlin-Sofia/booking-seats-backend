@@ -106,3 +106,9 @@ class SlotConstants:
     BASE_TIME = datetime.now() + timedelta(minutes=10)
     FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')
     TO_TIME = (BASE_TIME + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')
+
+
+class NotificationConstants:
+    """Класс констант для уведомлений и напоминаний о бронировании"""
+
+    ADMIN_EMAIL = "test@mail.ru"

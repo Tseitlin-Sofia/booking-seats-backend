@@ -19,6 +19,8 @@ from app.schemas.booking import (
     BookingStatus,
 )
 
+from app.celery.tasks import notify_admin, notify_client
+
 router = APIRouter()
 
 
@@ -121,6 +123,8 @@ async def create_booking(
         session=session,
         obj_in=booking_data,
     )
+    booking_for_celery = BookingInfo.model_validate(new_booking).model_dump()
+    notify_admin.delay(booking_for_celery)
 
     for table_slot in booking.tables_slots:
         await booking_table_slot_crud.create(
