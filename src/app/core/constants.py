@@ -1,21 +1,40 @@
 """Модуль с константами приложения."""
-from pathlib import Path
+import re
 from datetime import datetime, timedelta
-from app.core.config import settings
+from pathlib import Path
 
 
 class BookingConstants:
     """Класс с константами для бронирования."""
 
     REPR_FORMAT = 'Бронирование id:{} status:{} user_id:{}'
-    MAX_GUESTS = 1000
+    MAX_GUESTS = 1000  # TODO: возможно стоит вычислять по вместимости столов.
     MIN_GUESTS = 1
+
+    DATE_ERROR = 'Дата бронирования не может быть в прошлом.'
+    GUEST_NUMBER_ERROR = 'Количество гостей должно быть между {} и {}'
+    SLOT_ALREADY_BOOKED = (
+        'Попытка забронировать уже забронированный слот {} на стол {}.'
+    )
+    SLOTS_UNAVAILABLE = 'Некоторые слоты недоступны для бронирования.'
+    SLOT_CAFE_MISMATCH = 'Слот и стол должны принадлежать одному кафе.'
+    SLOT_DOES_NOT_EXIST = 'Слот c id {} не существует.'
+    TABLE_DOES_NOT_EXIST = 'Стол c id {} не существует.'
+    USER_DOES_NOT_EXIST = 'Пользователь c id {} не существует.'
+    CAFE_DOES_NOT_EXIST = 'Кафе c id {} не существует.'
+    USER_RIGHTS_ERROR = 'У вас нет прав для просмотра чужих бронирований.'
+    BOOKING_NOT_FOUND = 'Бронирование c id {} не найдено.'
+    SLOT_INACTIVE = 'Временной слот с ID {} неактивен'
+    TABLE_INACTIVE = 'Стол с ID {} неактивен'
+    USER_NOT_AUTHENTICATED = 'Пользователь не авторизован'
+    SLOTS_UNAVAILABLE = 'Выбранные временные слоты уже забронированы'
 
 
 class MediaConstants:
     """Класс констант для работы с media."""
 
-    MEDIA_DIR = settings.base_dir / "media"
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+    MEDIA_DIR = BASE_DIR / "media"
     IMAGE_EXTENSION = "jpg"
     CHUNK_SIZE_1MB = 1024 * 1024
     MAX_PHOTO_SIZE_5MB = CHUNK_SIZE_1MB * 5
@@ -37,7 +56,10 @@ class UserConstants:
     MAX_PHONE_LENGTH = 20
     MAX_PASSWORD_LENGTH = 255
     MAX_TG_ID_LENGTH = 100
+    MIN_PASSWORD_LENGTH = 5
     DEFAULT_USER_ROLE = 'user'
+    PHONE_REGEX = re.compile(r'^(\+7|8)\d{10}$')
+    PASSWORD_REGEX = re.compile(r'^(?=.*[A-Za-z])(?=.*\d).+$')
 
 
 class LoggingConstants:
@@ -79,7 +101,7 @@ class LoggingConstants:
 
 
 class SlotConstants:
-    """Класс с константами для модели интервала времени бронирования столика."""
+    """Класс для констант модели интервала времени бронирования столика."""
 
     BASE_TIME = datetime.now() + timedelta(minutes=10)
     FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')

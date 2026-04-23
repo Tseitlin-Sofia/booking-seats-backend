@@ -1,10 +1,15 @@
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, Enum, ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import CheckConstraint, Enum, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import UserConstants
 from app.core.db import Base, CommonMixin
+
+if TYPE_CHECKING:
+    from app.models.booking import Booking
+    from app.models.cafe import Cafe
 
 
 class UserRole(StrEnum):
@@ -48,11 +53,17 @@ class User(CommonMixin, Base):
         ),
         default=UserConstants.DEFAULT_USER_ROLE,
     )
-    cafe_id: Mapped[int | None] = mapped_column(
-        ForeignKey('cafe.id', ondelete='RESTRICT'),
-        nullable=True,
+    cafes: Mapped[list['Cafe']] = relationship(
+        'Cafe',
+        secondary='cafe_managers',
+        back_populates='managers_id',
+        lazy='selectin',
     )
-    # TODO Добавить relationship для модели Cafe.
+    bookings: Mapped[list["Booking"]] = relationship(
+        "Booking",
+        back_populates="user",
+        lazy="selectin",
+    )
 
     @property
     def is_admin(self) -> bool:

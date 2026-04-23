@@ -1,24 +1,15 @@
 """Pydantic схемы для бронирований."""
 
 from datetime import date, datetime
-from enum import StrEnum
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.booking import BookingStatus
 from app.schemas.cafe import CafeShortInfo
-from app.schemas.table import TableShortInfo
 from app.schemas.slot import TimeSlotShortInfo
+from app.schemas.table import TableShortInfo
 from app.schemas.user import UserShortInfo
-
-
-class BookingStatus(StrEnum):
-    """Статус бронирования."""
-
-    BOOKING = "BOOKING"
-    CANCELED = "CANCELED"
-    ACTIVE = "ACTIVE"
-    COMPLETED = "COMPLETED"
 
 
 class BookingTableSlot(BaseModel):
@@ -46,13 +37,13 @@ class BookingCommon(BaseModel):
     guest_number: int = Field(..., gt=0, title="Guest Number")
     note: Optional[str] = Field(None, title="Note")
     booking_date: date = Field(..., title="Booking Date")
+    # TODO: validate booking_date is in the future, slots arent empty, gn>0
 
 
 class BookingCreate(BookingCommon):
     """Схема для создания бронирования."""
 
     cafe_id: int = Field(..., title="Cafe Id")
-    status: BookingStatus = Field(default=BookingStatus.BOOKING, exclude=True)
 
     model_config = ConfigDict(extra='forbid')
 

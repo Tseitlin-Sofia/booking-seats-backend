@@ -1,8 +1,8 @@
-"""recreate initial migrations with slot models
+"""recreate initial migrations
 
-Revision ID: d48b4a84ddbe
-Revises: 
-Create Date: 2026-04-16 23:53:36.898503
+Revision ID: 8ed6bcbc6a32
+Revises:
+Create Date: 2026-04-21 11:47:22.572651
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'd48b4a84ddbe'
+revision: str = '8ed6bcbc6a32'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,12 +26,53 @@ def upgrade() -> None:
     sa.Column('address', sa.String(), nullable=False),
     sa.Column('phone', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
-    sa.Column('photo_id', sa.Integer(), nullable=True),
+    sa.Column('photo_id', sa.UUID(), nullable=True),
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name', 'address', name='cafe_unique_name_and_address')
+    )
+    op.create_table('user',
+    sa.Column('username', sa.String(length=100), nullable=False),
+    sa.Column('password_hash', sa.String(length=255), nullable=False),
+    sa.Column('email', sa.String(length=255), nullable=True),
+    sa.Column('phone', sa.String(length=20), nullable=True),
+    sa.Column('tg_id', sa.String(length=100), nullable=True),
+    sa.Column('role', sa.Enum('ADMIN', 'MANAGER', 'USER', name='userrole'), nullable=False),
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.CheckConstraint('email is not null OR phone is not null', name='ch_user_email_or_phone_required'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('phone'),
+    sa.UniqueConstraint('tg_id'),
+    sa.UniqueConstraint('username')
+    )
+    op.create_table('booking',
+    sa.Column('status', sa.Enum('BOOKING', 'CANCELED', 'ACTIVE', 'COMPLETED', name='bookingstatus'), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('cafe_id', sa.Integer(), nullable=False),
+    sa.Column('guest_number', sa.Integer(), nullable=False),
+    sa.Column('note', sa.String(), nullable=True),
+    sa.Column('booking_date', sa.Date(), nullable=False),
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], name='fk_booking_cafe_id_cafe'),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], name='fk_booking_user_id_user'),
     sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('cafe_managers',
+    sa.Column('cafe_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('cafe_id', 'user_id')
     )
     op.create_table('slot',
     sa.Column('start_time', sa.DateTime(), nullable=False),
@@ -55,55 +96,14 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('user',
-    sa.Column('username', sa.String(length=100), nullable=False),
-    sa.Column('password_hash', sa.String(length=255), nullable=False),
-    sa.Column('email', sa.String(length=255), nullable=True),
-    sa.Column('phone', sa.String(length=20), nullable=True),
-    sa.Column('tg_id', sa.String(length=100), nullable=True),
-    sa.Column('role', sa.Enum('ADMIN', 'MANAGER', 'USER', name='userrole'), nullable=False),
-    sa.Column('cafe_id', sa.Integer(), nullable=True),
-    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.CheckConstraint('email is not null OR phone is not null', name='ch_user_email_or_phone_required'),
-    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ondelete='RESTRICT'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email'),
-    sa.UniqueConstraint('phone'),
-    sa.UniqueConstraint('tg_id'),
-    sa.UniqueConstraint('username')
-    )
-    op.create_table('booking',
-    sa.Column('status', sa.Enum('BOOKING', 'CANCELED', 'ACTIVE', 'COMPLETED', name='bookingstatus'), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('cafe_id', sa.Integer(), nullable=False),
-    sa.Column('guest_number', sa.Integer(), nullable=False),
-    sa.Column('note', sa.String(), nullable=True),
-    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], name='fk_booking_cafe_id_cafe'),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], name='fk_booking_user_id_user'),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('cafe_managers',
-    sa.Column('cafe_id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('cafe_id', 'user_id')
-    )
     op.create_table('bookingtableslot',
     sa.Column('table_id', sa.Integer(), nullable=False),
     sa.Column('slot_id', sa.Integer(), nullable=False),
     sa.Column('booking_id', sa.Integer(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['booking_id'], ['booking.id'], name='fk_booking_table_slot_booking_id_booking'),
     sa.ForeignKeyConstraint(['slot_id'], ['slot.id'], name='fk_booking_table_slot_slot_id_slot'),
     sa.ForeignKeyConstraint(['table_id'], ['table.id'], name='fk_booking_table_slot_table_id_table'),
@@ -116,10 +116,10 @@ def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('bookingtableslot')
+    op.drop_table('table')
+    op.drop_table('slot')
     op.drop_table('cafe_managers')
     op.drop_table('booking')
     op.drop_table('user')
-    op.drop_table('table')
-    op.drop_table('slot')
     op.drop_table('cafe')
     # ### end Alembic commands ###
