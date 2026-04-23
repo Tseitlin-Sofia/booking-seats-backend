@@ -53,11 +53,11 @@ class User(CommonMixin, Base):
         ),
         default=UserConstants.DEFAULT_USER_ROLE,
     )
-    cafes: Mapped[list["Cafe"]] = relationship(
-        "Cafe",
-        secondary="cafe_managers",
-        back_populates="managers_id",
-        lazy="selectin",
+    cafes: Mapped[list['Cafe']] = relationship(
+        'Cafe',
+        secondary='cafe_managers',
+        back_populates='managers_id',
+        lazy='selectin',
     )
     bookings: Mapped[list["Booking"]] = relationship(
         "Booking",
