@@ -15,6 +15,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import ExpiredSignatureError, InvalidTokenError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
 from app.core.db import get_async_session
 from app.models.user import User
@@ -182,5 +183,6 @@ async def get_manager_user(
             detail='Недостаточно прав',
         )
     return current_user
+
 
 auth_service = AuthService()
