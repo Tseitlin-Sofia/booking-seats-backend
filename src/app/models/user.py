@@ -1,7 +1,7 @@
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, Enum, ForeignKey, String
+from sqlalchemy import CheckConstraint, Enum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import UserConstants
