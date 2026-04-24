@@ -6,15 +6,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.crud.cafe import cafe_crud
+from app.crud.user import user_crud
 from app.models import Cafe, User
 from app.schemas.cafe import CafeCreate, CafeUpdate
 
-logger = get_logger
+
+logger = get_logger()
 
 
 async def get_cafe_or_404(session: AsyncSession, obj_id: int) -> Self:
     """Возвращает объект по id и выдает 404, если он не найден."""
-    db_cafe = await cafe_crud.get_obj_by_id(session, obj_id)
+    db_cafe = await cafe_crud.get(obj_id, session)
     # db_cafe = await cafe_crud.get(session, obj_id)  До фикса базового круда.
     if db_cafe is None:
         raise HTTPException(HTTPStatus.NOT_FOUND, detail='Объект не найден!')
@@ -47,13 +49,13 @@ async def is_managers_id(
     session: AsyncSession,
     new_cafe: Union[CafeCreate, CafeUpdate],
 ) -> Optional[List[User]]:
-    """Проверка, указаны ли реальные менеджеры и их передача для POST."""
+    """Проверка, указаны ли реальные менеджеры."""
     new_data = new_cafe.model_dump(exclude_unset=True)
     if 'managers_id' not in new_data:
         return None
-    managers = []  # Cписок менеджеров, чтобы добавить в cafe_managers.
+    managers = []
     for manager_id in new_data['managers_id']:
-        db_user = await cafe_crud.get_obj_by_id(session, manager_id)
+        db_user = await user_crud.get(manager_id, session)
         if db_user is None:
             logger.warning(
                 'Попытка назначить несуществующего пользователя менеджером!'
@@ -61,7 +63,7 @@ async def is_managers_id(
             )
             raise HTTPException(
                 status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                detail='Пользователь не найден.',
+                detail=f'Указанный менеджер с {manager_id} не существует!',
             )
         if not db_user.is_manager:
             logger.warning(

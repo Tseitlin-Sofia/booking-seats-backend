@@ -31,17 +31,6 @@ class CRUDCafe(CRUDBase):
         result = await session.execute(stmt)
         return result.scalars().all()
 
-    async def get_obj_by_id(
-        self,
-        session: AsyncSession,
-        obj_id: int,
-    ) -> Optional[Self]:
-        """До фикса базового круда."""
-        result = await session.execute(
-            select(self.model).where(self.model.id == obj_id),
-        )
-        return result.scalars().first()
-
     async def create_new_cafe(
         self,
         session: AsyncSession,
@@ -71,10 +60,9 @@ class CRUDCafe(CRUDBase):
         """Обновляет существующее кафе в базе данных."""
         update_data = new_data_cafe.model_dump(exclude_unset=True)
         for key in update_data.keys():
-            new_value = update_data[key]
             if key == 'managers_id':
-                new_value = managers
-            setattr(db_cafe, key, new_value)
+                db_cafe.managers_id = managers
+            setattr(db_cafe, key, update_data[key])
         session.add(db_cafe)
         logger.info(
             'Кафе успешно обновлено!',

@@ -13,7 +13,7 @@ from app.api.validators.table import (
 )
 from app.core.user import get_current_user, get_manager_user
 from app.crud.table import table_crud
-from app.models.cafe import cafe_managers
+# from app.models.cafe import cafe_managers
 from app.models.user import User
 from app.schemas.table import (
     TableCreate,
@@ -37,12 +37,12 @@ async def check_manager_cafe_access(
         return
     if not user.is_manager:
         return
-    result = await session.execute(
-        select(cafe_managers.c.cafe_id).where(
-            cafe_managers.c.user_id == user.id,
-            cafe_managers.c.cafe_id == cafe_id,
-        ),
-    )
+    # result = await session.execute(
+    #     select(cafe_managers.c.cafe_id).where(
+    #         cafe_managers.c.user_id == user.id,
+    #         cafe_managers.c.cafe_id == cafe_id,
+    #     ),
+    # )
     if result.first() is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -44,8 +44,12 @@ class MediaConstants:
 class CafeConstants:
     """Класс с константами для модели кафе."""
 
+    ERROR_PHONE = (
+        'Номер телефона должен начинаться с +7 '
+        'и не превышать 10 цифр после!'
+    )
     NAME_RESTRICTION = 20
-    MOSCOW_HOURS = 3
+    PHONE_FORMAT = r'^\+7\d{10}$'
 
 
 class UserConstants:

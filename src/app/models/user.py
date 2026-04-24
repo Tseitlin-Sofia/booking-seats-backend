@@ -1,8 +1,8 @@
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, Enum, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import CheckConstraint, Enum, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.constants import UserConstants
 from app.core.db import Base, CommonMixin
@@ -53,11 +53,9 @@ class User(CommonMixin, Base):
         ),
         default=UserConstants.DEFAULT_USER_ROLE,
     )
-    cafes: Mapped[list['Cafe']] = relationship(
-        'Cafe',
-        secondary='cafe_managers',
-        back_populates='managers_id',
-        lazy='selectin',
+    cafe_id: Mapped[int] = mapped_column(ForeignKey("cafe.id"), nullable=True,)
+    cafe: Mapped['Cafe'] = relationship(
+        back_populates="managers", lazy="selectin",
     )
     bookings: Mapped[list["Booking"]] = relationship(
         "Booking",
@@ -85,7 +83,18 @@ class User(CommonMixin, Base):
             'email is not null OR phone is not null',
             name='ch_user_email_or_phone_required',
         ),
+        CheckConstraint(
+            "(role = 'manager') OR (cafe_id IS NULL)",
+            name="only_manager_can_have_cafe",
+        )
     )
+
+    @validates("cafe_id")
+    def validate_manager(self, key, value):
+        """Проверка, что только менеджер может быть привязан к кафе."""
+        if value is not None and self.role != UserRole.MANAGER:
+            raise ValueError("К кафе можно привязать только менеджера!")
+        return value
 
     def __str__(self) -> str:
         return self.username
