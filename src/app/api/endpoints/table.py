@@ -16,7 +16,6 @@ from app.schemas.table import (
     TableUpdate,
 )
 
-
 router = APIRouter()
 
 UserDep = Annotated[User, Depends(get_current_user)]
@@ -35,9 +34,9 @@ async def get_tables(
     show_active: bool = None,
 ) -> list[TableInfo]:
     """Возвращает все столы заданного кафе."""
-    await get_cafe_or_404(session, cafe_id, True,)
+    await get_cafe_or_404(session, cafe_id, True)
     if not (user.is_admin or user.is_manager):
-        return await table_crud.get_tables_by_cafe(cafe_id, session, True,)
+        return await table_crud.get_tables_by_cafe(cafe_id, session, True)
     return await table_crud.get_tables_by_cafe(cafe_id, session, show_active)
 
 
@@ -54,8 +53,8 @@ async def create_table(
     user: ManagerDep,
 ) -> TableInfo:
     """Создаёт новый стол в указанном кафе."""
-    await is_manager_from_cafe(cafe_id, user,)
-    await get_cafe_or_404(session, cafe_id, True,)
+    await is_manager_from_cafe(cafe_id, user)
+    await get_cafe_or_404(session, cafe_id, True)
     return await table_crud.create_for_cafe(
         cafe_id=cafe_id,
         obj_in=table_in,
@@ -75,13 +74,13 @@ async def get_table(
     user: UserDep,
 ) -> TableInfo:
     """Возвращает информацию о конкретном столе в кафе."""
-    await get_cafe_or_404(session, cafe_id, True,)
+    await get_cafe_or_404(session, cafe_id, True)
     await check_table_exists_in_cafe(
         cafe_id,
         table_id,
         session,
     )
-    table = await table_crud.get_with_cafe(table_id, session,)
+    table = await table_crud.get_with_cafe(table_id, session)
     if not (user.is_admin or user.is_manager) and not table.is_active:
         raise HTTPException(HTTPStatus.FORBIDDEN, detail='Доступ запрещен!')
     return table
@@ -100,8 +99,8 @@ async def update_table(
     user: ManagerDep,
 ) -> TableInfo:
     """Обновляет данные стола в указанном кафе."""
-    await is_manager_from_cafe(cafe_id, user,)
-    await get_cafe_or_404(session, cafe_id, True,)
+    await is_manager_from_cafe(cafe_id, user)
+    await get_cafe_or_404(session, cafe_id, True)
     table = await check_table_exists_in_cafe(
         cafe_id,
         table_id,
@@ -112,4 +111,4 @@ async def update_table(
         obj_in=table_in,
         session=session,
     )
-    return await table_crud.get_with_cafe(table_id, session,)
+    return await table_crud.get_with_cafe(table_id, session)

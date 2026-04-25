@@ -9,7 +9,6 @@ from app.crud.base import CRUDBase
 from app.crud.slot import slot_crud
 from app.schemas.slot import SlotBase, SlotCreate
 
-
 router = APIRouter()
 
 

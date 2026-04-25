@@ -58,7 +58,7 @@ class CafeUpdate(ValidatePhoneMixin, BaseModel):
     description: Optional[str] = None
     photo_id: Optional[UUID] = None
     managers_id: Optional[List[int]] = Field(
-        default=None, min_length=CafeConstants.MIN_LENGTH_MANAGERS_LIST
+        default=None, min_length=CafeConstants.MIN_LENGTH_MANAGERS_LIST,
     )
     is_active: Optional[bool] = None
 
@@ -69,5 +69,5 @@ class CafeCreate(ValidatePhoneMixin, CafeBase):
     """Схема для метода POST."""
 
     managers_id: List[int] = Field(
-        min_length=CafeConstants.MIN_LENGTH_MANAGERS_LIST
+        min_length=CafeConstants.MIN_LENGTH_MANAGERS_LIST,
     )

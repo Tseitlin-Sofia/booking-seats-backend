@@ -2,20 +2,18 @@ from http import HTTPStatus
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from app.api.dependencies import SessionDep
+
+from app.api.dependencies import ManagerDep, SessionDep, UserDep
 from app.api.validators.cafe import (
     check_name_address,
     get_cafe_or_404,
     is_manager_from_cafe,
     is_managers_id,
 )
-
-from app.api.dependencies import ManagerDep, UserDep
 from app.core.user import get_admin_user
 from app.crud.cafe import CRUDCafe, cafe_crud
 from app.models import Cafe
 from app.schemas.cafe import CafeCreate, CafeInfo, CafeUpdate
-
 
 router = APIRouter()
 
@@ -35,7 +33,7 @@ router = APIRouter()
 async def get_all_cafes(
     session: SessionDep,
     user: UserDep,
-    show_active: Optional[bool] = None
+    show_active: Optional[bool] = None,
 ) -> List[Cafe]:
     """Ручка multi-get."""
     if not (user.is_admin or user.is_manager):
@@ -58,7 +56,7 @@ async def get_all_cafes(
 async def get_cafe(
     session: SessionDep,
     cafe_id: int,
-    user: UserDep
+    user: UserDep,
 ) -> Cafe:
     """Ручка id-get."""
     cafe = await get_cafe_or_404(session, cafe_id)
@@ -77,7 +75,7 @@ async def get_cafe(
         'Только для администраторов.'
     ),
     response_description='Подробный вывод созданного кафе',
-    dependencies=[Depends(get_admin_user)]
+    dependencies=[Depends(get_admin_user)],
 )
 async def create_new_cafe(
     new_cafe: CafeCreate,

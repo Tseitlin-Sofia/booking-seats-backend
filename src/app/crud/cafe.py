@@ -1,4 +1,4 @@
-from typing import List, Optional, Self, Sequence
+from typing import List, Optional, Self
 
 from sqlalchemy import and_, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,7 +22,7 @@ class CRUDCafe(CRUDBase):
     ) -> Self:
         """Создает новое кафе в базе данных."""
         db_cafe = self.model(**new_cafe.model_dump(
-            exclude={"managers_id"}, exclude_unset=True)
+            exclude={"managers_id"}, exclude_unset=True),
         )
         db_cafe.managers = managers
         session.add(db_cafe)
@@ -61,11 +61,12 @@ class CRUDCafe(CRUDBase):
     async def is_cafe_exist(
             self,
             session: AsyncSession,
-            cafe_id: int
+            cafe_id: int,
     ) -> bool:
+        """Метод, проверяющий существование кафе в бд."""
         result = await session.execute(select(
-            exists().where(Cafe.id == cafe_id)
-        ),)
+            exists().where(Cafe.id == cafe_id),
+        ))
         return result.scalar_one()
 
     async def is_unique_name_address(

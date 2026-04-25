@@ -53,7 +53,7 @@ class User(CommonMixin, Base):
         ),
         default=UserConstants.DEFAULT_USER_ROLE,
     )
-    cafe_id: Mapped[int] = mapped_column(ForeignKey("cafe.id"), nullable=True,)
+    cafe_id: Mapped[int] = mapped_column(ForeignKey("cafe.id"), nullable=True)
     cafe: Mapped['Cafe'] = relationship(
         back_populates="managers", lazy="selectin",
     )
@@ -86,7 +86,7 @@ class User(CommonMixin, Base):
     )
 
     @validates("cafe_id")
-    def validate_manager(self, key, value):
+    def validate_manager(self, key: int, value: int) -> int:
         """Проверка, что только менеджер может быть привязан к кафе."""
         if value is not None and not self.is_manager:
             raise ValueError("К кафе можно привязать только менеджера!")
