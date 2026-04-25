@@ -92,7 +92,7 @@ class User(CommonMixin, Base):
     @validates("cafe_id")
     def validate_manager(self, key, value):
         """Проверка, что только менеджер может быть привязан к кафе."""
-        if value is not None and self.role != UserRole.MANAGER:
+        if value is not None and self.role != 'manager':
             raise ValueError("К кафе можно привязать только менеджера!")
         return value
 
