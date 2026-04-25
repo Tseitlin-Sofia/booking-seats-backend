@@ -83,16 +83,12 @@ class User(CommonMixin, Base):
             'email is not null OR phone is not null',
             name='ch_user_email_or_phone_required',
         ),
-        CheckConstraint(
-            "(role = 'manager') OR (cafe_id IS NULL)",
-            name="only_manager_can_have_cafe",
-        )
     )
 
     @validates("cafe_id")
     def validate_manager(self, key, value):
         """Проверка, что только менеджер может быть привязан к кафе."""
-        if value is not None and self.role != 'manager':
+        if value is not None and not self.is_manager:
             raise ValueError("К кафе можно привязать только менеджера!")
         return value
 

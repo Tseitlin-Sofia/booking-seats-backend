@@ -34,7 +34,7 @@ class CRUDTable(CRUDBase):
         self,
         cafe_id: int,
         session: AsyncSession,
-        show_active: bool = True,
+        show_active: Optional[bool] = None,
     ) -> list[Table]:
         """Получает все столы заданного кафе."""
         stmt = (

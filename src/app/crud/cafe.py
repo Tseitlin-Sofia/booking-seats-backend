@@ -14,23 +14,6 @@ logger = get_logger()
 class CRUDCafe(CRUDBase):
     """CRUD для объектов модели кафе."""
 
-    async def get_all_cafes(
-        self,
-        session: AsyncSession,
-        show_active: Optional[bool],
-    ) -> Sequence[Cafe]:
-        """Возвращает список кафе в соответствии с правами доступа.
-
-        Учитывается установленный менеджером/админом show_active.
-        """
-        stmt = select(Cafe)
-        if show_active is True:
-            stmt = stmt.where(Cafe.is_active)
-        elif show_active is not None:
-            stmt = stmt.where(Cafe.is_active == show_active)
-        result = await session.execute(stmt)
-        return result.scalars().all()
-
     async def create_new_cafe(
         self,
         session: AsyncSession,
@@ -38,8 +21,10 @@ class CRUDCafe(CRUDBase):
         managers: List[User],
     ) -> Self:
         """Создает новое кафе в базе данных."""
-        db_cafe = self.model(**new_cafe.model_dump())
-        db_cafe.managers_id = managers  # NOTE: связываем менеджеров с кафе.
+        db_cafe = self.model(**new_cafe.model_dump(
+            exclude={"managers_id"}, exclude_unset=True)
+        )
+        db_cafe.managers = managers
         session.add(db_cafe)
         await session.commit()
         await session.refresh(db_cafe)
@@ -61,7 +46,8 @@ class CRUDCafe(CRUDBase):
         update_data = new_data_cafe.model_dump(exclude_unset=True)
         for key in update_data.keys():
             if key == 'managers_id':
-                db_cafe.managers_id = managers
+                db_cafe.managers = managers
+                continue
             setattr(db_cafe, key, update_data[key])
         session.add(db_cafe)
         logger.info(
@@ -71,6 +57,16 @@ class CRUDCafe(CRUDBase):
         await session.commit()
         await session.refresh(db_cafe)
         return db_cafe
+
+    async def is_cafe_exist(
+            self,
+            session: AsyncSession,
+            cafe_id: int
+    ) -> bool:
+        result = await session.execute(select(
+            exists().where(Cafe.id == cafe_id)
+        ),)
+        return result.scalar_one()
 
     async def is_unique_name_address(
         self,

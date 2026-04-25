@@ -3,11 +3,12 @@ from typing import Optional
 from fastapi import APIRouter
 
 from app.api.dependencies import SessionDep
+from app.api.validators.cafe import get_cafe_or_404
 from app.api.validators.slot import check_slots_intersections
-from app.api.validators.table import check_cafe_exists
 from app.crud.base import CRUDBase
 from app.crud.slot import slot_crud
 from app.schemas.slot import SlotBase, SlotCreate
+
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ async def get_slots(
     active: Optional[bool] = True,
 ) -> list[SlotBase]:
     """Возвращает все слоты для бронирования столиков в заданном кафе."""
-    await check_cafe_exists(cafe_id, session)
+    await get_cafe_or_404(session, cafe_id, True)
     slots = await slot_crud.get_slots_by_cafe(cafe_id, session)
     if not active:
         return slots
@@ -39,7 +40,7 @@ async def create_slot(
     session: SessionDep,
 ) -> SlotBase:
     """Создание нового слота для бронирования столика."""
-    await check_cafe_exists(slot_data.cafe_id, session)
+    await get_cafe_or_404(session, slot_data.cafe_id, True)
     await check_slots_intersections(
         **slot_data.model_dump(), session=session,
     )

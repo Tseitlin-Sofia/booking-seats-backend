@@ -29,7 +29,7 @@ class Cafe(CommonMixin, Base):
     phone: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String)
     photo_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID)
-    managers_id: Mapped[List['User']] = relationship(
+    managers: Mapped[List['User']] = relationship(
         back_populates="cafe", lazy="selectin",
     )
     tables: Mapped[List['TableModel']] = relationship(

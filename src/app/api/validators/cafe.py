@@ -14,12 +14,27 @@ from app.schemas.cafe import CafeCreate, CafeUpdate
 logger = get_logger()
 
 
-async def get_cafe_or_404(session: AsyncSession, obj_id: int) -> Self:
+async def raise_error(
+        msg: str,
+        status: HTTPStatus = HTTPStatus.UNPROCESSABLE_ENTITY
+) -> None:
+    raise HTTPException(status_code=status, detail=msg)
+
+
+async def get_cafe_or_404(
+        session: AsyncSession,
+        cafe_id: int,
+        is_exist: Optional[bool] = False
+) -> Self:
     """Возвращает объект по id и выдает 404, если он не найден."""
-    db_cafe = await cafe_crud.get(obj_id, session)
-    # db_cafe = await cafe_crud.get(session, obj_id)  До фикса базового круда.
-    if db_cafe is None:
-        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Объект не найден!')
+    if is_exist:
+        db_cafe = cafe_crud.is_cafe_exist(session, cafe_id)
+    else:
+        db_cafe = await cafe_crud.get(cafe_id, session)
+    if db_cafe is False or db_cafe is None:
+        msg = f'Кафе не найдено! cafe_id: {cafe_id}'
+        logger.debug(msg)
+        await raise_error(msg, HTTPStatus.NOT_FOUND)
     return db_cafe
 
 
@@ -36,18 +51,16 @@ async def check_name_address(
         session, db_cafe, name, address,
     )
     if is_exist:
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail=(
-                'Кафе с таким же названием и адресом уже существует! '
-                'Введите другое название или адрес!'
-            ),
-        )
+        await error_incorrect_data((
+            'Кафе с таким же названием и адресом уже существует! '
+            'Введите другое название или адрес!'
+        ))
 
 
 async def is_managers_id(
     session: AsyncSession,
     new_cafe: Union[CafeCreate, CafeUpdate],
+    cafe_id: Optional[int] = None
 ) -> Optional[List[User]]:
     """Проверка, указаны ли реальные менеджеры."""
     new_data = new_cafe.model_dump(exclude_unset=True)
@@ -55,28 +68,36 @@ async def is_managers_id(
         return None
     managers = []
     for manager_id in new_data['managers_id']:
-        db_user = await user_crud.get(manager_id, session)
+        db_user = await user_crud.get(manager_id, session, True)
         if db_user is None:
-            logger.warning(
-                'Попытка назначить несуществующего пользователя менеджером!'
-                + f' manager_id: {manager_id}',
+            msg = (
+                'Попытка назначить несуществующего пользователя менеджером! '
+                f'manager_id: {manager_id}'
             )
-            raise HTTPException(
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                detail=f'Указанный менеджер с {manager_id} не существует!',
-            )
+            logger.warning(msg)
+            await error_incorrect_data(msg)
         if not db_user.is_manager:
-            logger.warning(
-                'Попытка назначения роли, не являющейся ролью менеджера,'
-                + ' для объекта "кафе"!'
-                + f' manager_id: {manager_id} | role: {db_user.role}',
+            msg = (
+                'Попытка назначить к кафе не менеджера! '
+                f'manager_id: {manager_id} | role: {db_user.role}'
             )
-            raise HTTPException(
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                detail=(
-                    f'Пользователь c id {manager_id} не является менеджером!'
-                ),
+            logger.warning(msg)
+            await error_incorrect_data(msg)
+        if db_user.cafe_id is not None and db_user.cafe_id != cafe_id:
+            """Проверка, обеспечивающая любому кафе наличие менеджеров."""
+            msg = (
+                f'Вы пытаетесь назначить менеджера c id {manager_id}, '
+                'привязанного к другому кафе! Сначала замените или исключите '
+                f'его из кафе с id {db_user.cafe_id}!'
             )
+            logger.warning(msg)
+            await error_incorrect_data(msg)
         managers.append(db_user)
 
     return managers
+
+
+async def is_manager_from_cafe(cafe_id: int, user: User) -> None:
+    if user.is_manager and user.cafe_id != cafe_id:
+        msg = 'Менеджер может редактировать только свое привязанное кафе!'
+        await raise_error(msg, HTTPStatus.FORBIDDEN)

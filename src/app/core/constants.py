@@ -49,6 +49,7 @@ class CafeConstants:
         'и не превышать 10 цифр после!'
     )
     NAME_RESTRICTION = 20
+    MIN_LENGTH_MANAGERS_LIST = 1
     PHONE_FORMAT = r'^\+7\d{10}$'
 
 
