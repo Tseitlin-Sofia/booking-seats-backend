@@ -2,13 +2,14 @@ import re
 import uuid
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import UUID, String, UniqueConstraint
+from sqlalchemy import ForeignKey, UUID, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.constants import CafeConstants
 from app.core.db import Base, CommonMixin
 
 if TYPE_CHECKING:
+    from app.models.action import Action
     from app.models.booking import Booking
     from app.models.table import Table as TableModel
     from app.models.user import User
@@ -41,6 +42,12 @@ class Cafe(CommonMixin, Base):
         'Booking',
         back_populates="cafe",
         lazy="selectin",
+    )
+    action_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("action.id"), nullable=True
+    )
+    action: Mapped[Optional['Action']] = relationship(
+        back_populates="cafes", lazy="selectin",
     )
 
     @validates("phone")
