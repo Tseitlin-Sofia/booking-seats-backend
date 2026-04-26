@@ -20,10 +20,10 @@ class ActionUpdate(ActionBase):
     """Схема для метода PATCH."""
 
     cafes_id: Optional[List[int]] = Field(
-        default=None, min_length=ActionConstants.MIN_LENGTH_CAFES_LIST
+        default=None, min_length=ActionConstants.MIN_LENGTH_CAFES_LIST,
     )
     description: Optional[str] = Field(
-        default=None, min_length=ActionConstants.MIN_DESCRIPTION
+        default=None, min_length=ActionConstants.MIN_DESCRIPTION,
     )
     is_active: Optional[bool] = None
 

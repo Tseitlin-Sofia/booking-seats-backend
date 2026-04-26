@@ -20,9 +20,10 @@ class CRUDCafe(CRUDBase):
         session: AsyncSession,
         action_id: int,
     ) -> Sequence[Cafe]:
+        """Возвращает список кафе по id акции."""
         result = await session.execute(
             select(action_cafe.c.cafe_id)
-            .where(action_cafe.c.action_id == action_id)
+            .where(action_cafe.c.action_id == action_id),
         )
         return result.scalars().all()
 

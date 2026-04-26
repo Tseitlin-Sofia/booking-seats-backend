@@ -8,7 +8,6 @@ from app.models.action import Action
 from app.models.cafe import Cafe
 from app.schemas.action import ActionCreate, ActionUpdate
 
-
 logger = get_logger()
 
 
@@ -19,7 +18,7 @@ class CRUDAction(CRUDBase):
         self,
         session: AsyncSession,
         new_action: ActionCreate,
-        cafes: List[Cafe]
+        cafes: List[Cafe],
     ) -> Self:
         """Создает новую акцию в базе данных."""
         db_action = self.model(**new_action.model_dump(

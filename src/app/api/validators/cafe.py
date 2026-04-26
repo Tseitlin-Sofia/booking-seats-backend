@@ -11,7 +11,6 @@ from app.models.cafe import Cafe
 from app.models.user import User
 from app.schemas.cafe import CafeCreate, CafeUpdate
 
-
 logger = get_logger()
 
 

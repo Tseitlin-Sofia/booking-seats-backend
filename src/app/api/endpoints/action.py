@@ -8,9 +8,9 @@ from app.api.validators.action import (
     can_manager_change_action,
     get_action_or_404,
     is_action_already_exists,
-    is_cafes_exists
+    is_cafes_exists,
 )
-from app.crud.action import action_crud, CRUDAction
+from app.crud.action import CRUDAction, action_crud
 from app.models import Action
 from app.schemas.action import ActionCreate, ActionInfo, ActionUpdate
 
@@ -85,7 +85,7 @@ async def create_new_action(
         await can_manager_change_action(session, new_action, user)
     await is_action_already_exists(session, new_action)
     cafes = await is_cafes_exists(session, new_action)
-    return await action_crud.create_new_action(session, new_action, cafes,)
+    return await action_crud.create_new_action(session, new_action, cafes)
 
 
 @router.patch(
@@ -106,7 +106,7 @@ async def update_cafe(
     user: ManagerDep,
 ) -> CRUDAction:
     """Ручка patch."""
-    await is_action_already_exists(session, new_action,)
+    await is_action_already_exists(session, new_action)
     db_action = await get_action_or_404(session, action_id)
     if user.is_manager:
         await can_manager_change_action(session, new_action, user, db_action)

@@ -125,7 +125,7 @@ class CRUDBase:
             session: AsyncSession,
             obj_id: Optional[int] = None,
             attr_name: Optional[str] = None,
-            attr_value: Optional[Any] = None
+            attr_value: Optional[Any] = None,
     ) -> bool:
         """Проверка наличия объекта в бд (также по атрибуту)."""
         stmt = exists().select_from(self.model)

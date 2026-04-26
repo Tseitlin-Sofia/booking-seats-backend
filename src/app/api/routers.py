@@ -2,8 +2,8 @@
 
 from fastapi import APIRouter
 
-from app.api.endpoints.auth import router as auth_router
 from app.api.endpoints.action import router as action_router
+from app.api.endpoints.auth import router as auth_router
 from app.api.endpoints.booking import router as booking_router
 from app.api.endpoints.cafe import router as cafe_router
 from app.api.endpoints.media import router as media_router

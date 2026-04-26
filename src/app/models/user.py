@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import CheckConstraint, Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
@@ -54,7 +54,7 @@ class User(CommonMixin, Base):
         default=UserConstants.DEFAULT_USER_ROLE,
     )
     cafe_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("cafe.id"), nullable=True
+        ForeignKey("cafe.id"), nullable=True,
     )
     cafe: Mapped[Optional['Cafe']] = relationship(
         back_populates="managers", lazy="selectin",

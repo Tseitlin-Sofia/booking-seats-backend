@@ -3,11 +3,13 @@ from typing import List, Optional, Self, Sequence, Union
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.validators.cafe import (
+    get_cafe_or_404,
+    is_manager_from_cafe,
+    raise_error,
+)
 from app.core.constants import ActionConstants
 from app.core.logging import get_logger
-from app.api.validators.cafe import (
-    get_cafe_or_404, is_manager_from_cafe, raise_error
-)
 from app.crud.action import action_crud
 from app.crud.cafe import cafe_crud
 from app.models.action import Action
@@ -15,11 +17,11 @@ from app.models.cafe import Cafe
 from app.models.user import User
 from app.schemas.action import ActionCreate, ActionUpdate
 
-
 logger = get_logger()
 
 
-async def check_cafe_list(cafes_id: Sequence, user: User):
+async def check_cafe_list(cafes_id: Sequence, user: User) -> None:
+    """Проверка, является ли юзер менеджером кафе."""
     if len(cafes_id) > ActionConstants.MIN_LENGTH_CAFES_LIST:
         msg = (
             'Менеджер может управлять акциями только своего кафе c id '
@@ -30,7 +32,7 @@ async def check_cafe_list(cafes_id: Sequence, user: User):
     await is_manager_from_cafe(cafes_id.pop(), user)
 
 
-async def get_action_or_404(session: AsyncSession, action_id: int,) -> Self:
+async def get_action_or_404(session: AsyncSession, action_id: int) -> Self:
     """Возвращает акцию по ее id и выдает 404, если она не найдена."""
     db_action = await action_crud.get(action_id, session)
     if db_action is None:
@@ -44,7 +46,7 @@ async def can_manager_change_action(
     session: AsyncSession,
     new_action: Union[ActionCreate, ActionUpdate],
     user: User,
-    db_action: Optional[Action] = None
+    db_action: Optional[Action] = None,
 ) -> None:
     """Менеджер может управлять акциями только привязанного к нему кафе."""
     new_data = new_action.model_dump(exclude_unset=True)
@@ -56,7 +58,7 @@ async def can_manager_change_action(
 
 
 async def is_cafes_exists(
-        session: AsyncSession, new_action: Union[ActionCreate, ActionUpdate]
+        session: AsyncSession, new_action: Union[ActionCreate, ActionUpdate],
 ) -> List[Cafe]:
     """Проверка, существуют ли кафе из списка в бд."""
     new_data = new_action.model_dump(exclude_unset=True)
@@ -75,9 +77,9 @@ async def is_action_already_exists(
     """Проверка на наличие акции в бд с тем же описанием."""
     new_data = new_action.model_dump(exclude_unset=True)
     if 'description' not in new_data:
-        return None
+        return
     is_exist = await action_crud.is_obj_exist(
-        session, attr_name='description', attr_value=new_data['description']
+        session, attr_name='description', attr_value=new_data['description'],
     )
     if is_exist:
         msg = 'Акция с таким описанием уже существует!'
