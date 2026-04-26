@@ -39,35 +39,24 @@ class CRUDCafe(CRUDBase):
         self,
         session: AsyncSession,
         db_cafe: Cafe,
-        new_data_cafe: CafeUpdate,
-        managers: Optional[List[User]],
+        new_cafe: CafeUpdate,
+        managers: Optional[List[User]] = None,
     ) -> Self:
         """Обновляет существующее кафе в базе данных."""
-        update_data = new_data_cafe.model_dump(exclude_unset=True)
-        for key in update_data.keys():
+        new_data = new_cafe.model_dump(exclude_unset=True)
+        for key in new_data.keys():
             if key == 'managers_id':
                 db_cafe.managers = managers
                 continue
-            setattr(db_cafe, key, update_data[key])
+            setattr(db_cafe, key, new_data[key])
         session.add(db_cafe)
         logger.info(
             'Кафе успешно обновлено!',
-            f' | updated_fields: {list(update_data.keys())}',
+            f' | updated_fields: {list(new_data.keys())}',
         )
         await session.commit()
         await session.refresh(db_cafe)
         return db_cafe
-
-    async def is_cafe_exist(
-            self,
-            session: AsyncSession,
-            cafe_id: int,
-    ) -> bool:
-        """Метод, проверяющий существование кафе в бд."""
-        result = await session.execute(select(
-            exists().where(Cafe.id == cafe_id),
-        ))
-        return result.scalar_one()
 
     async def is_unique_name_address(
         self,
