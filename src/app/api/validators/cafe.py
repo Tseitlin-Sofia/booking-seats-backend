@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import List, Optional, Self, TYPE_CHECKING, Union
+from typing import List, Optional, Self, Union
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,10 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import get_logger
 from app.crud.cafe import cafe_crud
 from app.crud.user import user_crud
+from app.models.cafe import Cafe
+from app.models.user import User
+from app.schemas.cafe import CafeCreate, CafeUpdate
 
-if TYPE_CHECKING:
-    from app.models import Cafe, User
-    from app.schemas.cafe import CafeCreate, CafeUpdate
 
 logger = get_logger()
 
@@ -30,7 +30,7 @@ async def get_cafe_or_404(
 ) -> Self:
     """Возвращает кафе по его id и выдает 404, если оно не найдено."""
     if is_exist:
-        db_cafe = cafe_crud.is_obj_exist(session, cafe_id)
+        db_cafe = await cafe_crud.is_obj_exist(session, cafe_id)
     else:
         db_cafe = await cafe_crud.get(cafe_id, session)
     if db_cafe is False or db_cafe is None:

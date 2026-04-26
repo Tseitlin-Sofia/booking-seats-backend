@@ -56,6 +56,7 @@ class CafeConstants:
 class ActionConstants:
     """Класс с константами для модели акций."""
 
+    MIN_DESCRIPTION = 10
     MIN_LENGTH_CAFES_LIST = 1
 
 

@@ -1,14 +1,13 @@
-from typing import List, Optional, Self, TYPE_CHECKING
+from typing import List, Optional, Self
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.crud.base import CRUDBase
-from app.models import Action
+from app.models.action import Action
+from app.models.cafe import Cafe
+from app.schemas.action import ActionCreate, ActionUpdate
 
-if TYPE_CHECKING:
-    from app.models.cafe import Cafe
-    from app.schemas.action import ActionCreate, ActionUpdate
 
 logger = get_logger()
 

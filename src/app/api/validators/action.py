@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import List, Self, TYPE_CHECKING, Union
+from typing import List, Optional, Self, Sequence, Union
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,13 +9,25 @@ from app.api.validators.cafe import (
     get_cafe_or_404, is_manager_from_cafe, raise_error
 )
 from app.crud.action import action_crud
+from app.crud.cafe import cafe_crud
+from app.models.action import Action
+from app.models.cafe import Cafe
+from app.models.user import User
+from app.schemas.action import ActionCreate, ActionUpdate
 
-if TYPE_CHECKING:
-    from app.models.cafe import Cafe
-    from app.models.user import User
-    from app.schemas.action import ActionCreate, ActionUpdate
 
 logger = get_logger()
+
+
+async def check_cafe_list(cafes_id: Sequence, user: User):
+    if len(cafes_id) > ActionConstants.MIN_LENGTH_CAFES_LIST:
+        msg = (
+            'Менеджер может управлять акциями только своего кафе c id '
+            f'{user.cafe_id}!'
+        )
+        logger.warning(msg)
+        await raise_error(msg, HTTPStatus.FORBIDDEN)
+    await is_manager_from_cafe(cafes_id.pop(), user)
 
 
 async def get_action_or_404(session: AsyncSession, action_id: int,) -> Self:
@@ -29,27 +41,24 @@ async def get_action_or_404(session: AsyncSession, action_id: int,) -> Self:
 
 
 async def can_manager_change_action(
+    session: AsyncSession,
     new_action: Union[ActionCreate, ActionUpdate],
-    user: User
+    user: User,
+    db_action: Optional[Action] = None
 ) -> None:
     """Менеджер может управлять акциями только привязанного к нему кафе."""
     new_data = new_action.model_dump(exclude_unset=True)
-    if 'cafes_id' not in new_data:
-        return None
-    cafes_id = new_data['cafes_id']
-    if len(cafes_id) > ActionConstants.MIN_LENGTH_CAFES_LIST:
-        msg = (
-            'Менеджер может управлять акциями только своего кафе c id '
-            f'{user.cafe_id}!'
-        )
-        logger.warning(msg)
-        await raise_error(msg, HTTPStatus.FORBIDDEN)
-    await is_manager_from_cafe(cafes_id.pop(), user,)
+    if db_action is not None:
+        cafes_id = await cafe_crud.get_cafes_by_action(session, db_action.id)
+        await check_cafe_list(cafes_id, user)
+    if 'cafes_id' in new_data:
+        await check_cafe_list(new_data['cafes_id'], user)
 
 
 async def is_cafes_exists(
         session: AsyncSession, new_action: Union[ActionCreate, ActionUpdate]
 ) -> List[Cafe]:
+    """Проверка, существуют ли кафе из списка в бд."""
     new_data = new_action.model_dump(exclude_unset=True)
     if 'cafes_id' not in new_data:
         return None
@@ -61,10 +70,13 @@ async def is_cafes_exists(
 
 
 async def is_action_already_exists(
-    session: AsyncSession, new_action: Union[ActionCreate, ActionUpdate]
+        session: AsyncSession, new_action: Union[ActionCreate, ActionUpdate],
 ) -> None:
+    """Проверка на наличие акции в бд с тем же описанием."""
     new_data = new_action.model_dump(exclude_unset=True)
-    is_exist = action_crud.is_obj_exist(
+    if 'description' not in new_data:
+        return None
+    is_exist = await action_crud.is_obj_exist(
         session, attr_name='description', attr_value=new_data['description']
     )
     if is_exist:

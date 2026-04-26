@@ -82,14 +82,14 @@ async def create_new_action(
 ) -> CRUDAction:
     """Ручка post."""
     if user.is_manager:
-        await can_manager_change_action(new_action, user)
+        await can_manager_change_action(session, new_action, user)
     await is_action_already_exists(session, new_action)
     cafes = await is_cafes_exists(session, new_action)
     return await action_crud.create_new_action(session, new_action, cafes,)
 
 
 @router.patch(
-    '/{cafe_id}',
+    '/{action_id}',
     response_model=ActionInfo,
     response_model_exclude_none=True,
     summary='Обновление информации об акции по ее ID',
@@ -100,16 +100,16 @@ async def create_new_action(
     response_description='Подробный вывод измененной акции',
 )
 async def update_cafe(
+    session: SessionDep,
     action_id: int,
     new_action: ActionUpdate,
     user: ManagerDep,
-    session: SessionDep,
 ) -> CRUDAction:
     """Ручка patch."""
-    if user.is_manager:
-        await can_manager_change_action(new_action, user)
-    await is_action_already_exists(session, new_action)
+    await is_action_already_exists(session, new_action,)
     db_action = await get_action_or_404(session, action_id)
+    if user.is_manager:
+        await can_manager_change_action(session, new_action, user, db_action)
     cafes = await is_cafes_exists(session, new_action)
     return await action_crud.update_db_action(
         session, db_action, new_action,  cafes,

@@ -128,10 +128,11 @@ class CRUDBase:
             attr_value: Optional[Any] = None
     ) -> bool:
         """Проверка наличия объекта в бд (также по атрибуту)."""
+        stmt = exists().select_from(self.model)
         if attr_name is not None and attr_value is not None:
             attr = getattr(self.model, attr_name)
-            stmt = select(exists().where(attr == attr_value))
+            stmt = stmt.where(attr == attr_value)
         elif obj_id is not None:
-            stmt = select(exists().where(self.model.id == obj_id))
-        result = await session.execute(stmt)
+            stmt = stmt.where(self.model.id == obj_id)
+        result = await session.execute(select(stmt))
         return result.scalar_one()

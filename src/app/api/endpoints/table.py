@@ -53,9 +53,9 @@ async def create_table(
     user: ManagerDep,
 ) -> TableInfo:
     """Создаёт новый стол в указанном кафе."""
+    await get_cafe_or_404(session, cafe_id, True)
     if user.is_manager:
         await is_manager_from_cafe(cafe_id, user)
-    await get_cafe_or_404(session, cafe_id, True)
     return await table_crud.create_for_cafe(
         cafe_id=cafe_id,
         obj_in=table_in,
@@ -100,9 +100,9 @@ async def update_table(
     user: ManagerDep,
 ) -> TableInfo:
     """Обновляет данные стола в указанном кафе."""
+    await get_cafe_or_404(session, cafe_id, True)
     if user.is_manager:
         await is_manager_from_cafe(cafe_id, user)
-    await get_cafe_or_404(session, cafe_id, True)
     table = await check_table_exists_in_cafe(
         cafe_id,
         table_id,
