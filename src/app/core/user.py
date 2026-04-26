@@ -5,6 +5,7 @@
 Sliding session: на каждый запрос выдаётся новый токен
 через заголовок X-New-Token.
 """
+
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -22,6 +23,7 @@ from app.models.user import User
 from app.services.user import ph
 
 bearer_scheme = HTTPBearer()
+bearer_scheme_optional = HTTPBearer(auto_error=False)
 
 EMAIL_REGEX = re.compile(r'^[^@]+@[^@]+\.[^@]+$')
 
@@ -103,8 +105,7 @@ async def get_user_from_token(
         headers={'WWW-Authenticate': 'Bearer'},
     )
 
-    auth = auth_service
-    payload = auth.decode_token(token)
+    payload = auth_service.decode_token(token)
 
     user_id = payload.get('sub')
     if not user_id:
@@ -144,7 +145,7 @@ async def get_current_user(
 async def get_current_user_optional(
     response: Response,
     credentials: Optional[HTTPAuthorizationCredentials] = Security(
-        bearer_scheme, auto_error=False,
+        bearer_scheme_optional,
     ),
     session: AsyncSession = Depends(get_async_session),
 ) -> Optional[User]:
