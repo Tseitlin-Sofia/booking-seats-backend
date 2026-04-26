@@ -2,16 +2,7 @@ import re
 import uuid
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import (
-    UUID,
-    Column,
-    ForeignKey,
-    String,
-    UniqueConstraint,
-)
-from sqlalchemy import (
-    Table as MtM_Model,
-)
+from sqlalchemy import UUID, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.constants import CafeConstants
@@ -21,22 +12,6 @@ if TYPE_CHECKING:
     from app.models.booking import Booking
     from app.models.table import Table as TableModel
     from app.models.user import User
-
-
-cafe_managers = MtM_Model(
-    "cafe_managers",
-    Base.metadata,
-    Column(
-        "cafe_id",
-        ForeignKey("cafe.id"),
-        primary_key=True,
-    ),
-    Column(
-        "user_id",
-        ForeignKey("user.id"),
-        primary_key=True,
-    ),
-)
 
 
 class Cafe(CommonMixin, Base):
@@ -54,11 +29,8 @@ class Cafe(CommonMixin, Base):
     phone: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String)
     photo_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID)
-    managers_id: Mapped[List['User']] = relationship(
-        "User",
-        secondary=cafe_managers,
-        back_populates="cafes",
-        lazy="selectin",
+    managers: Mapped[List['User']] = relationship(
+        back_populates="cafe", lazy="selectin",
     )
     tables: Mapped[List['TableModel']] = relationship(
         'Table',
