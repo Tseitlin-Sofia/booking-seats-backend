@@ -28,7 +28,7 @@ async def get_cafe_or_404(
 ) -> Self:
     """Возвращает объект по id и выдает 404, если он не найден."""
     if is_exist:
-        db_cafe = cafe_crud.is_cafe_exist(session, cafe_id)
+        db_cafe = await cafe_crud.is_cafe_exist(session, cafe_id)
     else:
         db_cafe = await cafe_crud.get(cafe_id, session)
     if db_cafe is False or db_cafe is None:
