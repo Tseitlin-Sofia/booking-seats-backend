@@ -137,6 +137,7 @@ venv.bak/
 # Spyder project settings
 .spyderproject
 .spyproject
+.htpasswd
 
 # Rope project settings
 .ropeproject

@@ -1,98 +1,104 @@
-import time
-
 import smtplib
 from email.mime.text import MIMEText
 import logging
+import os
+from dotenv import load_dotenv
 
-from typing import Dict, Any
-from datetime import datetime
-
-from .celery_app import celery_app
-from app.models.booking import Booking
 from app.core.constants import NotificationConstants
+from .celery_app import celery_app
 
 # Настройка логирования для задач
 logger = logging.getLogger(__name__)
 
+load_dotenv()
+
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
+SMTP_HOST = os.getenv('SMTP_HOST')
+SMTP_PORT = os.getenv('SMTP_PORT')
+SMTP_USER = os.getenv('SMTP_USER')
+SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
 
 @celery_app.task(name='tasks.notify_admin', bind=True, max_retries=3)
-def notify_admin(self, booking_data: dict):
-    print(f"[ADMIN NOTIFY] Отправляю письмо админу о столе {booking_data['table_id']}")
+def notify_admin(self, data: dict | None = None):
+    if data:
+        print(f"[ADMIN NOTIFY] Отправляю письмо админу о столе {data['table_id']}")
 
-    # --- ВРЕМЕННЫЕ НАСТРОЙКИ ДЛЯ ЛОКАЛЬНОГО ТЕСТА ---
-    SMTP_HOST = "localhost"
-    SMTP_PORT = 1025
-    SMTP_USER = ""           # Пусто для локального сервера
-    SMTP_PASSWORD = ""       # Пусто для локального сервера
-    ADMIN_EMAIL = "admin@test.local"
+        client = data.get('user', 'Неизвестно')
+        client_email = client.get('email', 'Неизвестно')
+        client_name = client.get('username', 'Неизвестно')
 
-    subject = f"🚨 НОВАЯ БРОНЬ! Стол №{booking_data['table_id']}"
-    body = f"""
-    Поступила новая бронь:
-    
-    👤 Клиент: {booking_data['client_name']}
-    📞 Телефон: {booking_data['phone']}
-    📧 Email клиента: {booking_data['client_email']}
-    📅 Дата и время: {booking_data['date_time']}
-    💬 Комментарий: {booking_data.get('comment', 'Нет')}
-    """
+        subject = f"🚨 НОВАЯ БРОНЬ! Стол №{data['table_id']}"
+        body = f"""
+        Поступила новая бронь:
+        
+        👤 Клиент: {client_name}
+        📞 Телефон: {data['phone']}
+        📧 Email клиента: {client_email}
+        📅 Дата и время: {data['booking_date']}
+        💬 Комментарий: {data.get('comment', 'Нет')}
+        """
+    else:
+        subject = f"Тестоовое сообщение"
+        body = f"Фото сформировано"
 
     msg = MIMEText(body, "plain", "utf-8")
     msg['Subject'] = subject
-    msg['From'] = SMTP_USER or "noreply@test.local"
-    msg['To'] = ADMIN_EMAIL
+    msg['From'] = ADMIN_EMAIL
+    msg['To'] = SMTP_USER
 
     try:
-        # Подключение БЕЗ starttls() и БЕЗ login()
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+            print("✅ Подключено!")
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            print("✅ Логин успешен!")
             server.send_message(msg)
-        print(f"[ADMIN NOTIFY] ✅ Письмо админу отправлено")
-        return {"status": "sent", "to": "admin"}
+            print(f"✅ Письмо отправлено! Проверьте ящик {SMTP_USER}")
     except Exception as e:
         print(f"[ADMIN NOTIFY] ❌ Ошибка: {e}")
         raise self.retry(exc=e, countdown=60)
 
 
 @celery_app.task(name='tasks.notify_client', bind=True, max_retries=3)
-def notify_client(self, booking_data: dict):
+def notify_client(self, data: dict | None = None):
     """
     Отправка напоминания КЛИЕНТУ о брони.
     Выполняется ПО РАСПИСАНИЮ (отложенная задача).
     """
-    client = booking_data.get('user', 'Неизвестно')
-    client_email = client.get('email', 'Неизвестно')
-    print(
-        "[CLIENT REMINDER] Отправляю напоминание клиенту"
-        f"{user.get('username', 'Неизвестно')}"
-    )
+    client_email = None
 
-    SMTP_HOST = "localhost"
-    SMTP_PORT = 1025
-    SMTP_USER = ""
-    SMTP_PASSWORD = ""
+    if data:
+        client = data.get('user', 'Неизвестно')
+        client_email = client.get('email', 'Неизвестно')
+        client_name = client.get('username', 'Неизвестно')
+        print(f"[CLIENT REMINDER] Отправляю напоминание клиенту {client_name}")
 
-    subject = "⏰ Напоминание о брони стола в ресторане"
-    body = f"""
-    {booking_data.user.username}, здравствуйте!
-    
-    Напоминаем, что вы забронировали стол на {booking_data.get('booking_date'), 'Неизвестно'}.
-    
-    Будем рады вас видеть!
-    
-    С уважением,
-    Ресторан "Каффетерий"
-    """
+        subject = "⏰ Напоминание о брони стола в ресторане"
+        body = f"""
+        {client_name}, здравствуйте!
+        
+        Напоминаем, что вы забронировали стол на {data.get('booking_date'), 'Неизвестно'}.
+        
+        Будем рады вас видеть!
+        
+        С уважением,
+        Ресторан "Каффетерий"
+        """
+    else:
+        subject = "Отложенное напоминание"
+        body = "Фотография загружена на сервер 5 минут назад"
 
     msg = MIMEText(body, "plain", "utf-8")
     msg['Subject'] = subject
-    msg['From'] = NotificationConstants.ADMIN_EMAIL
-    msg['To'] = client_email
+    msg['From'] = ADMIN_EMAIL
+    msg['To'] = client_email if client_email else SMTP_USER
 
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+            print("✅ Подключено!")
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            print("✅ Логин успешен!")
             server.send_message(msg)
-        print(f"[CLIENT REMINDER] ✅ Напоминание клиенту отправлено")
-        return {"status": "sent", "to": booking_data.user.email}
+            print(f"✅ Письмо отправлено! Проверьте ящик {SMTP_USER}")
     except Exception as e:
-        print(f"[CLIENT REMINDER] ❌ Ошибка: {e}")
+        print(f"[ADMIN NOTIFY] ❌ Ошибка: {e}")
         raise self.retry(exc=e, countdown=60)
