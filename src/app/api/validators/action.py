@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import List, Optional, Self, TYPE_CHECKING
+from typing import List, Self, TYPE_CHECKING, Union
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,7 +13,7 @@ from app.crud.action import action_crud
 if TYPE_CHECKING:
     from app.models.cafe import Cafe
     from app.models.user import User
-    from app.schemas.action import ActionCreate
+    from app.schemas.action import ActionCreate, ActionUpdate
 
 logger = get_logger()
 
@@ -29,7 +29,7 @@ async def get_action_or_404(session: AsyncSession, action_id: int,) -> Self:
 
 
 async def can_manager_change_action(
-    new_action: ActionCreate,
+    new_action: Union[ActionCreate, ActionUpdate],
     user: User
 ) -> None:
     """Менеджер может управлять акциями только привязанного к нему кафе."""
@@ -48,7 +48,7 @@ async def can_manager_change_action(
 
 
 async def is_cafes_exists(
-        session: AsyncSession, new_action: ActionCreate
+        session: AsyncSession, new_action: Union[ActionCreate, ActionUpdate]
 ) -> List[Cafe]:
     new_data = new_action.model_dump(exclude_unset=True)
     if 'cafes_id' not in new_data:
@@ -61,7 +61,7 @@ async def is_cafes_exists(
 
 
 async def is_action_already_exists(
-    session: AsyncSession, new_action: ActionCreate
+    session: AsyncSession, new_action: Union[ActionCreate, ActionUpdate]
 ) -> None:
     new_data = new_action.model_dump(exclude_unset=True)
     is_exist = action_crud.is_obj_exist(
