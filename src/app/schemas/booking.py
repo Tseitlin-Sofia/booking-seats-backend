@@ -41,7 +41,7 @@ class BookingTableSlotShortInfo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class BookingCommon(BookingValidatorMixin, BaseModel):
+class BookingCommon(BaseModel):
     """Общие поля для бронирований."""
 
     table_slots: list[BookingTableSlot] = Field(..., title="Table-Slot pairs")
@@ -50,7 +50,7 @@ class BookingCommon(BookingValidatorMixin, BaseModel):
     booking_date: date = Field(..., title="Booking Date")
 
 
-class BookingCreate(BookingCommon):
+class BookingCreate(BookingValidatorMixin, BookingCommon):
     """Схема для создания бронирования."""
 
     cafe_id: int = Field(..., title="Cafe Id")
@@ -72,11 +72,11 @@ class BookingInfo(BookingCommon):
     model_config = ConfigDict(from_attributes=True)
 
 
-class BookingUpdate(BaseModel):
+class BookingUpdate(BookingValidatorMixin, BaseModel):
     """Схема для обновления бронирования."""
 
     table_slots: list[BookingTableSlot] = Field(..., title="Table-Slot pairs")
-    guest_number: Optional[int] = Field(None, gt=0, title="Guest Number")
+    guest_number: Optional[int] = Field(None,title="Guest Number")
     note: Optional[str] = Field(None, title="Note")
     status: Optional[BookingStatus] = None
     booking_date: Optional[date] = Field(None, title="Booking Date")
