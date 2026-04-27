@@ -28,6 +28,7 @@ class BookingConstants:
     TABLE_INACTIVE = 'Стол с ID {} неактивен'
     USER_NOT_AUTHENTICATED = 'Пользователь не авторизован'
     SLOTS_UNAVAILABLE = 'Выбранные временные слоты уже забронированы'
+    LIST_SLOTS_ERROR = 'Список временных слотов не может быть пустым.'
 
 
 class MediaConstants:

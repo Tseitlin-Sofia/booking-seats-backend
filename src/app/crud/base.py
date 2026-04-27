@@ -119,3 +119,14 @@ class CRUDBase:
             stmt = stmt.where(self.model.is_active == is_active)
         result = await session.execute(stmt)
         return list(result.scalars().all())
+
+    async def deactivate(
+        self,
+        session: AsyncSession,
+        db_obj: Base,
+    ) -> Base:
+        """Деактивирует объект."""
+        db_obj.is_active = False
+        await session.commit()
+        await session.refresh(db_obj)
+        return db_obj

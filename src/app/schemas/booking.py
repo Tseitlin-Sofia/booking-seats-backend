@@ -3,13 +3,18 @@
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+)
 
 from app.models.booking import BookingStatus
 from app.schemas.cafe import CafeShortInfo
 from app.schemas.slot import TimeSlotShortInfo
 from app.schemas.table import TableShortInfo
 from app.schemas.user import UserShortInfo
+from app.schemas.validators.booking import BookingValidatorMixin
 
 
 class BookingTableSlot(BaseModel):
@@ -21,6 +26,12 @@ class BookingTableSlot(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
 
+class BookingTableSlotCreate(BookingTableSlot):
+    """Пара ID стола и ID временного слота для создания бронирования."""
+
+    booking_id: int = Field(..., title="Booking Id")
+
+
 class BookingTableSlotShortInfo(BaseModel):
     """Информация о столе и слоте для бронирования."""
 
@@ -30,14 +41,13 @@ class BookingTableSlotShortInfo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class BookingCommon(BaseModel):
+class BookingCommon(BookingValidatorMixin, BaseModel):
     """Общие поля для бронирований."""
 
-    tables_slots: list[BookingTableSlot] = Field(..., title="Table-Slot pairs")
-    guest_number: int = Field(..., gt=0, title="Guest Number")
+    table_slots: list[BookingTableSlot] = Field(..., title="Table-Slot pairs")
+    guest_number: int = Field(..., title="Guest Number")
     note: Optional[str] = Field(None, title="Note")
     booking_date: date = Field(..., title="Booking Date")
-    # TODO: validate booking_date is in the future, slots arent empty, gn>0
 
 
 class BookingCreate(BookingCommon):
@@ -65,7 +75,7 @@ class BookingInfo(BookingCommon):
 class BookingUpdate(BaseModel):
     """Схема для обновления бронирования."""
 
-    tables_slots: Optional[list[BookingTableSlot]] = None
+    table_slots: list[BookingTableSlot] = Field(..., title="Table-Slot pairs")
     guest_number: Optional[int] = Field(None, gt=0, title="Guest Number")
     note: Optional[str] = Field(None, title="Note")
     status: Optional[BookingStatus] = None
