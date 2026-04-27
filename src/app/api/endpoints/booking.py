@@ -10,14 +10,11 @@ from app.api.validators.booking import (
     validate_booking_exists,
     validate_booking_slots,
     validate_cafe_slot_table,
+    validate_pre_order_items,
     validate_user_rights,
 )
 from app.crud.booking import booking_crud, booking_table_slot_crud
-from app.schemas.booking import (
-    BookingCreate,
-    BookingInfo,
-    BookingStatus,
-)
+from app.schemas.booking import BookingCreate, BookingInfo, BookingStatus
 
 router = APIRouter()
 
@@ -39,13 +36,16 @@ async def get_bookings(
     session: SessionDep,
     current_user: UserDep,
     show_active: Annotated[
-        bool, Query(description="Показывать активные бронирования?"),
+        bool,
+        Query(description='Показывать активные бронирования?'),
     ] = True,
     cafe_id: Annotated[
-        Optional[int], Query(description="ID кафе"),
+        Optional[int],
+        Query(description='ID кафе'),
     ] = None,
     user_id: Annotated[
-        Optional[int], Query(description="ID пользователя"),
+        Optional[int],
+        Query(description='ID пользователя'),
     ] = None,
 ) -> list[BookingInfo]:
     """Получение списка бронирований."""
@@ -113,7 +113,16 @@ async def create_booking(
         slots=booking.tables_slots,
         session=session,
     )
-    booking_data = booking.model_dump()
+
+    dishes_map = {}
+    if booking.pre_order_items:
+        dishes_map = await validate_pre_order_items(
+            booking.pre_order_items,
+            booking.cafe_id,
+            session,
+        )
+
+    booking_data = booking.model_dump(exclude={'pre_order_items'})
     booking_data['status'] = BookingStatus.BOOKING
     booking_data['user_id'] = current_user.id
 
@@ -132,8 +141,18 @@ async def create_booking(
                 'slot_id': table_slot.slot_id,
             },
         )
+
+    if booking.pre_order_items and dishes_map:
+        await booking_crud.add_pre_order_items(
+            new_booking.id,
+            booking.pre_order_items,
+            dishes_map,
+            session,
+        )
+
     await session.refresh(new_booking)
     return new_booking
+
 
 # TODO: Можно удалить слоты и создать заново! cascade inactive
 # @router.patch(

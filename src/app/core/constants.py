@@ -1,4 +1,5 @@
 """Модуль с константами приложения."""
+
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -28,25 +29,27 @@ class BookingConstants:
     TABLE_INACTIVE = 'Стол с ID {} неактивен'
     USER_NOT_AUTHENTICATED = 'Пользователь не авторизован'
     SLOTS_UNAVAILABLE = 'Выбранные временные слоты уже забронированы'
+    DISH_NOT_FOUND = 'Некоторые блюда из предзаказа не найдены в меню.'
+    DISH_UNAVAILABLE = 'Выбранные блюда временно недоступны.'
+    DISH_CAFE_MISMATCH = 'Блюда не принадлежат выбранному кафе.'
 
 
 class MediaConstants:
     """Класс констант для работы с media."""
 
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
-    MEDIA_DIR = BASE_DIR / "media"
-    IMAGE_EXTENSION = "jpg"
+    MEDIA_DIR = BASE_DIR / 'media'
+    IMAGE_EXTENSION = 'jpg'
     CHUNK_SIZE_1MB = 1024 * 1024
     MAX_PHOTO_SIZE_5MB = CHUNK_SIZE_1MB * 5
-    VALID_TYPES = ["image/png", "image/jpeg"]
+    VALID_TYPES = ['image/png', 'image/jpeg']
 
 
 class CafeConstants:
     """Класс с константами для модели кафе."""
 
     ERROR_PHONE = (
-        'Номер телефона должен начинаться с +7 '
-        'и не превышать 10 цифр после!'
+        'Номер телефона должен начинаться с +7 и не превышать 10 цифр после!'
     )
     NAME_RESTRICTION = 20
     MIN_LENGTH_MANAGERS_LIST = 1
