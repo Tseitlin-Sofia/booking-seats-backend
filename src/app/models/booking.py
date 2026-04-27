@@ -6,7 +6,7 @@ from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, ForeignKey, Integer, String, func
+from sqlalchemy import Date, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from sqlalchemy.types import Enum
 
@@ -107,7 +107,7 @@ class Booking(Base, CommonMixin):
     @validates('booking_date')
     def validate_booking_date(self, key: str, value: date) -> date:
         """Валидация даты бронирования (нельзя бронировать в прошлом)."""
-        if value >= func.current_date().execute().scalar():
+        if value >= date.today():
             return value
         raise ValueError(Constants.DATE_ERROR)
 

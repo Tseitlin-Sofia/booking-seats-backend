@@ -1,9 +1,9 @@
 """Валидаторы для бронирования."""
 
+from datetime import date
 from typing import Self
 
 from pydantic import model_validator
-from sqlalchemy import func
 
 from app.core.constants import BookingConstants as Constants
 
@@ -14,7 +14,7 @@ class BookingValidatorMixin:
     @model_validator(mode='after')
     def check_future_date(self) -> Self:
         """Проверяет, что дата бронирования находится в будущем."""
-        if self.booking_date < func.current_date().execute().scalar():
+        if self.booking_date < date.today():
             raise ValueError(Constants.DATE_ERROR)
         return self
 

@@ -180,11 +180,10 @@ async def update_booking(
             attr_value=booking_id,
         )
     )
-    for table_slot in booking_table_slots_db:
-        await booking_table_slot_crud.deactivate(
-            session=session,
-            db_obj=table_slot,
-        )
+    await booking_table_slot_crud.deactivate_multi(
+        session=session,
+        db_objs=booking_table_slots_db,
+    )
 
     for table_slot in booking_data.pop('table_slots'):
         await booking_table_slot_crud.create(
