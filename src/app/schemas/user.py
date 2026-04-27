@@ -23,12 +23,10 @@ class UserBase(BaseModel):
     email: EmailStr | None = Field(
         None,
         max_length=UserConstants.MAX_EMAIL_LENGTH,
-        example='user@yandex.ru',
     )
     phone: str | None = Field(
         None,
         max_length=UserConstants.MAX_PHONE_LENGTH,
-        example='+71234567890',
     )
     tg_id: str | None = Field(
         None,
@@ -53,8 +51,6 @@ class UserCreate(UserBase):
     password: str = Field(
         ...,
         max_length=UserConstants.MAX_PASSWORD_LENGTH,
-        min_length=UserConstants.MIN_PASSWORD_LENGTH,
-        example='qwer1',
     )
 
     @model_validator(mode='after')
@@ -70,26 +66,6 @@ class UserCreate(UserBase):
             )
         return self
 
-    @field_validator('password')
-    @classmethod
-    def validate_password(cls, password: str) -> str:
-        """Проверяет пароль на соответствие заданным условиям."""
-        if (
-            (len(password) < UserConstants.MIN_PASSWORD_LENGTH)
-            or (len(password) > UserConstants.MAX_PASSWORD_LENGTH)
-        ):
-            raise ValueError(
-                'Пароль должен '
-                f'содержать минимум {UserConstants.MIN_PASSWORD_LENGTH} '
-                f'и не более {UserConstants.MAX_PASSWORD_LENGTH}.',
-            )
-
-        if not UserConstants.PASSWORD_REGEX.match(password):
-            raise ValueError(
-                'Пароль должен содержать хотя бы одну букву и одну цифру.',
-            )
-        return password
-
 
 class UserUpdate(UserBase):
     """Схема для обновления данных пользователя."""
@@ -102,29 +78,6 @@ class UserUpdate(UserBase):
         None, max_length=UserConstants.MAX_PASSWORD_LENGTH,
     )
     is_active: bool | None = Field(None)
-
-    @field_validator('password')
-    @classmethod
-    def validate_password(cls, password: str | None) -> str | None:
-        """Проверяет пароль на соответствие заданным условиям."""
-        if password is None:
-            return password
-
-        if (
-            (len(password) < UserConstants.MIN_PASSWORD_LENGTH)
-            or (len(password) > UserConstants.MAX_PASSWORD_LENGTH)
-        ):
-            raise ValueError(
-                'Пароль должен '
-                f'содержать минимум {UserConstants.MIN_PASSWORD_LENGTH} '
-                f'и не более {UserConstants.MAX_PASSWORD_LENGTH}.',
-            )
-
-        if not UserConstants.PASSWORD_REGEX.match(password):
-            raise ValueError(
-                'Пароль должен содержать хотя бы одну букву и одну цифру.',
-            )
-        return password
 
 
 class UserInfo(UserBase):
@@ -145,3 +98,9 @@ class UserShortInfo(UserBase):
     id: int = Field(...)
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AdminCreate(UserCreate):
+    """Схема для создания суперпользователя."""
+
+    role: UserRole = Field(UserRole.ADMIN, frozen=True)
