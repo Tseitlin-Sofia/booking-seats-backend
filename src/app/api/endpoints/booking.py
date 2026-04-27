@@ -125,7 +125,7 @@ async def create_booking(
         obj_in=booking_data,
     )
 
-    for table_slot in booking.tables_slots:
+    for table_slot in booking_data.tables_slots:
         await booking_table_slot_crud.create(
             session=session,
             obj_in=BookingTableSlotCreate(**{
@@ -160,16 +160,17 @@ async def update_booking(
         booking=booking,
         session=session,
     )
+    booking_data = booking.model_dump(exclude_unset=True)
     booking_db = await validate_booking_exists(booking_id, session)
     await validate_user_rights(current_user, booking_db.user_id)
     await validate_booking_slots(
-        slots=booking.table_slots,
-        booking_date=booking.get('booking_date', booking_db.booking_date),
+        slots=booking_data.table_slots,
+        booking_date=booking_data.get('booking_date', booking_db.booking_date),
         session=session,
     )
     await validate_cafe_slot_table(
         cafe_id=booking_db.cafe_id,
-        slots=booking.table_slots,
+        slots=booking_data.table_slots,
         session=session,
     )
     booking_table_slots_db = (
@@ -185,7 +186,7 @@ async def update_booking(
             db_obj=table_slot,
         )
 
-    for table_slot in booking.pop('table_slots'):
+    for table_slot in booking_data.pop('table_slots'):
         await booking_table_slot_crud.create(
             session=session,
             obj_in=BookingTableSlotCreate(**{
@@ -197,7 +198,7 @@ async def update_booking(
     booking_upd = await booking_crud.update(
         session=session,
         db_obj=booking_db,
-        obj_in=booking.model_dump(exclude_unset=True),
+        obj_in=booking_data,
     )
     await session.refresh(booking_upd)
     return booking_upd
