@@ -17,7 +17,6 @@ class BookingConstants:
     SLOT_ALREADY_BOOKED = (
         'Попытка забронировать уже забронированный слот {} на стол {}.'
     )
-    SLOTS_UNAVAILABLE = 'Некоторые слоты недоступны для бронирования.'
     SLOT_CAFE_MISMATCH = 'Слот и стол должны принадлежать одному кафе.'
     SLOT_DOES_NOT_EXIST = 'Слот c id {} не существует.'
     TABLE_DOES_NOT_EXIST = 'Стол c id {} не существует.'

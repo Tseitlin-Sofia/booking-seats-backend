@@ -138,14 +138,14 @@ async def validate_pre_order_items(
         logger.warning(
             f'В предзаказ добавлены несуществующие блюда: {list(missing)}',
         )
-        raise HTTPException(status_code=404, detail=Constants.DISH_NOT_FOUND)
+        raise HTTPException(status_code=422, detail=Constants.DISH_NOT_FOUND)
 
     unavailable = [d_id for d_id, d in dishes.items() if not d.is_available]
     if unavailable:
         logger.warning(
             f'Попытка заказать недоступные блюда: {unavailable}',
         )
-        raise HTTPException(status_code=400, detail=Constants.DISH_UNAVAILABLE)
+        raise HTTPException(status_code=422, detail=Constants.DISH_UNAVAILABLE)
 
     wrong_cafe = [d_id for d_id, d in dishes.items() if d.cafe_id != cafe_id]
     if wrong_cafe:
@@ -153,7 +153,7 @@ async def validate_pre_order_items(
             f'Блюда из предзаказа принадлежат другому кафе, id: {wrong_cafe}',
         )
         raise HTTPException(
-            status_code=400,
+            status_code=422,
             detail=Constants.DISH_CAFE_MISMATCH,
         )
 

@@ -46,7 +46,7 @@ class BookingTableSlot(Base, CommonMixin):
             name='fk_booking_table_slot_booking_id_booking',
         ),
     )
-    booking = relationship('Booking', back_populates='table_slots')
+    booking = relationship('Booking', back_populates='tables_slots')
 
 
 class Booking(Base, CommonMixin):
@@ -76,7 +76,7 @@ class Booking(Base, CommonMixin):
     )
     # TODO: Рассмотреть создание промежуточной таблицы в императивном стиле,
     # дабы избежать значения в виде списка
-    table_slots: Mapped[list['BookingTableSlot']] = relationship(
+    tables_slots: Mapped[list['BookingTableSlot']] = relationship(
         'BookingTableSlot',
         back_populates='booking',
         cascade='all, delete-orphan',
@@ -92,10 +92,9 @@ class Booking(Base, CommonMixin):
         back_populates='bookings',
         lazy='selectin',
     )
-    booking_dishes: Mapped[list['BookingDish']] = relationship(
+    pre_order_items: Mapped[list['BookingDish']] = relationship(
         'BookingDish',
         back_populates='booking',
-        cascade='all, delete-orphan',
         lazy='selectin',
     )
 
@@ -132,14 +131,13 @@ class Booking(Base, CommonMixin):
 class BookingDish(CommonMixin, Base):
     """Позиция предзаказа, привязанная к бронированию."""
 
-    __tablename__ = 'booking_dish'
     booking_id: Mapped[int] = mapped_column(Integer, ForeignKey('booking.id'))
     dish_id: Mapped[int] = mapped_column(Integer, ForeignKey('dish.id'))
     quantity: Mapped[int] = mapped_column(Integer)
     price_at_order: Mapped[float] = mapped_column(Float)
     booking: Mapped['Booking'] = relationship(
         'Booking',
-        back_populates='booking_dishes',
+        back_populates='pre_order_items',
     )
     dish: Mapped['Dish'] = relationship(
         'Dish',

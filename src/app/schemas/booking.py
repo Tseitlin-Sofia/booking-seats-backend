@@ -46,7 +46,6 @@ class BookingCreate(BookingCommon):
 
     cafe_id: int = Field(..., title='Cafe Id')
     pre_order_items: Optional[List[PreOrderItemCreate]] = None
-
     model_config = ConfigDict(extra='forbid')
 
 
@@ -56,11 +55,14 @@ class BookingInfo(BookingCommon):
     id: int = Field(..., title='Id')
     user: UserShortInfo
     cafe: CafeShortInfo
+    pre_order_items: Optional[List[PreOrderItemInfo]] = Field(
+        default=None,
+        title='Pre-order items',
+    )
     status: BookingStatus
     is_active: bool = Field(..., title='Is Active')
     created_at: datetime = Field(..., title='Created At')
     updated_at: datetime = Field(..., title='Updated At')
-    pre_order_items: Optional[List[PreOrderItemInfo]] = None
 
     model_config = ConfigDict(from_attributes=True)
 

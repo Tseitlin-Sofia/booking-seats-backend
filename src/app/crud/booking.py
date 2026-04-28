@@ -3,7 +3,7 @@
 from datetime import date
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -31,7 +31,7 @@ class BookingCRUD(CRUDBase):
         """Получает бронирования."""
         stmt = select(Booking).options(
             selectinload(
-                Booking.table_slots,
+                Booking.tables_slots,
             ).selectinload(
                 BookingTableSlot.slot,
             ),
@@ -66,9 +66,9 @@ class BookingCRUD(CRUDBase):
         await session.commit()
 
         logger.info(
-            'Предзаказ блюд успешно добавлен к бронированию'
-            + f'booking_id: {booking_id}'
-            + f'items_count" {len(items)}',
+            'Предзаказ блюд успешно добавлен к бронированию. '
+            f'booking_id: {booking_id}, '
+            f'items_count: {len(items)}',
         )
 
 
@@ -88,11 +88,16 @@ class BookingTableSlotCRUD(CRUDBase):
                 .where(
                     BookingTableSlot.table_id == slot.table_id,
                     BookingTableSlot.slot_id == slot.slot_id,
-                    BookingTableSlot.booking.status.in_(
-                        (BookingStatus.BOOKING, BookingStatus.ACTIVE),
-                    ),
                     BookingTableSlot.is_active,
-                    BookingTableSlot.booking.booking_date == date,
+                    BookingTableSlot.booking.has(
+                        and_(
+                            Booking.status.in_((
+                                BookingStatus.BOOKING,
+                                BookingStatus.ACTIVE,
+                            )),
+                            Booking.booking_date == date,
+                        ),
+                    ),
                 )
                 .exists()
             )

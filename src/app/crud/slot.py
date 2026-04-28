@@ -4,10 +4,11 @@ from typing import Self
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.crud.base import CRUDBase
 from app.models.slot import Slot
 
 
-class CRUDSlot:
+class CRUDSlot(CRUDBase):
     """CRUD операции для модели Slot."""
 
     def __init__(self, model: type[Self]) -> None:
@@ -38,12 +39,12 @@ class CRUDSlot:
         return new_slot
 
     async def get_slots_at_the_same_time(
-            self,
-            *,
-            from_reserve: datetime,
-            to_reserve: datetime,
-            table_id: int,
-            session: AsyncSession,
+        self,
+        *,
+        from_reserve: datetime,
+        to_reserve: datetime,
+        table_id: int,
+        session: AsyncSession,
     ) -> list[Slot]:
         """Возвращает слоты, пересекающиеся с заданным интервалом."""
         statement = select(Slot).where(

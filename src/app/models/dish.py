@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 class Dish(CommonMixin, Base):
     """Модель блюда в меню кафе."""
 
-    __tablename__ = 'dish'
     cafe_id: Mapped[int] = mapped_column(Integer, ForeignKey('cafe.id'))
     name: Mapped[str] = mapped_column(String(100))
     description: Mapped[str | None] = mapped_column(String(255))

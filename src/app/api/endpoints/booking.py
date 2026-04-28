@@ -113,36 +113,35 @@ async def create_booking(
         slots=booking.tables_slots,
         session=session,
     )
-
-    dishes_map = {}
-    if booking.pre_order_items:
-        dishes_map = await validate_pre_order_items(
-            booking.pre_order_items,
-            booking.cafe_id,
-            session,
-        )
-
-    booking_data = booking.model_dump(exclude={'pre_order_items'})
-    booking_data['status'] = BookingStatus.BOOKING
-    booking_data['user_id'] = current_user.id
+    booking_data = booking.model_dump(
+        exclude={'tables_slots', 'pre_order_items'},
+    )
+    booking_data.update({
+        'status': BookingStatus.BOOKING,
+        'user_id': current_user.id,
+    })
 
     new_booking = await booking_crud.create(
         session=session,
         obj_in=booking_data,
     )
 
-    for table_slot in booking.tables_slots:
+    for tables_slot in booking.tables_slots:
         await booking_table_slot_crud.create(
             session=session,
-            # TODO: сделать схему создания
             obj_in={
                 'booking_id': new_booking.id,
-                'table_id': table_slot.table_id,
-                'slot_id': table_slot.slot_id,
+                'table_id': tables_slot.table_id,
+                'slot_id': tables_slot.slot_id,
             },
         )
 
-    if booking.pre_order_items and dishes_map:
+    if booking.pre_order_items:
+        dishes_map = await validate_pre_order_items(
+            booking.pre_order_items,
+            booking.cafe_id,
+            session,
+        )
         await booking_crud.add_pre_order_items(
             new_booking.id,
             booking.pre_order_items,
@@ -151,7 +150,7 @@ async def create_booking(
         )
 
     await session.refresh(new_booking)
-    return new_booking
+    return BookingInfo.model_validate(new_booking, from_attributes=True)
 
 
 # TODO: Можно удалить слоты и создать заново! cascade inactive
