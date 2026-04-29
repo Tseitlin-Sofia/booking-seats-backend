@@ -6,16 +6,10 @@ from app.api.dependencies import (
     SessionDep,
     UserDep,
 )
-from app.api.validators.user import (
-    validate_admin_or_manager_cannot_deactivate_self,
-    validate_cannot_deactivate_last_manager,
-    validate_manager_can_only_edit_users,
-)
 from app.core.user import get_current_user, get_manager_user
 from app.crud.user import user_crud
 from app.models.user import UserRole
 from app.schemas.user import UserCreate, UserInfo, UserUpdate
-from app.services.user import user_service
 
 router = APIRouter()
 
@@ -62,7 +56,7 @@ async def create_user(
             ),
         )
     try:
-        user = await user_service.create_user(session=session, user_in=user_in)
+        user = await user_crud.create(session=session, user_in=user_in)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -108,15 +102,11 @@ async def patch_me(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Вы не можете поменять поля role и is_active самому себе.',
         )
-    try:
-        return await user_service.update_user(
-            session=session, user=current_user, user_in=user_in,
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
+    return await user_crud.update(
+        session=session,
+        db_user=current_user,
+        user_in=user_in,
+    )
 
 
 @router.get(
@@ -168,23 +158,25 @@ async def update_user(
             detail='Пользователь с таким id не найден',
         )
 
+    if not current_user.is_admin:
+        if target_user.is_admin or target_user.is_manager:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='Менеджер может изменять только обычных пользователей',
+            )
+
+    if (
+        user_in.is_active is not None
+        and ((current_user.is_admin and current_user.id == target_user.id)
+        or (current_user.is_manager and current_user.id == target_user.id))
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Нельзя менять поле is_active самому себе.',
+        )
     try:
-        validate_admin_or_manager_cannot_deactivate_self(
-            current_user=current_user,
-            target_user=target_user,
-            is_active=user_in.is_active,
-        )
-        validate_manager_can_only_edit_users(
-            current_user=current_user,
-            target_user=target_user,
-        )
-        await validate_cannot_deactivate_last_manager(
-            session=session,
-            user=target_user,
-            is_active=user_in.is_active,
-        )
-        return await user_service.update_user(
-            session=session, user=target_user, user_in=user_in,
+        return await user_crud.update(
+            session=session, db_user=target_user, user_in=user_in,
         )
     except ValueError as e:
         raise HTTPException(

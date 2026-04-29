@@ -53,11 +53,14 @@ class User(CommonMixin, Base):
         ),
         default=UserConstants.DEFAULT_USER_ROLE,
     )
-    cafe_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("cafe.id"), nullable=True,
+    cafe_id: Mapped[int | None] = mapped_column(
+        ForeignKey('cafe.id'),
+        nullable=True,
     )
-    cafe: Mapped[Optional['Cafe']] = relationship(
-        back_populates="managers", lazy="selectin",
+    cafe: Mapped["Cafe | None"] = relationship(
+        "Cafe",
+        back_populates="managers",
+        lazy="selectin",
     )
     bookings: Mapped[list["Booking"]] = relationship(
         "Booking",
