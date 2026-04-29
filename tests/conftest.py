@@ -1,55 +1,113 @@
-from typing import Any, Callable, Generator, List
+import asyncio
+import sys
+from typing import AsyncGenerator
 
+import httpx
 import pytest
-from loguru import logger
-
-from app.core.logging import (
-    setup_logging,
-    trace_id_ctx,
-    user_id_ctx,
-    username_ctx,
+from fastapi import FastAPI
+from httpx import ASGITransport
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
 )
 
-SinkCallback = Callable[[Any], None]
+from app.core.config import settings
+from app.core.db import get_async_session
+from app.main import app as application
 
-SinkType = Callable[[List[str]], SinkCallback]
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+pytest_plugins = [
+    'tests.fixtures.auth',
+    'tests.fixtures.database',
+    'tests.fixtures.logging',
+    'tests.fixtures.payloads',
+]
+LOG_WRITE_DELAY_SEC = 0.5
+
+test_engine = create_async_engine(
+    settings.database_url,
+    echo=False,
+    pool_size=5,
+    max_overflow=10,
+)
+
+TestSessionLocal = async_sessionmaker(
+    test_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
 
 
-@pytest.fixture
-def capture_sink() -> SinkType:
-    """Фикстура: фабрика sink-функции для перехвата логов в тесте.
-
-    Возвращает функцию, которая принимает список для сбора логов
-    и возвращает sink-коллбэк для loguru.
-    """
-
-    def _create(captured: List[str]) -> SinkCallback:
-        def sink(message: Any) -> None:
-            captured.append(str(message).rstrip())
-
-        return sink
-
-    return _create
+@pytest.fixture(scope='function')
+async def session() -> AsyncGenerator[AsyncSession, None]:
+    """Тестовая сессия с автоматическим откатом и очисткой."""
+    async with TestSessionLocal() as test_session:
+        try:
+            yield test_session
+        finally:
+            await test_session.rollback()
 
 
-@pytest.fixture(autouse=True)
-def setup_test_logging() -> Generator[None, None, None]:
-    """Сбрасывает loguru и contextvars между тестами.
-
-    Автоматически применяется ко всем тестам проекта.
-    Гарантирует изоляцию: каждый тест начинается с чистого состояния.
-    """
-    default_trace = trace_id_ctx.get()
-    default_user = user_id_ctx.get()
-    default_username = username_ctx.get()
-
-    logger.remove()
-    setup_logging(env='dev', log_level='INFO')
-
+@pytest.fixture(scope='function', autouse=True)
+async def cleanup_engine() -> AsyncGenerator[None, None]:
+    """Очищает пул соединений между тестами."""
     yield
+    await test_engine.dispose()
 
-    logger.remove()
 
-    trace_id_ctx.set(default_trace)
-    user_id_ctx.set(default_user)
-    username_ctx.set(default_username)
+@pytest.fixture(scope='function', autouse=True)
+async def cleanup_tables(session: AsyncSession) -> AsyncGenerator[None, None]:
+    """Очищает таблицы после каждого теста."""
+    yield
+    tables_to_clean = [
+        'bookingdish',
+        'bookingtableslot',
+        'booking',
+        'dish',
+        'slot',
+        '"table"',
+        '"user"',
+        'cafe',
+    ]
+    for table in tables_to_clean:
+        try:
+            await session.execute(text(f'DELETE FROM {table}'))
+        except Exception:
+            pass
+    await session.commit()
+
+
+@pytest.fixture(scope='function')
+def app() -> FastAPI:
+    """Возвращает экземпляр приложения FastAPI."""
+    return application
+
+
+@pytest.fixture(scope='function')
+async def async_client(
+    app: FastAPI,
+    session: AsyncSession,
+) -> AsyncGenerator[httpx.AsyncClient, None]:
+    """Асинхронный клиент для тестов."""
+
+    async def override_get_async_session() -> AsyncGenerator[
+        AsyncSession,
+        None,
+    ]:
+        yield session
+
+    app.dependency_overrides[get_async_session] = override_get_async_session
+
+    transport = ASGITransport(app=app)
+    async with httpx.AsyncClient(
+        transport=transport,
+        base_url='http://test',
+    ) as client:
+        yield client
+
+    await session.close()
+    app.dependency_overrides.clear()
