@@ -1,6 +1,6 @@
 """Базовый класс для CRUD операций с базой данных."""
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from pydantic import BaseModel
 from sqlalchemy import exists, select
@@ -55,12 +55,15 @@ class CRUDBase:
 
     async def create(
         self,
-        obj_in: BaseModel,
+        obj_in: Union[BaseModel, dict],
         session: AsyncSession,
         user: Optional[User] = None,
     ) -> Base:
         """Создает новую запись в базе данных."""
-        obj_in_data = obj_in.model_dump()
+        if isinstance(obj_in, BaseModel):
+            obj_in_data = obj_in.model_dump()
+        else:
+            obj_in_data = obj_in.copy()
         if user is not None:
             obj_in_data['user_id'] = user.id
         db_obj = self.model(**obj_in_data)
@@ -96,7 +99,7 @@ class CRUDBase:
         """Получает объект по атрибуту, с учетом статуса активности."""
         if not hasattr(self.model, attr_name):
             raise AttributeError(
-                f"У модели {self.model.__name__} нет атрибута {attr_name}.",
+                f'У модели {self.model.__name__} нет атрибута {attr_name}.',
             )
         attr = getattr(self.model, attr_name)
         stmt = select(self.model).where(attr == attr_value)
@@ -119,6 +122,30 @@ class CRUDBase:
             stmt = stmt.where(self.model.is_active == is_active)
         result = await session.execute(stmt)
         return list(result.scalars().all())
+
+    async def deactivate(
+        self,
+        session: AsyncSession,
+        db_obj: Base,
+    ) -> Base:
+        """Деактивирует объект."""
+        db_obj.is_active = False
+        await session.commit()
+        await session.refresh(db_obj)
+        return db_obj
+
+    async def deactivate_multi(
+        self,
+        session: AsyncSession,
+        db_objs: list[Base],
+    ) -> list[Base]:
+        """Деактивирует несколько объектов."""
+        for db_obj in db_objs:
+            db_obj.is_active = False
+        await session.commit()
+        for db_obj in db_objs:
+            await session.refresh(db_obj)
+        return db_objs
 
     async def is_obj_exist(
             self,

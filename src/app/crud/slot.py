@@ -5,10 +5,11 @@ from fastapi import HTTPException
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.crud.base import CRUDBase
 from app.models.slot import Slot
 
 
-class CRUDSlot:
+class CRUDSlot(CRUDBase):
     """CRUD операции для модели Slot."""
 
     def __init__(self, model: type[Self]) -> None:

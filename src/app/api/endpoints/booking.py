@@ -11,6 +11,8 @@ from app.api.validators.booking import (
     validate_booking_exists,
     validate_booking_slots,
     validate_cafe_slot_table,
+    validate_pre_order_items,
+    validate_table_slots_exists,
     validate_user_rights,
 )
 from app.crud.booking import booking_crud, booking_table_slot_crud
@@ -18,6 +20,8 @@ from app.schemas.booking import (
     BookingCreate,
     BookingInfo,
     BookingStatus,
+    BookingTableSlotCreate,
+    BookingUpdate,
 )
 
 # from app.celery.tasks import notify_admin, notify_client
@@ -42,13 +46,16 @@ async def get_bookings(
     session: SessionDep,
     current_user: UserDep,
     show_active: Annotated[
-        bool, Query(description="Показывать активные бронирования?"),
+        bool,
+        Query(description='Показывать активные бронирования?'),
     ] = True,
     cafe_id: Annotated[
-        Optional[int], Query(description="ID кафе"),
+        Optional[int],
+        Query(description='ID кафе'),
     ] = None,
     user_id: Annotated[
-        Optional[int], Query(description="ID пользователя"),
+        Optional[int],
+        Query(description='ID пользователя'),
     ] = None,
 ) -> list[BookingInfo]:
     """Получение списка бронирований."""
@@ -107,18 +114,22 @@ async def create_booking(
 ) -> BookingInfo:
     """Создание бронирования."""
     await validate_booking_slots(
-        slots=booking.tables_slots,
+        slots=booking.table_slots,
         booking_date=booking.booking_date,
         session=session,
     )
     await validate_cafe_slot_table(
         cafe_id=booking.cafe_id,
-        slots=booking.tables_slots,
+        slots=booking.table_slots,
         session=session,
     )
-    booking_data = booking.model_dump()
-    booking_data['status'] = BookingStatus.BOOKING
-    booking_data['user_id'] = current_user.id
+    booking_data = booking.model_dump(
+        exclude={'tables_slots', 'pre_order_items'},
+    )
+    booking_data.update({
+        'status': BookingStatus.BOOKING,
+        'user_id': current_user.id,
+    })
 
     new_booking = await booking_crud.create(
         session=session,
@@ -133,64 +144,93 @@ async def create_booking(
     #     args=[booking_for_celery],
     #     eta=booking_date - timedelta(hours=2)
     # )
-
-    for table_slot in booking.tables_slots:
+    for tables_slot in booking.tables_slots:
         await booking_table_slot_crud.create(
             session=session,
-            # TODO: сделать схему создания
             obj_in={
                 'booking_id': new_booking.id,
-                'table_id': table_slot.table_id,
-                'slot_id': table_slot.slot_id,
+                'table_id': tables_slot.table_id,
+                'slot_id': tables_slot.slot_id,
             },
         )
+
+    if booking.pre_order_items:
+        dishes_map = await validate_pre_order_items(
+            booking.pre_order_items,
+            booking.cafe_id,
+            session,
+        )
+        await booking_crud.add_pre_order_items(
+            new_booking.id,
+            booking.pre_order_items,
+            dishes_map,
+            session,
+        )
+
     await session.refresh(new_booking)
-    return new_booking
+    return BookingInfo.model_validate(new_booking, from_attributes=True)
 
-# TODO: Можно удалить слоты и создать заново! cascade inactive
-# @router.patch(
-#     '/{booking_id}',
-#     response_model=BookingInfo,
-#     summary='Обновление информации о бронировании по его ID',
-#     description=(
-#         'Обновление информации о бронировании по его ID. '
-#         'Для администраторов и менеджеров - все бронирования, '
-#         'для пользователей - только свои.'
-#     ),
-#     response_description='Подробный вывод обновленного бронирования',
-# )
-# async def update_booking(
-#     session: SessionDep,
-#     booking_id: int,
-#     booking: BookingUpdate,
-#     current_user: UserDep,
-# ) -> BookingInfo:
-#     """Обновление бронирования."""
-#     booking_db = await validate_booking_exists(booking_id, session)
-#     booking_table_slots_db = await booking_table_slot_crud.get(
-#         session=session,
-#         id=booking_id,
-#     )
-#     await validate_user_rights(current_user, booking_db.user_id)
 
-#     if booking.tables_slots is not None:
-#         await validate_booking_slots(
-#             slots=booking.tables_slots,
-#             booking_date=booking.booking_date or booking_db.booking_date,
-#             session=session,
-#         )
-#         await validate_cafe_slot_table(
-#             cafe_id=booking_db.cafe_id,
-#             slots=booking.tables_slots,
-#             session=session,
-#         )
-#         await booking_table_slot_crud.update(
-#             session=session,
-#             db_obj=booking_table_slots_db,
-#             obj_in=booking.tables_slots,
-#         )
-#     return await booking_crud.update(
-#         session=session,
-#         db_obj=booking_db,
-#         obj_in=booking.model_dump(exclude_unset=True),
-#     )
+@router.patch(
+    '/{booking_id}',
+    response_model=BookingInfo,
+    summary='Обновление информации о бронировании по его ID',
+    description=(
+        'Обновление информации о бронировании по его ID. '
+        'Для администраторов и менеджеров - все бронирования, '
+        'для пользователей - только свои.'
+    ),
+    response_description='Подробный вывод обновленного бронирования',
+)
+async def update_booking(
+    session: SessionDep,
+    booking_id: int,
+    booking: BookingUpdate,
+    current_user: UserDep,
+) -> BookingInfo:
+    """Обновление бронирования."""
+    await validate_table_slots_exists(
+        booking=booking,
+        session=session,
+    )
+    booking_data = booking.model_dump(exclude_unset=True)
+    booking_db = await validate_booking_exists(booking_id, session)
+    await validate_user_rights(current_user, booking_db.user_id)
+    await validate_booking_slots(
+        slots=booking_data.table_slots,
+        booking_date=booking_data.get('booking_date', booking_db.booking_date),
+        session=session,
+    )
+    await validate_cafe_slot_table(
+        cafe_id=booking_db.cafe_id,
+        slots=booking_data.table_slots,
+        session=session,
+    )
+    booking_table_slots_db = (
+        await booking_table_slot_crud.get_by_attribute_multi(
+            session=session,
+            attr_name='booking_id',
+            attr_value=booking_id,
+        )
+    )
+    await booking_table_slot_crud.deactivate_multi(
+        session=session,
+        db_objs=booking_table_slots_db,
+    )
+
+    for table_slot in booking_data.pop('table_slots'):
+        await booking_table_slot_crud.create(
+            session=session,
+            obj_in=BookingTableSlotCreate(**{
+                'booking_id': booking_id,
+                'table_id': table_slot.table_id,
+                'slot_id': table_slot.slot_id,
+            }),
+        )
+    booking_upd = await booking_crud.update(
+        session=session,
+        db_obj=booking_db,
+        obj_in=booking_data,
+    )
+    await session.refresh(booking_upd)
+    return booking_upd
