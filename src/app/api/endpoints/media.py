@@ -6,14 +6,14 @@ import aiofiles
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
-from app.api.dependencies import UserDep
 from app.api.validators.media_validators import validate_image
+from app.celery.tasks import notify_admin, notify_client
 from app.core.constants import MediaConstants
-from app.celery.tasks import notify_client, notify_admin
 from app.models.user import User
 from app.services.media_service import transform_to_jpeg
 
 router = APIRouter()
+
 
 def is_manager_or_admin(user: User) -> None:
     """Проверка авторзованного юзера на роль админа/менеджера."""
@@ -23,10 +23,11 @@ def is_manager_or_admin(user: User) -> None:
             detail="Недостаточно прав для этого действия.",
         )
 
+
 @router.post(
     '/',
     summary="Загрузить png/jpeg на сервер",
-    status_code=201
+    status_code=201,
 )
 async def load_photo_to_server(
     # current_user: UserDep,
@@ -53,7 +54,7 @@ async def load_photo_to_server(
     notify_admin.delay()
     notify_client.apply_async(
         args=[],
-        eta=datetime.now() + timedelta(minutes=1)
+        eta=datetime.now() + timedelta(minutes=1),
     )
 
     return {"media_id": media_id}

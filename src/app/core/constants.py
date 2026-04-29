@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 
-
 class BookingConstants:
     """Класс с константами для бронирования."""
 
