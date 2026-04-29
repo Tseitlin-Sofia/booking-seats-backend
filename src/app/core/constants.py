@@ -61,10 +61,8 @@ class UserConstants:
     MAX_PHONE_LENGTH = 20
     MAX_PASSWORD_LENGTH = 255
     MAX_TG_ID_LENGTH = 100
-    MIN_PASSWORD_LENGTH = 5
     DEFAULT_USER_ROLE = 'user'
     PHONE_REGEX = re.compile(r'^(\+7|8)\d{10}$')
-    PASSWORD_REGEX = re.compile(r'^(?=.*[A-Za-z])(?=.*\d).+$')
 
 
 class LoggingConstants:
