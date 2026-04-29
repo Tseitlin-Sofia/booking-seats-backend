@@ -28,6 +28,7 @@ class BookingConstants:
     TABLE_INACTIVE = 'Стол с ID {} неактивен'
     USER_NOT_AUTHENTICATED = 'Пользователь не авторизован'
     SLOTS_UNAVAILABLE = 'Выбранные временные слоты уже забронированы'
+    LIST_SLOTS_ERROR = 'Список временных слотов не может быть пустым.'
     DISH_NOT_FOUND = 'Некоторые блюда из предзаказа не найдены в меню.'
     DISH_UNAVAILABLE = 'Выбранные блюда временно недоступны.'
     DISH_CAFE_MISMATCH = 'Блюда не принадлежат выбранному кафе.'
@@ -116,8 +117,8 @@ class SlotConstants:
     """Класс для констант модели интервала времени бронирования столика."""
 
     BASE_TIME = datetime.now() + timedelta(minutes=10)
-    FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')
-    TO_TIME = (BASE_TIME + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')
+    FROM_TIME = BASE_TIME.strftime('%H:%M')
+    TO_TIME = (BASE_TIME + timedelta(hours=1)).strftime('%H:%M')
 
 
 class NotificationConstants:

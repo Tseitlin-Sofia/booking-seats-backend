@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import time
 from typing import Self
 
 from fastapi import HTTPException
@@ -66,16 +66,17 @@ class CRUDSlot(CRUDBase):
             self,
             *,
             slot_id: int | None = None,
-            start_time: datetime,
-            end_time: datetime,
+            start_time: time,
+            end_time: time,
             cafe_id: int,
-            table_id: int,
             session: AsyncSession,
     ) -> list[Slot]:
-        """Возвращает слоты, пересекающиеся с заданным интервалом."""
-        statement = select(Slot).where(
+        """Возвращает слоты в этом кафе, пересекающиеся с заданным интервалом.
 
-            Slot.table_id == table_id,
+        Занятость конкретного стола в слоте (на конкретную дату)
+        проверяется отдельно через BookingTableSlotCRUD.is_available.
+        """
+        statement = select(Slot).where(
             Slot.cafe_id == cafe_id,
             start_time < Slot.end_time,
             end_time > Slot.start_time,
@@ -84,9 +85,7 @@ class CRUDSlot(CRUDBase):
             statement = statement.where(Slot.id != slot_id)
 
         result = await session.execute(statement)
-        slots = list(result.scalars().all())
-        print(f'Пересекающиеся слоты: {slots}')
-        return slots
+        return list(result.scalars().all())
 
     async def update(
         self,

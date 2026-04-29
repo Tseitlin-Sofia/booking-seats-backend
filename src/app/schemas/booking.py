@@ -3,7 +3,11 @@
 from datetime import date, datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+)
 
 from app.models.booking import BookingStatus
 from app.schemas.cafe import CafeShortInfo
@@ -11,6 +15,7 @@ from app.schemas.dish import PreOrderItemCreate, PreOrderItemInfo
 from app.schemas.slot import TimeSlotShortInfo
 from app.schemas.table import TableShortInfo
 from app.schemas.user import UserShortInfo
+from app.schemas.validators.booking import BookingValidatorMixin
 
 
 class BookingTableSlot(BaseModel):
@@ -20,6 +25,12 @@ class BookingTableSlot(BaseModel):
     slot_id: int = Field(..., title='Slot Id')
 
     model_config = ConfigDict(extra='forbid')
+
+
+class BookingTableSlotCreate(BookingTableSlot):
+    """Пара ID стола и ID временного слота для создания бронирования."""
+
+    booking_id: int = Field(..., title="Booking Id")
 
 
 class BookingTableSlotShortInfo(BaseModel):
@@ -41,7 +52,7 @@ class BookingCommon(BaseModel):
     # TODO: validate booking_date is in the future, slots arent empty, gn>0
 
 
-class BookingCreate(BookingCommon):
+class BookingCreate(BookingValidatorMixin, BookingCommon):
     """Схема для создания бронирования."""
 
     cafe_id: int = Field(..., title='Cafe Id')
@@ -67,7 +78,7 @@ class BookingInfo(BookingCommon):
     model_config = ConfigDict(from_attributes=True)
 
 
-class BookingUpdate(BaseModel):
+class BookingUpdate(BookingValidatorMixin, BaseModel):
     """Схема для обновления бронирования."""
 
     tables_slots: Optional[list[BookingTableSlot]] = None

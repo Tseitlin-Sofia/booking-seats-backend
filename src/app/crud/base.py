@@ -123,6 +123,30 @@ class CRUDBase:
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
+    async def deactivate(
+        self,
+        session: AsyncSession,
+        db_obj: Base,
+    ) -> Base:
+        """Деактивирует объект."""
+        db_obj.is_active = False
+        await session.commit()
+        await session.refresh(db_obj)
+        return db_obj
+
+    async def deactivate_multi(
+        self,
+        session: AsyncSession,
+        db_objs: list[Base],
+    ) -> list[Base]:
+        """Деактивирует несколько объектов."""
+        for db_obj in db_objs:
+            db_obj.is_active = False
+        await session.commit()
+        for db_obj in db_objs:
+            await session.refresh(db_obj)
+        return db_objs
+
     async def is_obj_exist(
             self,
             session: AsyncSession,
