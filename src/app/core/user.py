@@ -81,8 +81,6 @@ class AuthService:
             query = select(User).where(User.email == login)
         elif login.startswith('+'):
             query = select(User).where(User.phone == login)
-        else:
-            query = select(User).where(User.username == login)
 
         result = await session.execute(query)
         user = result.scalar_one_or_none()
