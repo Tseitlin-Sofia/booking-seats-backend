@@ -46,7 +46,9 @@ class Settings(BaseSettings):
         )
 
     model_config = SettingsConfigDict(
-        env_file=BASE_DIR / '../infra/.env',
+        # Для локального запуска используем .env из папки src,
+        # для докера - из папки infra
+        env_file=BASE_DIR / '.env',
         extra='ignore',
     )
 
