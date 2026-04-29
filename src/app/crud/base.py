@@ -26,12 +26,12 @@ class CRUDBase:
         self,
         obj_id: int,
         session: AsyncSession,
-        is_active: Optional[bool] = True,
+        is_active: Optional[bool] = None,
     ) -> Optional[Base]:
         """Получает объект по его id, с учетом статуса активности."""
         stmt = select(self.model).where(
-                self.model.id == obj_id,
-            )
+            self.model.id == obj_id,
+        )
         if is_active is not None:
             stmt = stmt.where(
                 self.model.is_active == is_active,
@@ -42,7 +42,7 @@ class CRUDBase:
     async def get_multi(
         self,
         session: AsyncSession,
-        is_active: Optional[bool] = True,
+        is_active: Optional[bool] = None,
     ) -> list[Base]:
         """Получает все объекты, с учетом статуса активности."""
         stmt = select(self.model)

@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core.constants import CafeConstants
+from app.schemas.user import UserShortInfo
 
 
 class ValidatePhoneMixin:
@@ -37,20 +38,10 @@ class CafeShortInfo(CafeBase):
     id: int
 
 
-class CafeManagers(BaseModel):
-    """Схема менеджеров для схемы CafeInfo."""
-
-    id: int
-    username: str
-    email: Optional[str]
-    phone: Optional[str]
-    tg_id: Optional[str]
-
-
 class CafeInfo(CafeShortInfo):
     """Схема для метода GET (multi + id) и POST."""
 
-    managers: list[CafeManagers]
+    managers: list[UserShortInfo]
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -66,7 +57,9 @@ class CafeUpdate(ValidatePhoneMixin, BaseModel):
     phone: Optional[str] = None
     description: Optional[str] = None
     photo_id: Optional[UUID] = None
-    managers_id: Optional[List[int]] = None
+    managers_id: Optional[List[int]] = Field(
+        default=None, min_length=CafeConstants.MIN_LENGTH_MANAGERS_LIST,
+    )
     is_active: Optional[bool] = None
 
     model_config = ConfigDict(extra='forbid')
@@ -75,4 +68,6 @@ class CafeUpdate(ValidatePhoneMixin, BaseModel):
 class CafeCreate(ValidatePhoneMixin, CafeBase):
     """Схема для метода POST."""
 
-    managers_id: List[int]
+    managers_id: List[int] = Field(
+        min_length=CafeConstants.MIN_LENGTH_MANAGERS_LIST,
+    )
