@@ -1,5 +1,6 @@
 """Эндпоинты бронирования."""
 
+# from datetime import timedelta
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, status
@@ -15,6 +16,8 @@ from app.api.validators.booking import (
 )
 from app.crud.booking import booking_crud, booking_table_slot_crud
 from app.schemas.booking import BookingCreate, BookingInfo, BookingStatus
+
+# from app.celery.tasks import notify_admin, notify_client
 
 router = APIRouter()
 
@@ -125,6 +128,15 @@ async def create_booking(
         session=session,
         obj_in=booking_data,
     )
+    # TODO код для создания задачи на отправку напоминания клиенту
+    # и уведомления админа
+    # booking_for_celery = BookingInfo.model_validate(new_booking).model_dump()
+    # notify_admin.delay(booking_for_celery)
+    # booking_date = booking_for_celery.get('booking_date', None)
+    # notify_client.apply_async(
+    #     args=[booking_for_celery],
+    #     eta=booking_date - timedelta(hours=2)
+    # )
 
     for tables_slot in booking.tables_slots:
         await booking_table_slot_crud.create(

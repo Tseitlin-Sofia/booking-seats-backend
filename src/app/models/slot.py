@@ -18,9 +18,14 @@ class Slot(Base, CommonMixin):
         ForeignKey('cafe.id'),
         nullable=False,
     )
+    table_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey('table.id'),
+        nullable=False,
+    )
 
     def __repr__(self) -> str:
         return (
             f'Время бронирования: {self.start_time} - {self.end_time}, '
-            f'кафе_id={self.cafe_id}'
+            f'кафе_id={self.cafe_id}, столик_id={self.table_id}'
         )

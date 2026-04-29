@@ -1,7 +1,9 @@
 """Настройки приложения."""
 
 from pathlib import Path
+from typing import Optional
 
+from pydantic import EmailStr
 from pydantic.types import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -15,6 +17,10 @@ class Settings(BaseSettings):
     base_dir: Path = BASE_DIR
     description: str = 'DESCRIPTION'
     secret: str = 'SECRET'
+    first_superuser_email: Optional[EmailStr] = None
+    first_superuser_password: Optional[str] = None
+    first_superuser_username: Optional[str] = None
+    first_superuser_phone: Optional[str] = None
     environment: str = 'dev'
     log_level: str = 'INFO'
     postgres_user: str
@@ -40,6 +46,8 @@ class Settings(BaseSettings):
         )
 
     model_config = SettingsConfigDict(
+        # Для локального запуска используем .env из папки src,
+        # для докера - из папки infra
         env_file=BASE_DIR / '.env',
         extra='ignore',
     )

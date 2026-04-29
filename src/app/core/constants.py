@@ -55,6 +55,13 @@ class CafeConstants:
     PHONE_FORMAT = r'^\+7\d{10}$'
 
 
+class ActionConstants:
+    """Класс с константами для модели акций."""
+
+    MIN_DESCRIPTION = 10
+    MIN_LENGTH_CAFES_LIST = 1
+
+
 class UserConstants:
     """Класс с константами для пользователей."""
 
@@ -63,10 +70,8 @@ class UserConstants:
     MAX_PHONE_LENGTH = 20
     MAX_PASSWORD_LENGTH = 255
     MAX_TG_ID_LENGTH = 100
-    MIN_PASSWORD_LENGTH = 5
     DEFAULT_USER_ROLE = 'user'
     PHONE_REGEX = re.compile(r'^(\+7|8)\d{10}$')
-    PASSWORD_REGEX = re.compile(r'^(?=.*[A-Za-z])(?=.*\d).+$')
 
 
 class LoggingConstants:
@@ -113,3 +118,9 @@ class SlotConstants:
     BASE_TIME = datetime.now() + timedelta(minutes=10)
     FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')
     TO_TIME = (BASE_TIME + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')
+
+
+class NotificationConstants:
+    """Класс констант для уведомлений и напоминаний о бронировании."""
+
+    ADMIN_EMAIL = "test@mail.ru"
