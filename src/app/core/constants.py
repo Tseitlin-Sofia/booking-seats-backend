@@ -35,7 +35,7 @@ class MediaConstants:
     """Класс констант для работы с media."""
 
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
-    MEDIA_DIR = BASE_DIR / "media"
+    MEDIA_DIR = Path("/media")
     IMAGE_EXTENSION = "jpg"
     CHUNK_SIZE_1MB = 1024 * 1024
     MAX_PHOTO_SIZE_5MB = CHUNK_SIZE_1MB * 5
@@ -62,10 +62,8 @@ class UserConstants:
     MAX_PHONE_LENGTH = 20
     MAX_PASSWORD_LENGTH = 255
     MAX_TG_ID_LENGTH = 100
-    MIN_PASSWORD_LENGTH = 5
     DEFAULT_USER_ROLE = 'user'
     PHONE_REGEX = re.compile(r'^(\+7|8)\d{10}$')
-    PASSWORD_REGEX = re.compile(r'^(?=.*[A-Za-z])(?=.*\d).+$')
 
 
 class LoggingConstants:
@@ -112,3 +110,9 @@ class SlotConstants:
     BASE_TIME = datetime.now() + timedelta(minutes=10)
     FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')
     TO_TIME = (BASE_TIME + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')
+
+
+class NotificationConstants:
+    """Класс констант для уведомлений и напоминаний о бронировании."""
+
+    ADMIN_EMAIL = "test@mail.ru"

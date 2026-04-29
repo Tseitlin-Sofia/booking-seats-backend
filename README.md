@@ -23,8 +23,10 @@ docker compose exec app alembic revision --autogenerate -m "description"
 docker compose exec app alembic upgrade head
 ```
 
-При создании первого пользователя ему автоматически назначается роль Администратора.
-
+Для создания 1 суперпользователя:
+```bash
+docker compose exec app python -m app.core.init_db create-superuser
+```
 
 Проверка создания таблиц:
 ```bash
