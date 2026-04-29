@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, Any, Optional
 
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import Base
@@ -119,3 +119,20 @@ class CRUDBase:
             stmt = stmt.where(self.model.is_active == is_active)
         result = await session.execute(stmt)
         return list(result.scalars().all())
+
+    async def is_obj_exist(
+            self,
+            session: AsyncSession,
+            obj_id: Optional[int] = None,
+            attr_name: Optional[str] = None,
+            attr_value: Optional[Any] = None,
+    ) -> bool:
+        """Проверка наличия объекта в бд (также по атрибуту)."""
+        stmt = exists().select_from(self.model)
+        if attr_name is not None and attr_value is not None:
+            attr = getattr(self.model, attr_name)
+            stmt = stmt.where(attr == attr_value)
+        elif obj_id is not None:
+            stmt = stmt.where(self.model.id == obj_id)
+        result = await session.execute(select(stmt))
+        return result.scalar_one()

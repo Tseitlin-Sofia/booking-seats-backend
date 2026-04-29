@@ -7,7 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import get_logger
 from app.crud.cafe import cafe_crud
 from app.crud.user import user_crud
-from app.models import Cafe, User
+from app.models.cafe import Cafe
+from app.models.user import User
 from app.schemas.cafe import CafeCreate, CafeUpdate
 
 logger = get_logger()
@@ -26,9 +27,9 @@ async def get_cafe_or_404(
         cafe_id: int,
         is_exist: Optional[bool] = False,
 ) -> Self:
-    """Возвращает объект по id и выдает 404, если он не найден."""
+    """Возвращает кафе по его id и выдает 404, если оно не найдено."""
     if is_exist:
-        db_cafe = await cafe_crud.is_cafe_exist(session, cafe_id)
+        db_cafe = await cafe_crud.is_obj_exist(session, cafe_id)
     else:
         db_cafe = await cafe_crud.get(cafe_id, session)
     if db_cafe is False or db_cafe is None:
@@ -97,8 +98,15 @@ async def is_managers_id(
     return managers
 
 
-async def is_manager_from_cafe(cafe_id: int, user: User) -> None:
+async def is_manager_from_cafe(
+    cafe_id: int,
+    user: User,
+) -> None:
     """Проверка, что менеджер может редактировать только свое кафе."""
-    if user.is_manager and user.cafe_id != cafe_id:
-        msg = 'Менеджер может редактировать только свое привязанное кафе!'
+    if user.cafe_id != cafe_id:
+        msg = (
+            'Менеджер может редактировать только свое привязанное кафе c id '
+            f'{user.cafe_id}!'
+        )
+        logger.warning(msg)
         await raise_error(msg, HTTPStatus.FORBIDDEN)
