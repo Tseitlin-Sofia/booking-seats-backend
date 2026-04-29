@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import CheckConstraint, Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
