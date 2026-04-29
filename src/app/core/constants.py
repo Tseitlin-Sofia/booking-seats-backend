@@ -44,8 +44,13 @@ class MediaConstants:
 class CafeConstants:
     """Класс с константами для модели кафе."""
 
+    ERROR_PHONE = (
+        'Номер телефона должен начинаться с +7 '
+        'и не превышать 10 цифр после!'
+    )
     NAME_RESTRICTION = 20
-    MOSCOW_HOURS = 3
+    MIN_LENGTH_MANAGERS_LIST = 1
+    PHONE_FORMAT = r'^\+7\d{10}$'
 
 
 class UserConstants:
@@ -56,10 +61,8 @@ class UserConstants:
     MAX_PHONE_LENGTH = 20
     MAX_PASSWORD_LENGTH = 255
     MAX_TG_ID_LENGTH = 100
-    MIN_PASSWORD_LENGTH = 5
     DEFAULT_USER_ROLE = 'user'
     PHONE_REGEX = re.compile(r'^(\+7|8)\d{10}$')
-    PASSWORD_REGEX = re.compile(r'^(?=.*[A-Za-z])(?=.*\d).+$')
 
 
 class LoggingConstants:

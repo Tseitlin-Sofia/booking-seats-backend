@@ -1,6 +1,6 @@
 """Схема для модели интервала времени бронирования столика."""
 
-from datetime import time
+from datetime import datetime
 
 from pydantic import (
     BaseModel,
@@ -16,12 +16,12 @@ from app.core.constants import SlotConstants
 class SlotBase(BaseModel):
     """Базовая схема для модели интервала времени бронирования столика."""
 
-    start_time: time = Field(
+    start_time: datetime = Field(
         ...,
         examples=[SlotConstants.FROM_TIME],
         description='Время начала интервала',
     )
-    end_time: time = Field(
+    end_time: datetime = Field(
         ...,
         examples=[SlotConstants.TO_TIME],
         description='Время окончания интервала',
@@ -42,20 +42,26 @@ class SlotBase(BaseModel):
 class SlotCreate(SlotBase):
     """Схема для создания интервала времени бронирования столика."""
 
-    cafe_id: int = Field(..., description='ID кафе, к которому относится слот')
+    table_id: int = Field(
+        ...,
+        description='ID столика, к которому относится слот',
+    )
 
 
 class SlotUpdate(SlotBase):
     """Схема для обновления интервала времени бронирования столика."""
 
-    cafe_id: int = Field(..., description='ID кафе, к которому относится слот')
+    table_id: int = Field(
+        ...,
+        description='ID столика, к которому относится слот',
+    )
 
 
 class TimeSlotShortInfo(BaseModel):
     """Краткая информация о временном слоте."""
 
     id: int = Field(..., description='ID временного слота')
-    start_time: time = Field(..., description='Время начала интервала')
-    end_time: time = Field(..., description='Время окончания интервала')
+    start_time: datetime = Field(..., description='Время начала интервала')
+    end_time: datetime = Field(..., description='Время окончания интервала')
 
     model_config = ConfigDict(from_attributes=True)
