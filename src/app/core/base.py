@@ -2,5 +2,5 @@
 
 from app.core.db import Base  # noqa
 from app.models import (  # noqa
-    Action, Cafe, Table, User, Booking, BookingTableSlot,
+    Action, Cafe, Dish, Table, User, Booking, BookingTableSlot,
   )

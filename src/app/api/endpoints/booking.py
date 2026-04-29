@@ -11,6 +11,7 @@ from app.api.validators.booking import (
     validate_booking_exists,
     validate_booking_slots,
     validate_cafe_slot_table,
+    validate_pre_order_items,
     validate_table_slots_exists,
     validate_user_rights,
 )
@@ -45,13 +46,16 @@ async def get_bookings(
     session: SessionDep,
     current_user: UserDep,
     show_active: Annotated[
-        bool, Query(description="Показывать активные бронирования?"),
+        bool,
+        Query(description='Показывать активные бронирования?'),
     ] = True,
     cafe_id: Annotated[
-        Optional[int], Query(description="ID кафе"),
+        Optional[int],
+        Query(description='ID кафе'),
     ] = None,
     user_id: Annotated[
-        Optional[int], Query(description="ID пользователя"),
+        Optional[int],
+        Query(description='ID пользователя'),
     ] = None,
 ) -> list[BookingInfo]:
     """Получение списка бронирований."""
@@ -119,9 +123,13 @@ async def create_booking(
         slots=booking.table_slots,
         session=session,
     )
-    booking_data = booking.model_dump()
-    booking_data['status'] = BookingStatus.BOOKING
-    booking_data['user_id'] = current_user.id
+    booking_data = booking.model_dump(
+        exclude={'tables_slots', 'pre_order_items'},
+    )
+    booking_data.update({
+        'status': BookingStatus.BOOKING,
+        'user_id': current_user.id,
+    })
 
     new_booking = await booking_crud.create(
         session=session,
@@ -136,18 +144,31 @@ async def create_booking(
     #     args=[booking_for_celery],
     #     eta=booking_date - timedelta(hours=2)
     # )
-
-    for table_slot in booking_data.tables_slots:
+    for tables_slot in booking.tables_slots:
         await booking_table_slot_crud.create(
             session=session,
-            obj_in=BookingTableSlotCreate(**{
+            obj_in={
                 'booking_id': new_booking.id,
-                'table_id': table_slot.table_id,
-                'slot_id': table_slot.slot_id,
-            }),
+                'table_id': tables_slot.table_id,
+                'slot_id': tables_slot.slot_id,
+            },
         )
+
+    if booking.pre_order_items:
+        dishes_map = await validate_pre_order_items(
+            booking.pre_order_items,
+            booking.cafe_id,
+            session,
+        )
+        await booking_crud.add_pre_order_items(
+            new_booking.id,
+            booking.pre_order_items,
+            dishes_map,
+            session,
+        )
+
     await session.refresh(new_booking)
-    return new_booking
+    return BookingInfo.model_validate(new_booking, from_attributes=True)
 
 
 @router.patch(
