@@ -40,7 +40,7 @@ class Settings(BaseSettings):
         )
 
     model_config = SettingsConfigDict(
-        env_file=BASE_DIR / '../infra/.env',
+        env_file=BASE_DIR / '.env',
         extra='ignore',
     )
 
