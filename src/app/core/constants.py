@@ -109,6 +109,6 @@ class SlotConstants:
 
 
 class NotificationConstants:
-    """Класс констант для уведомлений и напоминаний о бронировании"""
+    """Класс констант для уведомлений и напоминаний о бронировании."""
 
     ADMIN_EMAIL = "test@mail.ru"
