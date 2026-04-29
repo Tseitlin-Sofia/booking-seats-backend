@@ -34,7 +34,7 @@ class MediaConstants:
     """Класс констант для работы с media."""
 
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
-    MEDIA_DIR = BASE_DIR / "media"
+    MEDIA_DIR = Path("/media")
     IMAGE_EXTENSION = "jpg"
     CHUNK_SIZE_1MB = 1024 * 1024
     MAX_PHOTO_SIZE_5MB = CHUNK_SIZE_1MB * 5
@@ -109,3 +109,9 @@ class SlotConstants:
     BASE_TIME = datetime.now() + timedelta(minutes=10)
     FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')
     TO_TIME = (BASE_TIME + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')
+
+
+class NotificationConstants:
+    """Класс констант для уведомлений и напоминаний о бронировании."""
+
+    ADMIN_EMAIL = "test@mail.ru"

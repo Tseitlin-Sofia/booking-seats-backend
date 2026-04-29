@@ -1,18 +1,18 @@
 """Модуль эндпоинтов для загрузки на сервер и получения из него изображений."""
 import uuid
+from datetime import datetime, timedelta
 
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
 from app.api.validators.media_validators import validate_image
+from app.celery.tasks import notify_admin, notify_client
 from app.core.constants import MediaConstants
 from app.models.user import User
 from app.services.media_service import transform_to_jpeg
 
 router = APIRouter()
-
-# UserDep = Annotated[User, Depends(current_user)]
 
 
 def is_manager_or_admin(user: User) -> None:
@@ -24,16 +24,20 @@ def is_manager_or_admin(user: User) -> None:
         )
 
 
-@router.post('/', summary="Загрузить png/jpeg на сервер")
+@router.post(
+    '/',
+    summary="Загрузить png/jpeg на сервер",
+    status_code=201,
+)
 async def load_photo_to_server(
+    # current_user: UserDep,
     image_bytes: bytes = Depends(validate_image),
-    # user: UserDep
 ) -> dict:
     """Загрузка png/jpg изображений на сервер в папку src/media/.
 
-    Ограничение: объем не более 5MB.
+    Ограничение: объем не более 5MB, только для админа/менеджера.
     """
-    # is_manager_or_admin(user)
+    # is_manager_or_admin(current_user)
     MediaConstants.MEDIA_DIR.mkdir(exist_ok=True)
 
     while True:
@@ -47,6 +51,11 @@ async def load_photo_to_server(
     jpeg_bytes = transform_to_jpeg(image_bytes)
     async with aiofiles.open(file_path, "wb") as f:
         await f.write(jpeg_bytes)
+    notify_admin.delay()
+    notify_client.apply_async(
+        args=[],
+        eta=datetime.now() + timedelta(minutes=1),
+    )
 
     return {"media_id": media_id}
 
