@@ -19,7 +19,7 @@ docker compose up [-d]
 
 Для создания/применения миграций:
 ```bash
-docker compose exec app alembic revision --autogenerate -m "Add UserModel"
+docker compose exec app alembic revision --autogenerate -m "description"
 docker compose exec app alembic upgrade head
 ```
 
@@ -65,3 +65,7 @@ ruff check --fix
 ```shell
 pre-commit install
 ```
+
+## Требования к фронтенду.
+
+При PATCH-запросе на эндпойнт `{server}/booking/{booking_id}` требуется ВСЕГДА передавать новый список BookingTableSlots.

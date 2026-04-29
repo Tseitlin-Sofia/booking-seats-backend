@@ -28,6 +28,7 @@ class BookingConstants:
     TABLE_INACTIVE = 'Стол с ID {} неактивен'
     USER_NOT_AUTHENTICATED = 'Пользователь не авторизован'
     SLOTS_UNAVAILABLE = 'Выбранные временные слоты уже забронированы'
+    LIST_SLOTS_ERROR = 'Список временных слотов не может быть пустым.'
     DISH_NOT_FOUND = 'Некоторые блюда из предзаказа не найдены в меню.'
     DISH_UNAVAILABLE = 'Выбранные блюда временно недоступны.'
     DISH_CAFE_MISMATCH = 'Блюда не принадлежат выбранному кафе.'

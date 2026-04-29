@@ -15,7 +15,12 @@ from app.crud.slot import slot_crud
 from app.crud.table import table_crud
 from app.models import Dish, User
 from app.models.booking import Booking
-from app.schemas.booking import BookingTableSlot as BookingTableSlotSchema
+from app.schemas.booking import (
+    BookingTableSlot as BookingTableSlotSchema,
+)
+from app.schemas.booking import (
+    BookingUpdate,
+)
 from app.schemas.dish import PreOrderItemCreate
 
 logger = get_logger()
@@ -121,6 +126,21 @@ async def validate_booking_exists(
             detail=Constants.BOOKING_NOT_FOUND.format(booking_id),
         )
     return booking
+
+
+async def validate_table_slots_exists(
+    booking: BookingUpdate,
+    session: AsyncSession,
+) -> None:
+    """Проверка передачи списка слотов."""
+    booking_data = booking.model_dump()
+    if booking_data.get('table_slots') is None or len(
+        booking_data['table_slots'],
+    ) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=Constants.LIST_SLOTS_ERROR,
+        )
 
 
 async def validate_pre_order_items(
