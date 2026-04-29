@@ -7,8 +7,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.constants import CafeConstants
 from app.core.db import Base, CommonMixin
+from app.models.action import action_cafe
 
 if TYPE_CHECKING:
+    from app.models.action import Action
     from app.models.booking import Booking
     from app.models.table import Table as TableModel
     from app.models.user import User
@@ -40,6 +42,11 @@ class Cafe(CommonMixin, Base):
     bookings: Mapped[List['Booking']] = relationship(
         'Booking',
         back_populates="cafe",
+        lazy="selectin",
+    )
+    actions: Mapped[List['Action']] = relationship(
+        secondary=action_cafe,
+        back_populates="cafes",
         lazy="selectin",
     )
 

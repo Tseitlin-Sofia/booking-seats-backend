@@ -100,7 +100,8 @@ async def update_table(
 ) -> TableInfo:
     """Обновляет данные стола в указанном кафе."""
     await get_cafe_or_404(session, cafe_id, True)
-    await is_manager_from_cafe(cafe_id, user)
+    if user.is_manager:
+        await is_manager_from_cafe(cafe_id, user)
     table = await check_table_exists_in_cafe(
         cafe_id,
         table_id,
