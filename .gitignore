@@ -5,7 +5,9 @@ __pycache__/
 
 # C extensions
 *.so
-
+logs/
+*.log.zip
+*.log
 # Distribution / packaging
 .ruff_cache/
 .Python
@@ -137,6 +139,7 @@ venv.bak/
 # Spyder project settings
 .spyderproject
 .spyproject
+.htpasswd
 
 # Rope project settings
 .ropeproject

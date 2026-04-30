@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 
+from app.api.endpoints.action import router as action_router
 from app.api.endpoints.auth import router as auth_router
 from app.api.endpoints.booking import router as booking_router
 from app.api.endpoints.cafe import router as cafe_router
@@ -16,6 +17,11 @@ main_router.include_router(
     media_router,
     prefix='/media',
     tags=['Медиа'],
+)
+main_router.include_router(
+    action_router,
+    prefix='/actions',
+    tags=['Акции'],
 )
 main_router.include_router(
     cafe_router,

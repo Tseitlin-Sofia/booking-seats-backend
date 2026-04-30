@@ -1,18 +1,18 @@
-# from http import HTTPStatus
-from typing import List  # Annotated
+from http import HTTPStatus
+from typing import List, Optional
 
-from fastapi import APIRouter  # Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
-from app.api.dependencies import SessionDep
+from app.api.dependencies import ManagerDep, SessionDep, UserDep
 from app.api.validators.cafe import (
     check_name_address,
     get_cafe_or_404,
+    is_manager_from_cafe,
     is_managers_id,
 )
-
-# from app.core.user import get_admin_user, get_current_user, get_manager_user
+from app.core.user import get_admin_user
 from app.crud.cafe import CRUDCafe, cafe_crud
-from app.models import Cafe  # User
+from app.models import Cafe
 from app.schemas.cafe import CafeCreate, CafeInfo, CafeUpdate
 
 router = APIRouter()
@@ -30,13 +30,15 @@ router = APIRouter()
     ),
     response_description='Подробный вывод всех кафе',
 )
-async def get_all_cafes(session: SessionDep) -> List[CafeInfo]:
+async def get_all_cafes(
+    session: SessionDep,
+    user: UserDep,
+    show_active: Optional[bool] = None,
+) -> List[Cafe]:
     """Ручка multi-get."""
-    return await cafe_crud.get_by_attribute_multi(
-        attr_name='is_active',
-        attr_value=True,
-        session=session,
-    )
+    if not (user.is_admin or user.is_manager):
+        return await cafe_crud.get_multi(session, True)
+    return await cafe_crud.get_multi(session, show_active)
 
 
 @router.get(
@@ -54,14 +56,13 @@ async def get_all_cafes(session: SessionDep) -> List[CafeInfo]:
 async def get_cafe(
     session: SessionDep,
     cafe_id: int,
-    # user: Annotated[User, Depends(get_current_user)]
+    user: UserDep,
 ) -> Cafe:
     """Ручка id-get."""
     cafe = await get_cafe_or_404(session, cafe_id)
-    # NOTE: уберу noqe, когда будут смержены зависимости с юзерами.
-    # if not (user.is_admin or user.is_manager) and not cafe.is_active:
-    #     raise HTTPException(HTTPStatus.FORBIDDEN, detail='Доступ запрещен!')
-    return cafe  # noqa: RET504
+    if not (user.is_admin or user.is_manager) and not cafe.is_active:
+        raise HTTPException(HTTPStatus.FORBIDDEN, detail='Доступ запрещен!')
+    return cafe
 
 
 @router.post(
@@ -74,9 +75,7 @@ async def get_cafe(
         'Только для администраторов.'
     ),
     response_description='Подробный вывод созданного кафе',
-    # NOTE: в документации доступ указан и для менеджеров, но в таблице CRUD
-    # указан только админ, поэтому сделал по таблице.
-    # dependencies=[Depends(get_admin_user)]
+    dependencies=[Depends(get_admin_user)],
 )
 async def create_new_cafe(
     new_cafe: CafeCreate,
@@ -98,17 +97,19 @@ async def create_new_cafe(
         'Только для администраторов и менеджеров.'
     ),
     response_description='Подробный вывод измененного кафе',
-    # dependencies=[Depends(get_manager_user)]
 )
 async def update_cafe(
     cafe_id: int,
     new_cafe: CafeUpdate,
+    user: ManagerDep,
     session: SessionDep,
 ) -> CRUDCafe:
     """Ручка patch."""
+    if user.is_manager:
+        await is_manager_from_cafe(cafe_id, user)
     db_cafe = await get_cafe_or_404(session, cafe_id)
     await check_name_address(session, new_cafe, db_cafe)
-    managers = await is_managers_id(session, new_cafe)
+    managers = await is_managers_id(session, new_cafe, cafe_id)
     return await cafe_crud.update_db_cafe(
         session, db_cafe, new_cafe,  managers,
     )

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import get_logger
 from app.crud.base import CRUDBase
 from app.models import Cafe, User
+from app.models.action import action_cafe
 from app.schemas.cafe import CafeCreate, CafeUpdate
 
 logger = get_logger()
@@ -14,33 +15,17 @@ logger = get_logger()
 class CRUDCafe(CRUDBase):
     """CRUD для объектов модели кафе."""
 
-    async def get_all_cafes(
+    async def get_cafes_by_action(
         self,
         session: AsyncSession,
-        show_active: Optional[bool],
+        action_id: int,
     ) -> Sequence[Cafe]:
-        """Возвращает список кафе в соответствии с правами доступа.
-
-        Учитывается установленный менеджером/админом show_active.
-        """
-        stmt = select(Cafe)
-        if show_active is True:
-            stmt = stmt.where(Cafe.is_active)
-        elif show_active is not None:
-            stmt = stmt.where(Cafe.is_active == show_active)
-        result = await session.execute(stmt)
-        return result.scalars().all()
-
-    async def get_obj_by_id(
-        self,
-        session: AsyncSession,
-        obj_id: int,
-    ) -> Optional[Self]:
-        """До фикса базового круда."""
+        """Возвращает список кафе по id акции."""
         result = await session.execute(
-            select(self.model).where(self.model.id == obj_id),
+            select(action_cafe.c.cafe_id)
+            .where(action_cafe.c.action_id == action_id),
         )
-        return result.scalars().first()
+        return result.scalars().all()
 
     async def create_new_cafe(
         self,
@@ -49,8 +34,10 @@ class CRUDCafe(CRUDBase):
         managers: List[User],
     ) -> Self:
         """Создает новое кафе в базе данных."""
-        db_cafe = self.model(**new_cafe.model_dump())
-        db_cafe.managers_id = managers  # NOTE: связываем менеджеров с кафе.
+        db_cafe = self.model(**new_cafe.model_dump(
+            exclude={"managers_id"}, exclude_unset=True),
+        )
+        db_cafe.managers = managers
         session.add(db_cafe)
         await session.commit()
         await session.refresh(db_cafe)
@@ -65,20 +52,20 @@ class CRUDCafe(CRUDBase):
         self,
         session: AsyncSession,
         db_cafe: Cafe,
-        new_data_cafe: CafeUpdate,
-        managers: Optional[List[User]],
+        new_cafe: CafeUpdate,
+        managers: Optional[List[User]] = None,
     ) -> Self:
         """Обновляет существующее кафе в базе данных."""
-        update_data = new_data_cafe.model_dump(exclude_unset=True)
-        for key in update_data.keys():
-            new_value = update_data[key]
+        new_data = new_cafe.model_dump(exclude_unset=True)
+        for key in new_data.keys():
             if key == 'managers_id':
-                new_value = managers
-            setattr(db_cafe, key, new_value)
+                db_cafe.managers = managers
+                continue
+            setattr(db_cafe, key, new_data[key])
         session.add(db_cafe)
         logger.info(
             'Кафе успешно обновлено!',
-            f' | updated_fields: {list(update_data.keys())}',
+            f' | updated_fields: {list(new_data.keys())}',
         )
         await session.commit()
         await session.refresh(db_cafe)

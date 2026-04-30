@@ -16,17 +16,16 @@ if TYPE_CHECKING:
 class Table(CommonMixin, Base):
     """Стол для бронирования в кафе."""
 
-    __tablename__ = "table"
-
     cafe_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("cafe.id"),
+        ForeignKey('cafe.id'),
         nullable=False,
     )
     seat_number: Mapped[int] = mapped_column(
         Integer,
         CheckConstraint(
-            'seat_number > 0', name='ck_table_seat_number_positive',
+            'seat_number > 0',
+            name='ck_table_seat_number_positive',
         ),
         nullable=False,
     )
@@ -36,14 +35,13 @@ class Table(CommonMixin, Base):
     )
 
     cafe: Mapped[Cafe] = relationship(
-        "Cafe",
-        back_populates="tables",
-        lazy="selectin",
+        'Cafe',
+        back_populates='tables',
+        lazy='selectin',
     )
 
     def __repr__(self) -> str:
         """Строковое представление стола."""
         return (
-            f"<Table {self.id}: {self.seat_number} seats, "
-            f"cafe={self.cafe_id}>"
+            f'<Table {self.id}: {self.seat_number} seats, cafe={self.cafe_id}>'
         )

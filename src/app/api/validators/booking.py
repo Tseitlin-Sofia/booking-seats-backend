@@ -4,6 +4,7 @@ from datetime import date
 from typing import Optional
 
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import BookingConstants as Constants
@@ -12,9 +13,15 @@ from app.crud.booking import booking_crud, booking_table_slot_crud
 from app.crud.cafe import cafe_crud
 from app.crud.slot import slot_crud
 from app.crud.table import table_crud
-from app.models import User
+from app.models import Dish, User
 from app.models.booking import Booking
-from app.schemas.booking import BookingTableSlot as BookingTableSlotSchema
+from app.schemas.booking import (
+    BookingTableSlot as BookingTableSlotSchema,
+)
+from app.schemas.booking import (
+    BookingUpdate,
+)
+from app.schemas.dish import PreOrderItemCreate
 
 logger = get_logger()
 
@@ -119,3 +126,55 @@ async def validate_booking_exists(
             detail=Constants.BOOKING_NOT_FOUND.format(booking_id),
         )
     return booking
+
+
+async def validate_table_slots_exists(
+    booking: BookingUpdate,
+    session: AsyncSession,
+) -> None:
+    """Проверка передачи списка слотов."""
+    booking_data = booking.model_dump()
+    if booking_data.get('table_slots') is None or len(
+        booking_data['table_slots'],
+    ) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=Constants.LIST_SLOTS_ERROR,
+        )
+
+
+async def validate_pre_order_items(
+    items: list[PreOrderItemCreate],
+    cafe_id: int,
+    session: AsyncSession,
+) -> dict[int, Dish]:
+    """Проверяет доступность блюд и их принадлежность к кафе."""
+    dish_ids = [item.dish_id for item in items]
+    result = await session.execute(select(Dish).where(Dish.id.in_(dish_ids)))
+    dishes = {d.id: d for d in result.scalars().all()}
+
+    missing = set(dish_ids) - set(dishes.keys())
+    if missing:
+        logger.warning(
+            f'В предзаказ добавлены несуществующие блюда: {list(missing)}',
+        )
+        raise HTTPException(status_code=422, detail=Constants.DISH_NOT_FOUND)
+
+    unavailable = [d_id for d_id, d in dishes.items() if not d.is_available]
+    if unavailable:
+        logger.warning(
+            f'Попытка заказать недоступные блюда: {unavailable}',
+        )
+        raise HTTPException(status_code=422, detail=Constants.DISH_UNAVAILABLE)
+
+    wrong_cafe = [d_id for d_id, d in dishes.items() if d.cafe_id != cafe_id]
+    if wrong_cafe:
+        logger.warning(
+            f'Блюда из предзаказа принадлежат другому кафе, id: {wrong_cafe}',
+        )
+        raise HTTPException(
+            status_code=422,
+            detail=Constants.DISH_CAFE_MISMATCH,
+        )
+
+    return dishes

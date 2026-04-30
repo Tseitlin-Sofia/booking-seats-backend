@@ -3,20 +3,17 @@
 from datetime import date
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.constants import BookingConstants as Constants
 from app.core.logging import get_logger
 from app.crud.base import CRUDBase
-from app.models import Booking, BookingTableSlot
-from app.schemas.booking import (
-    BookingStatus,
-)
-from app.schemas.booking import (
-    BookingTableSlot as BookingTableSlotSchema,
-)
+from app.models import Booking, BookingDish, BookingTableSlot, Dish
+from app.schemas.booking import BookingStatus
+from app.schemas.booking import BookingTableSlot as BookingTableSlotSchema
+from app.schemas.dish import PreOrderItemCreate
 
 logger = get_logger()
 
@@ -34,7 +31,7 @@ class BookingCRUD(CRUDBase):
         """Получает бронирования."""
         stmt = select(Booking).options(
             selectinload(
-                Booking.table_slots,
+                Booking.tables_slots,
             ).selectinload(
                 BookingTableSlot.slot,
             ),
@@ -48,6 +45,32 @@ class BookingCRUD(CRUDBase):
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
+    async def add_pre_order_items(
+        self,
+        booking_id: int,
+        items: list[PreOrderItemCreate],
+        dishes_map: dict[int, Dish],
+        session: AsyncSession,
+    ) -> None:
+        """Создаёт записи предзаказа и привязывает их к бронированию."""
+        booking_dishes = [
+            BookingDish(
+                booking_id=booking_id,
+                dish_id=item.dish_id,
+                quantity=item.quantity,
+                price_at_order=dishes_map[item.dish_id].price,
+            )
+            for item in items
+        ]
+        session.add_all(booking_dishes)
+        await session.commit()
+
+        logger.info(
+            'Предзаказ блюд успешно добавлен к бронированию. '
+            f'booking_id: {booking_id}, '
+            f'items_count: {len(items)}',
+        )
+
 
 class BookingTableSlotCRUD(CRUDBase):
     """CRUD операции для слотов бронирования."""
@@ -60,35 +83,47 @@ class BookingTableSlotCRUD(CRUDBase):
     ) -> bool:
         """Проверяет доступность запрошенных слотов."""
         for slot in slots:
-            stmt = select(BookingTableSlot).where(
-                BookingTableSlot.table_id == slot.table_id,
-                BookingTableSlot.slot_id == slot.slot_id,
-                BookingTableSlot.booking.status.in_(
-                    (BookingStatus.BOOKING, BookingStatus.ACTIVE),
-                ),
-                BookingTableSlot.is_active,
-                BookingTableSlot.booking.booking_date == date,
-            ).exists()
+            stmt = (
+                select(BookingTableSlot)
+                .where(
+                    BookingTableSlot.table_id == slot.table_id,
+                    BookingTableSlot.slot_id == slot.slot_id,
+                    BookingTableSlot.is_active,
+                    BookingTableSlot.booking.has(
+                        and_(
+                            Booking.status.in_((
+                                BookingStatus.BOOKING,
+                                BookingStatus.ACTIVE,
+                            )),
+                            Booking.booking_date == date,
+                        ),
+                    ),
+                )
+                .exists()
+            )
             # TODO: возможно стоит сделать 1 запросом:
-                #     conditions = []
-                # for slot in slots:
-                #     conditions.append(
-                #         and_(
-                #             BookingTableSlot.table_id == slot.table_id,
-                #             BookingTableSlot.slot_id == slot.slot_id,
-                #             BookingTableSlot.is_active
-                #         )
-                #     )
-                # stmt = select(BookingTableSlot).where(
-                #     or_(*conditions),
-                #     BookingTableSlot.booking.status.in_(
-                #         (BookingStatus.BOOKING, BookingStatus.ACTIVE),
-                #     ),
-                # )
+            #     conditions = []
+            # for slot in slots:
+            #     conditions.append(
+            #         and_(
+            #             BookingTableSlot.table_id == slot.table_id,
+            #             BookingTableSlot.slot_id == slot.slot_id,
+            #             BookingTableSlot.is_active
+            #         )
+            #     )
+            # stmt = select(BookingTableSlot).where(
+            #     or_(*conditions),
+            #     BookingTableSlot.booking.status.in_(
+            #         (BookingStatus.BOOKING, BookingStatus.ACTIVE),
+            #     ),
+            # )
             result = await session.execute(select(stmt))
             if result.scalar():
-                logger.warning(Constants.SLOT_ALREADY_BOOKED.format(
-                    slot.slot_id, slot.table_id),
+                logger.warning(
+                    Constants.SLOT_ALREADY_BOOKED.format(
+                        slot.slot_id,
+                        slot.table_id,
+                    ),
                 )
                 return False
         return True
