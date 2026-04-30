@@ -1,6 +1,6 @@
 """Базовый класс для CRUD операций с базой данных."""
 
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
 
 from pydantic import BaseModel
 from sqlalchemy import exists, select
@@ -122,6 +122,17 @@ class CRUDBase:
             stmt = stmt.where(self.model.is_active == is_active)
         result = await session.execute(stmt)
         return list(result.scalars().all())
+
+    async def get_by_list_of_id(
+        self,
+        session: AsyncSession,
+        sequence_id: Iterable[int],
+    ) -> Iterable[Base]:
+        """Возвращает кафе по последовательности из id."""
+        result = await session.execute(
+            select(self.model).where(self.model.id.in_(sequence_id)),
+        )
+        return result.scalars().all()
 
     async def deactivate(
         self,

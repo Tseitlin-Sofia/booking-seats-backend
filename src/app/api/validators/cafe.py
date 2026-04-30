@@ -67,35 +67,32 @@ async def is_managers_id(
     new_data = new_cafe.model_dump(exclude_unset=True)
     if 'managers_id' not in new_data:
         return None
-    managers = []
-    for manager_id in new_data['managers_id']:
-        db_user = await user_crud.get(manager_id, session, True)
-        if db_user is None:
+    users_id = set(new_data['managers_id'])
+    db_users = await user_crud.get_by_list_of_id(session, users_id)
+    if len(users_id) != len(db_users):
+        db_users_id = set(user.id for user in db_users)
+        missing_id = users_id - db_users_id
+        logger.warning(f'Пользователи с id {missing_id} не существуют!')
+        await raise_error(f'Пользователи с id {missing_id} не существуют!')
+    for user in db_users:
+        if not user.is_manager:
             msg = (
-                'Попытка назначить несуществующего пользователя менеджером! '
-                f'manager_id: {manager_id}'
+                'Попытка назначить к кафе не менеджера: '
+                f'id: {user.id} | role: {user.role}!'
             )
             logger.warning(msg)
             await raise_error(msg)
-        if not db_user.is_manager:
-            msg = (
-                'Попытка назначить к кафе не менеджера! '
-                f'manager_id: {manager_id} | role: {db_user.role}'
-            )
-            logger.warning(msg)
-            await raise_error(msg)
-        if db_user.cafe_id is not None and db_user.cafe_id != cafe_id:
+        if user.cafe_id is not None and user.cafe_id != cafe_id:
             """Проверка, обеспечивающая любому кафе наличие менеджеров."""
             msg = (
-                f'Вы пытаетесь назначить менеджера c id {manager_id}, '
-                'привязанного к другому кафе! Сначала замените или исключите '
-                f'его из кафе с id {db_user.cafe_id}!'
+                'Вы пытаетесь назначить занятого менеджера c id '
+                f'{user.id}! Сначала замените или исключите '
+                f'его из кафе с id {user.cafe_id}!'
             )
             logger.warning(msg)
             await raise_error(msg)
-        managers.append(db_user)
 
-    return managers
+    return db_users
 
 
 async def is_manager_from_cafe(

@@ -52,7 +52,9 @@ class CafeConstants:
         'Номер телефона должен начинаться с +7 и не превышать 10 цифр после!'
     )
     NAME_RESTRICTION = 20
+    MIN_LENGTH_ADDRESS = 10
     MIN_LENGTH_MANAGERS_LIST = 1
+    MIN_LENGTH_NAME = 10
     PHONE_FORMAT = r'^\+7\d{10}$'
 
 

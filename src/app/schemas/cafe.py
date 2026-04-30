@@ -52,8 +52,12 @@ class CafeInfo(CafeShortInfo):
 class CafeUpdate(ValidatePhoneMixin, BaseModel):
     """Схема для метода PATCH."""
 
-    name: Optional[str] = None
-    address: Optional[str] = None
+    name: Optional[str] = Field(
+        default=None, min_length=CafeConstants.MIN_LENGTH_NAME,
+    )
+    address: Optional[str] = Field(
+        default=None, min_length=CafeConstants.MIN_LENGTH_ADDRESS,
+    )
     phone: Optional[str] = None
     description: Optional[str] = None
     photo_id: Optional[UUID] = None
