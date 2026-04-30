@@ -65,6 +65,19 @@ class ActionConstants:
     MIN_LENGTH_CAFES_LIST = 1
 
 
+class DishConstants:
+    """Класс с константами для модели блюд."""
+
+    MAX_NAME_LENGTH = 100
+    MAX_DESCRIPTION_LENGTH = 255
+    DISH_NOT_FOUND_IN_CAFE = (
+        'Блюдо с id={dish_id} в кафе с id={cafe_id} не найдено.'
+    )
+    DISH_NAME_DUPLICATE = (
+        'Блюдо с названием "{name}" уже существует в кафе с id={cafe_id}.'
+    )
+
+
 class UserConstants:
     """Класс с константами для пользователей."""
 
