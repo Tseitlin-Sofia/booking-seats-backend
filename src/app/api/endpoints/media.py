@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
 from app.api.validators.media_validators import validate_image
+from app.api.dependencies import UserDep
 from app.celery.tasks import notify_admin, notify_client
 from app.core.constants import MediaConstants
 from app.models.user import User
@@ -30,14 +31,14 @@ def is_manager_or_admin(user: User) -> None:
     status_code=201,
 )
 async def load_photo_to_server(
-    # current_user: UserDep,
+    current_user: UserDep,
     image_bytes: bytes = Depends(validate_image),
 ) -> dict:
     """Загрузка png/jpg изображений на сервер в папку src/media/.
 
     Ограничение: объем не более 5MB, только для админа/менеджера.
     """
-    # is_manager_or_admin(current_user)
+    is_manager_or_admin(current_user)
     MediaConstants.MEDIA_DIR.mkdir(exist_ok=True)
 
     while True:
