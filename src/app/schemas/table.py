@@ -46,15 +46,11 @@ class TableUpdate(BaseModel):
     @model_validator(mode='after')
     def prevent_null_required_fields(self) -> Self:
         """Запрещает явную передачу null для обязательных полей."""
-        not_nullable = {'seat_number'}
+        not_nullable = {'seat_number', 'is_active'}
         for field_name in not_nullable:
             if (
                 field_name in self.model_fields_set
-                and getattr(
-                    self,
-                    field_name,
-                )
-                is None
+                and getattr(self, field_name) is None
             ):
                 msg = f'Поле {field_name} не может быть null'
                 raise ValueError(msg)
