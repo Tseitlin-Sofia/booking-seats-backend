@@ -1,4 +1,5 @@
 """Модуль с константами приложения."""
+
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -16,7 +17,6 @@ class BookingConstants:
     SLOT_ALREADY_BOOKED = (
         'Попытка забронировать уже забронированный слот {} на стол {}.'
     )
-    SLOTS_UNAVAILABLE = 'Некоторые слоты недоступны для бронирования.'
     SLOT_CAFE_MISMATCH = 'Слот и стол должны принадлежать одному кафе.'
     SLOT_DOES_NOT_EXIST = 'Слот c id {} не существует.'
     TABLE_DOES_NOT_EXIST = 'Стол c id {} не существует.'
@@ -28,29 +28,39 @@ class BookingConstants:
     TABLE_INACTIVE = 'Стол с ID {} неактивен'
     USER_NOT_AUTHENTICATED = 'Пользователь не авторизован'
     SLOTS_UNAVAILABLE = 'Выбранные временные слоты уже забронированы'
+    LIST_SLOTS_ERROR = 'Список временных слотов не может быть пустым.'
+    DISH_NOT_FOUND = 'Некоторые блюда из предзаказа не найдены в меню.'
+    DISH_UNAVAILABLE = 'Выбранные блюда временно недоступны.'
+    DISH_CAFE_MISMATCH = 'Блюда не принадлежат выбранному кафе.'
 
 
 class MediaConstants:
     """Класс констант для работы с media."""
 
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
-    MEDIA_DIR = Path("/media")
-    IMAGE_EXTENSION = "jpg"
+    MEDIA_DIR = BASE_DIR / 'media'
+    IMAGE_EXTENSION = 'jpg'
     CHUNK_SIZE_1MB = 1024 * 1024
     MAX_PHOTO_SIZE_5MB = CHUNK_SIZE_1MB * 5
-    VALID_TYPES = ["image/png", "image/jpeg"]
+    VALID_TYPES = ['image/png', 'image/jpeg']
 
 
 class CafeConstants:
     """Класс с константами для модели кафе."""
 
     ERROR_PHONE = (
-        'Номер телефона должен начинаться с +7 '
-        'и не превышать 10 цифр после!'
+        'Номер телефона должен начинаться с +7 и не превышать 10 цифр после!'
     )
     NAME_RESTRICTION = 20
     MIN_LENGTH_MANAGERS_LIST = 1
     PHONE_FORMAT = r'^\+7\d{10}$'
+
+
+class ActionConstants:
+    """Класс с константами для модели акций."""
+
+    MIN_DESCRIPTION = 10
+    MIN_LENGTH_CAFES_LIST = 1
 
 
 class UserConstants:
