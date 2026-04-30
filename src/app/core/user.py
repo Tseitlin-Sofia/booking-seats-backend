@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import jwt
-from fastapi import Depends, HTTPException, Response, Security, status
+from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import ExpiredSignatureError, InvalidTokenError
 from sqlalchemy import select
@@ -76,11 +76,13 @@ class AuthService:
         login: str,
         password: str,
     ) -> Optional[User]:
-        """Аутентифицирует пользователя по логину и паролю."""
+        """Аутентифицирует пользователя по телефону/email и паролю"""
         if EMAIL_REGEX.match(login):
             query = select(User).where(User.email == login)
         elif login.startswith('+'):
             query = select(User).where(User.phone == login)
+        else:
+            return None
 
         result = await session.execute(query)
         user = result.scalar_one_or_none()
@@ -126,22 +128,16 @@ async def get_user_from_token(
 
 
 async def get_current_user(
-    response: Response,
     credentials: HTTPAuthorizationCredentials = Security(bearer_scheme),
     session: AsyncSession = Depends(get_async_session),
 ) -> User:
     """Возвращает текущего авторизованного пользователя."""
     token = credentials.credentials
     user = await get_user_from_token(token, session)
-
-    new_token = auth_service.create_token(user.id, user.role)
-    response.headers['X-New-Token'] = new_token
-
     return user
 
 
 async def get_current_user_optional(
-    response: Response,
     credentials: Optional[HTTPAuthorizationCredentials] = Security(
         bearer_scheme_optional,
     ),
@@ -153,12 +149,7 @@ async def get_current_user_optional(
 
     token = credentials.credentials
     user = await get_user_from_token(token, session)
-
-    new_token = auth_service.create_token(user.id, user.role)
-    response.headers['X-New-Token'] = new_token
-
     return user
-
 
 async def get_admin_user(
     current_user: User = Depends(get_current_user),
