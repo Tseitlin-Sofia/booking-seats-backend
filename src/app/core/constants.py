@@ -117,8 +117,8 @@ class SlotConstants:
     """Класс для констант модели интервала времени бронирования столика."""
 
     BASE_TIME = datetime.now() + timedelta(minutes=10)
-    FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')
-    TO_TIME = (BASE_TIME + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')
+    FROM_TIME = BASE_TIME.strftime('%H:%M')
+    TO_TIME = (BASE_TIME + timedelta(hours=1)).strftime('%H:%M')
 
 
 class NotificationConstants:

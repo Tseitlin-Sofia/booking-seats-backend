@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import time
 from typing import Any
 
 from fastapi import HTTPException
@@ -24,24 +24,22 @@ async def get_slot_or_404(
 
 async def check_slots_intersections(
         *,
-        start_time: datetime,
-        end_time: datetime,
+        start_time: time,
+        end_time: time,
         cafe_id: int,
-        table_id: int,
         session: AsyncSession,
         slot_id: int | None = None,
 ) -> None:
-    """Проверяет пересечение временных слотов."""
+    """Проверяет пересечение временных слотов в рамках одного кафе."""
     slots = await slot_crud.get_slots_at_the_same_time(
         start_time=start_time,
         end_time=end_time,
         cafe_id=cafe_id,
-        table_id=table_id,
         session=session,
         slot_id=slot_id,
     )
     if slots:
         raise HTTPException(
             status_code=422,
-            detail='Слот пересекается с уже существующим слотом.',
+            detail='Слот пересекается с уже существующим слотом в этом кафе.',
         )
