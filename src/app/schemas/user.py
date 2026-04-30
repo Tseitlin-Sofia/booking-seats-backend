@@ -97,7 +97,7 @@ class UserUpdate(UserBase):
     username: str | None = Field(
         None, max_length=UserConstants.MAX_USERNAME_LENGTH,
     )
-    role: UserRole | None = Field(None, example='user',)
+    role: UserRole | None = Field(None, example='user')
     password: str | None = Field(
         None, max_length=UserConstants.MAX_PASSWORD_LENGTH, example='qwer1',
     )

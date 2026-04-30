@@ -37,6 +37,24 @@ class UserService:
             cleaned = '+7' + cleaned[1:]
         return cleaned
 
+    def raise_duplicate_error(
+        self,
+        email: str | None,
+        phone: str | None,
+        username: str | None,
+        tg_id: str | None,
+        conflicting_user: User,
+    ) -> None:
+        """Выбрасывает исключение с указанием конфликтующего поля."""
+        if email and conflicting_user.email == email:
+            raise ValueError('Пользователь с таким email уже существует.')
+        if phone and conflicting_user.phone == phone:
+            raise ValueError('Пользователь с таким phone уже существует.')
+        if username and conflicting_user.username == username:
+            raise ValueError('Пользователь с таким username уже существует.')
+        if tg_id and conflicting_user.tg_id == tg_id:
+            raise ValueError('Пользователь с таким tg_id уже существует.')
+
     async def check_unique_fields(
         self,
         session: AsyncSession,
@@ -62,7 +80,7 @@ class UserService:
             return
 
         stmt = select(User).where(
-            User.is_active == True,
+            User.is_active,
             or_(*conditions),
         )
 
@@ -70,14 +88,9 @@ class UserService:
         conflicting_user = result.scalars().first()
 
         if conflicting_user:
-            if email and conflicting_user.email == email:
-                raise ValueError('Пользователь с таким email уже существует.')
-            if normalized_phone and conflicting_user.phone == normalized_phone:
-                raise ValueError('Пользователь с таким phone уже существует.')
-            if username and conflicting_user.username == username:
-                raise ValueError('Пользователь с таким username уже существует.')
-            if tg_id and conflicting_user.tg_id == tg_id:
-                raise ValueError('Пользователь с таким tg_id уже существует.')
+            self.raise_duplicate_error(
+                email, normalized_phone, username, tg_id, conflicting_user,
+            )
 
     @staticmethod
     def check_email_or_phone_required(
