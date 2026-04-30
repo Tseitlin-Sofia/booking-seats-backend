@@ -9,7 +9,12 @@ from app.core.db import Base, CommonMixin
 
 
 class Slot(Base, CommonMixin):
-    """Модель интервала времени для бронирования столика."""
+    """Модель интервала времени для бронирования столика.
+
+    Слот описывает только временной интервал в рамках конкретного кафе.
+    Связь "стол ↔ слот ↔ бронирование" хранится в таблице BookingTableSlot
+    и устанавливается в момент бронирования.
+    """
 
     start_time: Mapped[time] = mapped_column(Time, nullable=False)
     end_time: Mapped[time] = mapped_column(Time, nullable=False)
@@ -18,14 +23,9 @@ class Slot(Base, CommonMixin):
         ForeignKey('cafe.id'),
         nullable=False,
     )
-    table_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey('table.id'),
-        nullable=False,
-    )
 
     def __repr__(self) -> str:
         return (
             f'Время бронирования: {self.start_time} - {self.end_time}, '
-            f'кафе_id={self.cafe_id}, столик_id={self.table_id}'
+            f'кафе_id={self.cafe_id}'
         )

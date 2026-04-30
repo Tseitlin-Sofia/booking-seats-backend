@@ -1,6 +1,6 @@
 """Схема для модели интервала времени бронирования столика."""
 
-from datetime import datetime
+from datetime import time
 
 from pydantic import (
     BaseModel,
@@ -14,17 +14,17 @@ from app.core.constants import SlotConstants
 
 
 class SlotBase(BaseModel):
-    """Базовая схема для модели интервала времени бронирования столика."""
+    """Базовая схема для модели интервала времени бронирования слота в кафе."""
 
-    start_time: datetime = Field(
+    start_time: time = Field(
         ...,
         examples=[SlotConstants.FROM_TIME],
-        description='Время начала интервала',
+        description='Время начала интервала (HH:MM или HH:MM:SS)',
     )
-    end_time: datetime = Field(
+    end_time: time = Field(
         ...,
         examples=[SlotConstants.TO_TIME],
-        description='Время окончания интервала',
+        description='Время окончания интервала (HH:MM или HH:MM:SS)',
     )
 
     model_config = ConfigDict(extra='forbid')
@@ -40,28 +40,18 @@ class SlotBase(BaseModel):
 
 
 class SlotCreate(SlotBase):
-    """Схема для создания интервала времени бронирования столика."""
-
-    table_id: int = Field(
-        ...,
-        description='ID столика, к которому относится слот',
-    )
+    """Схема для создания интервала времени бронирования слота в кафе."""
 
 
 class SlotUpdate(SlotBase):
-    """Схема для обновления интервала времени бронирования столика."""
-
-    table_id: int = Field(
-        ...,
-        description='ID столика, к которому относится слот',
-    )
+    """Схема для обновления интервала времени бронирования слота в кафе."""
 
 
 class TimeSlotShortInfo(BaseModel):
     """Краткая информация о временном слоте."""
 
     id: int = Field(..., description='ID временного слота')
-    start_time: datetime = Field(..., description='Время начала интервала')
-    end_time: datetime = Field(..., description='Время окончания интервала')
+    start_time: time = Field(..., description='Время начала интервала')
+    end_time: time = Field(..., description='Время окончания интервала')
 
     model_config = ConfigDict(from_attributes=True)

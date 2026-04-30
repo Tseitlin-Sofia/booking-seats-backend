@@ -52,7 +52,9 @@ class CafeConstants:
         'Номер телефона должен начинаться с +7 и не превышать 10 цифр после!'
     )
     NAME_RESTRICTION = 20
+    MIN_LENGTH_ADDRESS = 10
     MIN_LENGTH_MANAGERS_LIST = 1
+    MIN_LENGTH_NAME = 10
     PHONE_FORMAT = r'^\+7\d{10}$'
 
 
@@ -84,8 +86,10 @@ class UserConstants:
     MAX_PHONE_LENGTH = 20
     MAX_PASSWORD_LENGTH = 255
     MAX_TG_ID_LENGTH = 100
+    MIN_PASSWORD_LENGTH = 5
     DEFAULT_USER_ROLE = 'user'
     PHONE_REGEX = re.compile(r'^(\+7|8)\d{10}$')
+    PASSWORD_REGEX = re.compile(r'^(?=.*[A-Za-z])(?=.*\d).+$')
 
 
 class LoggingConstants:
@@ -130,8 +134,8 @@ class SlotConstants:
     """Класс для констант модели интервала времени бронирования столика."""
 
     BASE_TIME = datetime.now() + timedelta(minutes=10)
-    FROM_TIME = BASE_TIME.strftime('%Y-%m-%dT%H:%M')
-    TO_TIME = (BASE_TIME + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')
+    FROM_TIME = BASE_TIME.strftime('%H:%M')
+    TO_TIME = (BASE_TIME + timedelta(hours=1)).strftime('%H:%M')
 
 
 class NotificationConstants:

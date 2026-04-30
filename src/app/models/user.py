@@ -58,14 +58,14 @@ class User(CommonMixin, Base):
         nullable=True,
     )
     cafe: Mapped["Cafe | None"] = relationship(
-        "Cafe",
-        back_populates="managers",
-        lazy="selectin",
+        'Cafe',
+        back_populates='managers',
+        lazy='selectin',
     )
-    bookings: Mapped[list["Booking"]] = relationship(
-        "Booking",
-        back_populates="user",
-        lazy="selectin",
+    bookings: Mapped[list['Booking']] = relationship(
+        'Booking',
+        back_populates='user',
+        lazy='selectin',
     )
 
     @property
@@ -94,7 +94,7 @@ class User(CommonMixin, Base):
     def validate_manager(self, key: int, value: int) -> int:
         """Проверка, что только менеджер может быть привязан к кафе."""
         if value is not None and not self.is_manager:
-            raise ValueError("К кафе можно привязать только менеджера!")
+            raise ValueError('К кафе можно привязать только менеджера!')
         return value
 
     def __str__(self) -> str:
