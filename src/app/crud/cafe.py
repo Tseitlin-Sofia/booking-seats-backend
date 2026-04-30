@@ -1,4 +1,4 @@
-from typing import List, Optional, Self, Set, Sequence
+from typing import List, Optional, Self, Sequence
 
 from sqlalchemy import and_, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession

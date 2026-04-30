@@ -74,7 +74,7 @@ async def is_managers_id(
         missing_id = users_id - db_users_id
         logger.warning(f'Пользователи с id {missing_id} не существуют!')
         await raise_error(f'Пользователи с id {missing_id} не существуют!')
-    for user in user:
+    for user in db_users:
         if not user.is_manager:
             msg = (
                 'Попытка назначить к кафе не менеджера: '

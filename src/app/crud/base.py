@@ -130,7 +130,7 @@ class CRUDBase:
     ) -> Iterable[Base]:
         """Возвращает кафе по последовательности из id."""
         result = await session.execute(
-            select(self.model).where(self.model.id.in_(sequence_id))
+            select(self.model).where(self.model.id.in_(sequence_id)),
         )
         return result.scalars().all()
 

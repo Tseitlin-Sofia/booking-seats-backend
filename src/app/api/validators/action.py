@@ -1,10 +1,9 @@
 from http import HTTPStatus
-from typing import List, Optional, Self, Sequence, Union
+from typing import Optional, Self, Sequence, Union
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.validators.cafe import (
-    get_cafe_or_404,
     is_manager_from_cafe,
     raise_error,
 )
