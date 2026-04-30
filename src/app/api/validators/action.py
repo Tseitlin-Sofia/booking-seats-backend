@@ -59,15 +59,18 @@ async def can_manager_change_action(
 
 async def is_cafes_exists(
         session: AsyncSession, new_action: Union[ActionCreate, ActionUpdate],
-) -> List[Cafe]:
+) -> Optional[Sequence[Cafe]]:
     """Проверка, существуют ли кафе из списка в бд."""
     new_data = new_action.model_dump(exclude_unset=True)
     if 'cafes_id' not in new_data:
         return None
-    cafes = []
-    for cafe_id in new_data['cafes_id']:
-        cafe = await get_cafe_or_404(session, cafe_id)
-        cafes.append(cafe)
+    cafes_id = set(new_data['cafes_id'])
+    cafes = await cafe_crud.get_by_list_of_id(session, cafes_id)
+    if len(cafes_id) != len(cafes):
+        db_cafes_id = set(cafe.id for cafe in cafes)
+        missing_ids = cafes_id - db_cafes_id
+        logger.warning(f'Кафе с id {missing_ids} не существуют!')
+        await raise_error(f'Кафе с id {missing_ids} не существуют!')
     return cafes
 
 
