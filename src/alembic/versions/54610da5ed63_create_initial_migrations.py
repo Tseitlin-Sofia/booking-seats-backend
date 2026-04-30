@@ -1,18 +1,18 @@
-"""initial schema.
+"""create initial migrations
 
-Revision ID: c945c7040fed
-Revises:
-Create Date: 2026-04-30 18:39:14.064664
+Revision ID: 54610da5ed63
+Revises: 
+Create Date: 2026-04-30 23:43:56.949185
 
 """
 from typing import Sequence, Union
 
+from alembic import op
 import sqlalchemy as sa
 
-from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'c945c7040fed'
+revision: str = '54610da5ed63'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -29,7 +29,7 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('description'),
+    sa.UniqueConstraint('description')
     )
     op.create_table('cafe',
     sa.Column('name', sa.String(), nullable=False),
@@ -42,14 +42,14 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('name', 'address', name='cafe_unique_name_and_address'),
+    sa.UniqueConstraint('name', 'address', name='cafe_unique_name_and_address')
     )
     op.create_table('action_cafe',
     sa.Column('action_id', sa.Integer(), nullable=False),
     sa.Column('cafe_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['action_id'], ['action.id'] ),
-    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'] ),
-    sa.PrimaryKeyConstraint('action_id', 'cafe_id'),
+    sa.ForeignKeyConstraint(['action_id'], ['action.id'], ),
+    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ),
+    sa.PrimaryKeyConstraint('action_id', 'cafe_id')
     )
     op.create_table('dish',
     sa.Column('cafe_id', sa.Integer(), nullable=False),
@@ -61,8 +61,8 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'] ),
-    sa.PrimaryKeyConstraint('id'),
+    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('slot',
     sa.Column('start_time', sa.Time(), nullable=False),
@@ -72,8 +72,8 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'] ),
-    sa.PrimaryKeyConstraint('id'),
+    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('table',
     sa.Column('cafe_id', sa.Integer(), nullable=False),
@@ -83,8 +83,8 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'] ),
-    sa.PrimaryKeyConstraint('id'),
+    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('user',
     sa.Column('username', sa.String(length=100), nullable=False),
@@ -99,12 +99,12 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.CheckConstraint('email is not null OR phone is not null', name='ch_user_email_or_phone_required'),
-    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'] ),
+    sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('phone'),
     sa.UniqueConstraint('tg_id'),
-    sa.UniqueConstraint('username'),
+    sa.UniqueConstraint('username')
     )
     op.create_table('booking',
     sa.Column('status', sa.Enum('BOOKING', 'CANCELED', 'ACTIVE', 'COMPLETED', name='bookingstatus'), nullable=False),
@@ -119,7 +119,7 @@ def upgrade() -> None:
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['cafe_id'], ['cafe.id'], name='fk_booking_cafe_id_cafe'),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], name='fk_booking_user_id_user'),
-    sa.PrimaryKeyConstraint('id'),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('bookingdish',
     sa.Column('booking_id', sa.Integer(), nullable=False),
@@ -130,9 +130,9 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['booking_id'], ['booking.id'] ),
-    sa.ForeignKeyConstraint(['dish_id'], ['dish.id'] ),
-    sa.PrimaryKeyConstraint('id'),
+    sa.ForeignKeyConstraint(['booking_id'], ['booking.id'], ),
+    sa.ForeignKeyConstraint(['dish_id'], ['dish.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('bookingtableslot',
     sa.Column('table_id', sa.Integer(), nullable=False),
@@ -145,7 +145,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['booking_id'], ['booking.id'], name='fk_booking_table_slot_booking_id_booking'),
     sa.ForeignKeyConstraint(['slot_id'], ['slot.id'], name='fk_booking_table_slot_slot_id_slot'),
     sa.ForeignKeyConstraint(['table_id'], ['table.id'], name='fk_booking_table_slot_table_id_table'),
-    sa.PrimaryKeyConstraint('id'),
+    sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
 
