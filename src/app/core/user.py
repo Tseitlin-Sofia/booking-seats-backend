@@ -76,7 +76,7 @@ class AuthService:
         login: str,
         password: str,
     ) -> Optional[User]:
-        """Аутентифицирует пользователя по телефону/email и паролю"""
+        """Аутентифицирует пользователя по телефону/email и паролю."""
         if EMAIL_REGEX.match(login):
             query = select(User).where(User.email == login)
         elif login.startswith('+'):
@@ -133,8 +133,7 @@ async def get_current_user(
 ) -> User:
     """Возвращает текущего авторизованного пользователя."""
     token = credentials.credentials
-    user = await get_user_from_token(token, session)
-    return user
+    return await get_user_from_token(token, session)
 
 
 async def get_current_user_optional(
@@ -148,8 +147,8 @@ async def get_current_user_optional(
         return None
 
     token = credentials.credentials
-    user = await get_user_from_token(token, session)
-    return user
+    return await get_user_from_token(token, session)
+
 
 async def get_admin_user(
     current_user: User = Depends(get_current_user),
