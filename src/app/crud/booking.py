@@ -19,7 +19,6 @@ from app.models import (
     Table,
 )
 from app.schemas.booking import BookingStatus
-from app.schemas.booking import BookingTableSlot as BookingTableSlotSchema
 from app.schemas.dish import PreOrderItemCreate
 
 logger = get_logger()
@@ -82,7 +81,7 @@ class BookingTableSlotCRUD(CRUDBase):
 
     async def is_available(
         self,
-        slots: list[BookingTableSlotSchema],
+        slots: list[dict[str, int]],
         date: date,
         session: AsyncSession,
     ) -> bool:
@@ -119,8 +118,8 @@ class BookingTableSlotCRUD(CRUDBase):
         for slot in slots:
             conditions.append(
                 and_(
-                    BookingTableSlot.table_id == slot.table_id,
-                    BookingTableSlot.slot_id == slot.slot_id,
+                    BookingTableSlot.table_id == slot.get('table_id'),
+                    BookingTableSlot.slot_id == slot.get('slot_id'),
                     BookingTableSlot.is_active,
                     BookingTableSlot.booking.has(
                         and_(

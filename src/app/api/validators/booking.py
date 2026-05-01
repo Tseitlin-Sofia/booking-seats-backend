@@ -45,7 +45,7 @@ async def validate_booking_slots(
 
 async def validate_cafe_slot_table(
     cafe_id: int,
-    slots: list[BookingTableSlotSchema],
+    slots: list[dict[str, int]],
     session: AsyncSession,
 ) -> None:
     """Валидация того что запрашиваемый слот и стол принадлежат одному кафе."""
@@ -55,9 +55,8 @@ async def validate_cafe_slot_table(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=Constants.CAFE_DOES_NOT_EXIST.format(cafe_id),
         )
-
-    slot_ids = [slot.slot_id for slot in slots]
-    table_ids = [slot.table_id for slot in slots]
+    slot_ids = [slot.get('slot_id') for slot in slots]
+    table_ids = [slot.get('table_id') for slot in slots]
 
     await booking_table_slot_crud.get_by_id_list(
         session=session,
@@ -115,8 +114,8 @@ async def validate_table_slots_exists(
 ) -> None:
     """Проверка передачи списка слотов."""
     booking_data = booking.model_dump()
-    if booking_data.get('table_slots') is None or len(
-        booking_data['table_slots'],
+    if booking_data.get('tables_slots') is None or len(
+        booking_data['tables_slots'],
     ) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

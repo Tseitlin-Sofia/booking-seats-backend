@@ -9,22 +9,13 @@ from app.core.constants import BookingConstants as Constants
 
 
 class BookingValidatorMixin:
-    """Валидаторы для бронирования."""
+    """Валидаторы для бронирования без полей tables_slots."""
 
     @model_validator(mode='after')
     def check_future_date(self) -> Self:
         """Проверяет, что дата бронирования находится в будущем."""
         if self.booking_date < date.today():
             raise ValueError(Constants.DATE_ERROR)
-        return self
-
-    @model_validator(mode='after')
-    def check_list_slotst_is_not_empty(
-        self,
-    ) -> Self:
-        """Проверяет, что список слотов не пуст."""
-        if len(self.tables_slots) == 0:
-            raise ValueError(Constants.LIST_SLOTS_ERROR)
         return self
 
     @model_validator(mode='after')
@@ -35,4 +26,17 @@ class BookingValidatorMixin:
             or self.guest_number < Constants.MIN_GUESTS
         ):
             raise ValueError(Constants.GUEST_NUMBER_ERROR)
+        return self
+
+
+class BookingUpdateFullValidatorMixin:
+    """Валидаторы для обновления бронирования."""
+
+    @model_validator(mode='after')
+    def check_list_slotst_is_not_empty(
+        self,
+    ) -> Self:
+        """Проверяет, что список слотов не пуст."""
+        if hasattr(self, 'tables_slots') and len(self.tables_slots) == 0:
+            raise ValueError(Constants.LIST_SLOTS_ERROR)
         return self
