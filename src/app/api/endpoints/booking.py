@@ -170,7 +170,7 @@ async def create_booking(
     )
     # Код для создания задачи на отправку напоминания клиенту
     # и уведомления админа
-    _make_notification_tasks_for_celery(new_booking, method='POST')
+    # _make_notification_tasks_for_celery(new_booking, method='POST')
 
     for table_slot in booking.tables_slots:
         await booking_table_slot_crud.create(
@@ -250,14 +250,14 @@ async def update_booking(
             session=session,
             obj_in=BookingTableSlotCreate(**{
                 'booking_id': booking_id,
-                'table_id': table_slot.table_id,
-                'slot_id': table_slot.slot_id,
+                'table_id': table_slot.get('table_id'),
+                'slot_id': table_slot.get('slot_id'),
             }),
         )
     booking_upd = await booking_crud.update(
         session=session,
         db_obj=booking_db,
-        obj_in=booking_data,
+        obj_in=BookingUpdate(**booking_data),
     )
     await session.refresh(booking_upd)
     _make_notification_tasks_for_celery(booking_upd, method='PATCH')
