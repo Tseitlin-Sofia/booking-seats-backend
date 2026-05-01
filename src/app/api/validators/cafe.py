@@ -61,7 +61,7 @@ async def check_name_address(
 async def is_managers_id(
     session: AsyncSession,
     new_cafe: Union[CafeCreate, CafeUpdate],
-    cafe_id: Optional[int] = None,
+    db_cafe: Optional[Cafe] = None,
 ) -> Optional[List[User]]:
     """Проверка, указаны ли реальные менеджеры."""
     new_data = new_cafe.model_dump(exclude_unset=True)
@@ -78,16 +78,31 @@ async def is_managers_id(
         if not user.is_manager:
             msg = (
                 'Попытка назначить к кафе не менеджера: '
-                f'id: {user.id} | role: {user.role}!'
+                f'user_id: {user.id} | user_role: {user.role}!'
             )
             logger.warning(msg)
             await raise_error(msg)
-        if user.cafe_id is not None and user.cafe_id != cafe_id:
+        if db_cafe and (not user.is_active and db_cafe.is_active is True):
+            msg = (
+                'Попытка назначить к активированному кафе дезактивированного '
+                f' менеджера: manager_id: {user.id} | '
+                f'is_active: {user.is_active}!'
+            )
+            logger.warning(msg)
+            await raise_error(msg)
+        elif not user.is_active:
+            msg = (
+                'Попытка создать кафе с дезактивированным менеджером: '
+                f'manager_id: {user.id} | is_active: {user.is_active}!'
+            )
+            logger.warning(msg)
+            await raise_error(msg)
+        if user.cafe_id is not None and user.cafe_id != db_cafe.id:
             """Проверка, обеспечивающая любому кафе наличие менеджеров."""
             msg = (
-                'Вы пытаетесь назначить занятого менеджера c id '
-                f'{user.id}! Сначала замените или исключите '
-                f'его из кафе с id {user.cafe_id}!'
+                'Попытка назначить занятого менеджера - '
+                'замените или исключите его из привязанного кафе: '
+                f'manager_id: {user.id} | manager.cafe_id: {user.cafe_id}!'
             )
             logger.warning(msg)
             await raise_error(msg)
@@ -100,10 +115,18 @@ async def is_manager_from_cafe(
     user: User,
 ) -> None:
     """Проверка, что менеджер может редактировать только свое кафе."""
+    if user.cafe_id is None:
+        msg = (
+            'У вас нет привязанных кафе! Чтобы вас привязали к кафе - '
+            'обратитесь к администратору! '
+            f'manager_id: {user.id} | manager.cafe_id: {user.cafe_id}!'
+        )
+        logger.warning(msg)
+        await raise_error(msg, HTTPStatus.FORBIDDEN)
     if user.cafe_id != cafe_id:
         msg = (
-            'Менеджер может редактировать только свое привязанное кафе c id '
-            f'{user.cafe_id}!'
+            'Менеджер может редактировать только свое привязанное кафе: '
+            f'manager_id: {user.id} | manager.cafe_id: {user.cafe_id}!'
         )
         logger.warning(msg)
         await raise_error(msg, HTTPStatus.FORBIDDEN)
