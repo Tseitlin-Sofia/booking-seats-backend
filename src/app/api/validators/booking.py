@@ -14,9 +14,6 @@ from app.crud.cafe import cafe_crud
 from app.models import Dish, Slot, Table, User
 from app.models.booking import Booking
 from app.schemas.booking import (
-    BookingTableSlot as BookingTableSlotSchema,
-)
-from app.schemas.booking import (
     BookingUpdate,
 )
 from app.schemas.dish import PreOrderItemCreate

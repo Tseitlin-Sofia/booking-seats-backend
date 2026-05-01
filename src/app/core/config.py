@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # Основные параметры JWT
     jwt_secret_key: str = 'your-super-secret-key'
     jwt_algorithm: str = 'HS256'
-    jwt_token_inactivity_minutes: int = 30
+    jwt_token_inactivity_minutes: int = 120
 
     @property
     def database_url(self) -> str:

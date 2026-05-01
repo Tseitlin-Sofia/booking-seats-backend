@@ -14,6 +14,8 @@ class BookingValidatorMixin:
     @model_validator(mode='after')
     def check_future_date(self) -> Self:
         """Проверяет, что дата бронирования находится в будущем."""
+        if self.booking_date is None:
+            return self
         if self.booking_date < date.today():
             raise ValueError(Constants.DATE_ERROR)
         return self
@@ -21,6 +23,8 @@ class BookingValidatorMixin:
     @model_validator(mode='after')
     def check_guest_number_is_positive(self) -> Self:
         """Проверяет, количество гостей."""
+        if self.guest_number is None:
+            return self
         if (
             self.guest_number > Constants.MAX_GUESTS
             or self.guest_number < Constants.MIN_GUESTS
@@ -37,6 +41,9 @@ class BookingTableSlotsValidatorMixin:
         self,
     ) -> Self:
         """Проверяет, что список слотов не пуст."""
-        if hasattr(self, 'tables_slots') and len(self.tables_slots) == 0:
+        if (
+            hasattr(self, 'tables_slots')
+            and (self.tables_slots is None or len(self.tables_slots) == 0)
+        ):
             raise ValueError(Constants.LIST_SLOTS_ERROR)
         return self

@@ -115,7 +115,7 @@ class BookingCRUD(CRUDBase):
         )
         booking_time = min(
             [
-                time.fromisoformat(slot.start_time)
+                slot.start_time
                 for slot in slots
             ],
         )
@@ -188,6 +188,7 @@ class BookingTableSlotCRUD(CRUDBase):
                 BookingTableSlot.id.in_(obj.id for obj in objs),
             ),
         )
+        await session.flush()
         await session.commit()
 
     async def get_capacity(

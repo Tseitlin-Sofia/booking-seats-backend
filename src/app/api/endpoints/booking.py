@@ -191,8 +191,8 @@ async def create_booking(
             session=session,
             obj_in={
                 'booking_id': new_booking.id,
-                'table_id': table_slot.table_id,
-                'slot_id': table_slot.slot_id,
+                'table_id': table_slot['table_id'],
+                'slot_id': table_slot['slot_id'],
             },
         )
 
@@ -254,9 +254,7 @@ async def update_booking(
             attr_value=booking_id,
         )
     )
-    tables_slots = [
-        slot.model_dump() for slot in booking_data.pop('tables_slots')
-    ]
+    tables_slots = booking_data.pop('tables_slots')
     await validate_start_time(
         session=session,
         tables_slots=tables_slots,
@@ -271,14 +269,14 @@ async def update_booking(
         session=session,
         objs=booking_table_slots_db,
     )
-
+    await session.refresh(booking_db, attribute_names=['tables_slots'])
     for table_slot in tables_slots:
         await booking_table_slot_crud.create(
             session=session,
             obj_in=BookingTableSlotCreate(**{
                 'booking_id': booking_id,
-                'table_id': table_slot.get('table_id'),
-                'slot_id': table_slot.get('slot_id'),
+                'table_id': table_slot['table_id'],
+                'slot_id': table_slot['slot_id'],
             }),
         )
     booking_upd = await booking_crud.update(
