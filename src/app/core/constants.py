@@ -17,21 +17,20 @@ class BookingConstants:
     SLOT_ALREADY_BOOKED = (
         'Попытка забронировать уже забронированный слот {} на стол {}.'
     )
-    SLOT_CAFE_MISMATCH = 'Слот и стол должны принадлежать одному кафе.'
-    SLOT_DOES_NOT_EXIST = 'Слот c id {} не существует.'
-    TABLE_DOES_NOT_EXIST = 'Стол c id {} не существует.'
     USER_DOES_NOT_EXIST = 'Пользователь c id {} не существует.'
     CAFE_DOES_NOT_EXIST = 'Кафе c id {} не существует.'
     USER_RIGHTS_ERROR = 'У вас нет прав для просмотра чужих бронирований.'
     BOOKING_NOT_FOUND = 'Бронирование c id {} не найдено.'
-    SLOT_INACTIVE = 'Временной слот с ID {} неактивен'
-    TABLE_INACTIVE = 'Стол с ID {} неактивен'
     USER_NOT_AUTHENTICATED = 'Пользователь не авторизован'
     SLOTS_UNAVAILABLE = 'Выбранные временные слоты уже забронированы'
     LIST_SLOTS_ERROR = 'Список временных слотов не может быть пустым.'
     DISH_NOT_FOUND = 'Некоторые блюда из предзаказа не найдены в меню.'
     DISH_UNAVAILABLE = 'Выбранные блюда временно недоступны.'
     DISH_CAFE_MISMATCH = 'Блюда не принадлежат выбранному кафе.'
+    TABLE_OR_SLOT_ERROR = (
+        'Некоторые временные слоты или столы не найдены в базе данных.'
+    )
+    ID_LIST_NEEDED = 'Необходимо передать список идентификаторов.'
 
 
 class MediaConstants:

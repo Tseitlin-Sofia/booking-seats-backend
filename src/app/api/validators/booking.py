@@ -11,9 +11,7 @@ from app.core.constants import BookingConstants as Constants
 from app.core.logging import get_logger
 from app.crud.booking import booking_crud, booking_table_slot_crud
 from app.crud.cafe import cafe_crud
-from app.crud.slot import slot_crud
-from app.crud.table import table_crud
-from app.models import Dish, User
+from app.models import Dish, Slot, Table, User
 from app.models.booking import Booking
 from app.schemas.booking import (
     BookingTableSlot as BookingTableSlotSchema,
@@ -58,37 +56,21 @@ async def validate_cafe_slot_table(
             detail=Constants.CAFE_DOES_NOT_EXIST.format(cafe_id),
         )
 
-    for slot in slots:
-        slot_db = await slot_crud.get(session=session, obj_id=slot.slot_id)
-        if not slot_db:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=Constants.SLOT_DOES_NOT_EXIST.format(slot.slot_id),
-            )
-        table_db = await table_crud.get(session=session, obj_id=slot.table_id)
-        if not table_db:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=Constants.TABLE_DOES_NOT_EXIST.format(slot.table_id),
-            )
+    slot_ids = [slot.slot_id for slot in slots]
+    table_ids = [slot.table_id for slot in slots]
 
-        if slot_db.cafe_id != table_db.cafe_id or slot_db.cafe_id != cafe_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=Constants.SLOT_CAFE_MISMATCH,
-            )
-
-        if not slot_db.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=Constants.SLOT_INACTIVE.format(slot.slot_id),
-            )
-
-        if not table_db.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=Constants.TABLE_INACTIVE.format(slot.table_id),
-            )
+    await booking_table_slot_crud.get_by_id_list(
+        session=session,
+        cafe_id=cafe_id,
+        model=Slot,
+        id_list=slot_ids,
+    )
+    await booking_table_slot_crud.get_by_id_list(
+        session=session,
+        cafe_id=cafe_id,
+        model=Table,
+        id_list=table_ids,
+    )
 
 
 async def validate_user_rights(
@@ -130,7 +112,6 @@ async def validate_booking_exists(
 
 async def validate_table_slots_exists(
     booking: BookingUpdate,
-    session: AsyncSession,
 ) -> None:
     """Проверка передачи списка слотов."""
     booking_data = booking.model_dump()
