@@ -3,14 +3,21 @@
 from datetime import date
 from typing import Optional
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.constants import BookingConstants as Constants
 from app.core.logging import get_logger
 from app.crud.base import CRUDBase
-from app.models import Booking, BookingDish, BookingTableSlot, Dish
+from app.models import (
+    Booking,
+    BookingDish,
+    BookingTableSlot,
+    Dish,
+    Slot,
+    Table,
+)
 from app.schemas.booking import BookingStatus
 from app.schemas.booking import BookingTableSlot as BookingTableSlotSchema
 from app.schemas.dish import PreOrderItemCreate
@@ -32,8 +39,6 @@ class BookingCRUD(CRUDBase):
         stmt = select(Booking).options(
             selectinload(
                 Booking.tables_slots,
-            ).selectinload(
-                BookingTableSlot.slot,
             ),
         )
         if show_active is not None:
@@ -82,51 +87,78 @@ class BookingTableSlotCRUD(CRUDBase):
         session: AsyncSession,
     ) -> bool:
         """Проверяет доступность запрошенных слотов."""
+        # for slot in slots:
+        #     stmt = (
+        #         select(BookingTableSlot)
+        #         .where(
+        #             BookingTableSlot.table_id == slot.table_id,
+        #             BookingTableSlot.slot_id == slot.slot_id,
+        #             BookingTableSlot.is_active,
+        #             BookingTableSlot.booking.has(
+        #                 and_(
+        #                     Booking.status.in_((
+        #                         BookingStatus.BOOKING,
+        #                         BookingStatus.ACTIVE,
+        #                     )),
+        #                     Booking.booking_date == date,
+        #                 ),
+        #             ),
+        #         )
+        #         .exists()
+        #     )
+        #             result = await session.execute(select(stmt))
+        # if result.scalar():
+        #     logger.warning(
+        #         Constants.SLOT_ALREADY_BOOKED.format(
+        #             slot.slot_id,
+        #             slot.table_id,
+        #         ),
+        #     )
+        #     return False
+        conditions = []
         for slot in slots:
-            stmt = (
-                select(BookingTableSlot)
-                .where(
+            conditions.append(
+                and_(
                     BookingTableSlot.table_id == slot.table_id,
                     BookingTableSlot.slot_id == slot.slot_id,
                     BookingTableSlot.is_active,
                     BookingTableSlot.booking.has(
                         and_(
-                            Booking.status.in_((
-                                BookingStatus.BOOKING,
-                                BookingStatus.ACTIVE,
-                            )),
+                            Booking.status.in_(
+                                (BookingStatus.BOOKING, BookingStatus.ACTIVE),
+                            ),
                             Booking.booking_date == date,
                         ),
                     ),
-                )
-                .exists()
+                ),
             )
-            # TODO: возможно стоит сделать 1 запросом:
-            #     conditions = []
-            # for slot in slots:
-            #     conditions.append(
-            #         and_(
-            #             BookingTableSlot.table_id == slot.table_id,
-            #             BookingTableSlot.slot_id == slot.slot_id,
-            #             BookingTableSlot.is_active
-            #         )
-            #     )
-            # stmt = select(BookingTableSlot).where(
-            #     or_(*conditions),
-            #     BookingTableSlot.booking.status.in_(
-            #         (BookingStatus.BOOKING, BookingStatus.ACTIVE),
-            #     ),
-            # )
-            result = await session.execute(select(stmt))
-            if result.scalar():
-                logger.warning(
-                    Constants.SLOT_ALREADY_BOOKED.format(
-                        slot.slot_id,
-                        slot.table_id,
-                    ),
-                )
-                return False
+
+        stmt = select(BookingTableSlot).where(or_(*conditions))
+        result = await session.execute(stmt)
+        if result.scalar():
+            return False
         return True
+
+    async def get_by_id_list(
+        self,
+        session: AsyncSession,
+        cafe_id: int,
+        model: type[Slot | Table],
+        id_list: Optional[list[int]] = None,
+    ) -> list[Slot | Table]:
+        """Получает список объектов по их идентификаторам."""
+        if id_list is None:
+            raise ValueError(Constants.ID_LIST_NEEDED)
+        stmt = select(model).where(
+            model.id.in_(id_list),
+            model.cafe_id == cafe_id,
+            model.is_active,
+        )
+        query = await session.execute(stmt)
+        result = list(query.scalars().all())
+        if len(result) != len(id_list):
+            raise ValueError(Constants.TABLE_OR_SLOT_ERROR)
+        return result
 
 
 booking_crud = BookingCRUD(Booking)

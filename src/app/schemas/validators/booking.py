@@ -23,7 +23,7 @@ class BookingValidatorMixin:
         self,
     ) -> Self:
         """Проверяет, что список слотов не пуст."""
-        if len(self.table_slots) == 0:
+        if len(self.tables_slots) == 0:
             raise ValueError(Constants.LIST_SLOTS_ERROR)
         return self
 

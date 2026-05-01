@@ -74,8 +74,6 @@ class Booking(Base, CommonMixin):
     booking_date: Mapped['date'] = mapped_column(
         Date,
     )
-    # TODO: Рассмотреть создание промежуточной таблицы в императивном стиле,
-    # дабы избежать значения в виде списка
     tables_slots: Mapped[list['BookingTableSlot']] = relationship(
         'BookingTableSlot',
         back_populates='booking',
