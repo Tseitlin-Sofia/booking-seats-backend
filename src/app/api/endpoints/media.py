@@ -6,12 +6,12 @@ import aiofiles
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
-from app.api.validators.media_validators import validate_image
 from app.api.dependencies import UserDep
+from app.api.validators.media_validators import validate_image
 from app.celery.tasks import notify_admin, notify_client
 from app.core.constants import MediaConstants
 from app.models.user import User
-from app.services.media_service import transform_to_jpeg
+from app.services.media import transform_to_jpeg
 
 router = APIRouter()
 
