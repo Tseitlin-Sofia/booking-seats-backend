@@ -1,6 +1,6 @@
 """Валидаторы для эндпоинтов бронирования."""
 
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 from fastapi import HTTPException, status
@@ -25,7 +25,7 @@ logger = get_logger()
 
 
 async def validate_booking_slots(
-    slots: list[BookingTableSlotSchema],
+    slots: list[dict[str, int]],
     booking_date: date,
     session: AsyncSession,
 ) -> None:
@@ -55,8 +55,8 @@ async def validate_cafe_slot_table(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=Constants.CAFE_DOES_NOT_EXIST.format(cafe_id),
         )
-    slot_ids = [slot.get('slot_id') for slot in slots]
-    table_ids = [slot.get('table_id') for slot in slots]
+    slot_ids = [slot['slot_id'] for slot in slots]
+    table_ids = [slot['table_id'] for slot in slots]
 
     await booking_table_slot_crud.get_by_id_list(
         session=session,
@@ -120,6 +120,41 @@ async def validate_table_slots_exists(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=Constants.LIST_SLOTS_ERROR,
+        )
+
+
+async def validate_start_time(
+    session: AsyncSession,
+    tables_slots: list[dict[str, int]],
+    booking_date: date,
+) -> None:
+    """Проверка времени начала бронирования."""
+    if await booking_crud.get_start_datetime_by_slots_and_date(
+        tables_slots=tables_slots,
+        booking_date=booking_date,
+        session=session,
+    ) < datetime.now():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=Constants.INVALID_START_TIME_ERROR,
+        )
+
+
+async def validate_guest_number(
+    guest_number: int,
+    tables_slots: list[dict[str, int]],
+    session: AsyncSession,
+) -> None:
+    """Проверяет количество гостей на основе вместимости столов."""
+    max_guests = await booking_table_slot_crud.get_capacity(
+        tables_slots=tables_slots, session=session,
+    )
+    if guest_number > max_guests or guest_number < Constants.MIN_GUESTS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=Constants.GUEST_NUMBER_ERROR.format(
+                Constants.MIN_GUESTS, max_guests,
+            ),
         )
 
 

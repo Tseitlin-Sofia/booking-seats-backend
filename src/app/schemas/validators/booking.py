@@ -29,7 +29,7 @@ class BookingValidatorMixin:
         return self
 
 
-class BookingUpdateFullValidatorMixin:
+class BookingTableSlotsValidatorMixin:
     """Валидаторы для обновления бронирования."""
 
     @model_validator(mode='after')

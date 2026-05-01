@@ -1,15 +1,17 @@
 """CRUD операции для бронирования."""
 
-from datetime import date
+from datetime import date, datetime, time
 from typing import Optional
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.constants import BookingConstants as Constants
 from app.core.logging import get_logger
 from app.crud.base import CRUDBase
+from app.crud.slot import slot_crud
+from app.crud.table import table_crud
 from app.models import (
     Booking,
     BookingDish,
@@ -75,6 +77,50 @@ class BookingCRUD(CRUDBase):
             f'items_count: {len(items)}',
         )
 
+    async def get_start_datetime_by_booking_id(
+        self,
+        booking_id: int,
+        session: AsyncSession,
+    ) -> datetime:
+        """Получает дату и время начала бронирования по id бронирования."""
+        booking = await self.get(booking_id, session)
+        if not booking:
+            raise ValueError(Constants.BOOKING_NOT_FOUND)
+        booking_date = date.fromisoformat(booking.booking_date)
+        stmt = select(BookingTableSlot).where(
+            BookingTableSlot.booking_id == booking_id,
+            BookingTableSlot.is_active,
+        )
+        slots = await session.execute(stmt)
+        booking_time = min(
+            [
+                time.fromisoformat(slot.start_time)
+                for slot
+                in slots.all()
+            ],
+        )
+        return datetime.combine(booking_date, booking_time)
+
+    async def get_start_datetime_by_slots_and_date(
+        self,
+        tables_slots: list[dict[str, int]],
+        booking_date: date,
+        session: AsyncSession,
+    ) -> datetime:
+        """По списку слотов и дате возвращает время начала бронирования."""
+        slots_ids = [table_slot['slot_id'] for table_slot in tables_slots]
+        slots = await slot_crud.get_by_list_of_id(
+            session=session,
+            sequence_id=slots_ids,
+        )
+        booking_time = min(
+            [
+                time.fromisoformat(slot.start_time)
+                for slot in slots
+            ],
+        )
+        return datetime.combine(booking_date, booking_time)
+
 
 class BookingTableSlotCRUD(CRUDBase):
     """CRUD операции для слотов бронирования."""
@@ -86,34 +132,6 @@ class BookingTableSlotCRUD(CRUDBase):
         session: AsyncSession,
     ) -> bool:
         """Проверяет доступность запрошенных слотов."""
-        # for slot in slots:
-        #     stmt = (
-        #         select(BookingTableSlot)
-        #         .where(
-        #             BookingTableSlot.table_id == slot.table_id,
-        #             BookingTableSlot.slot_id == slot.slot_id,
-        #             BookingTableSlot.is_active,
-        #             BookingTableSlot.booking.has(
-        #                 and_(
-        #                     Booking.status.in_((
-        #                         BookingStatus.BOOKING,
-        #                         BookingStatus.ACTIVE,
-        #                     )),
-        #                     Booking.booking_date == date,
-        #                 ),
-        #             ),
-        #         )
-        #         .exists()
-        #     )
-        #             result = await session.execute(select(stmt))
-        # if result.scalar():
-        #     logger.warning(
-        #         Constants.SLOT_ALREADY_BOOKED.format(
-        #             slot.slot_id,
-        #             slot.table_id,
-        #         ),
-        #     )
-        #     return False
         conditions = []
         for slot in slots:
             conditions.append(
@@ -146,7 +164,7 @@ class BookingTableSlotCRUD(CRUDBase):
         id_list: Optional[list[int]] = None,
     ) -> list[Slot | Table]:
         """Получает список объектов по их идентификаторам."""
-        if id_list is None:
+        if id_list is None or len(id_list) == 0:
             raise ValueError(Constants.ID_LIST_NEEDED)
         stmt = select(model).where(
             model.id.in_(id_list),
@@ -158,6 +176,29 @@ class BookingTableSlotCRUD(CRUDBase):
         if len(result) != len(id_list):
             raise ValueError(Constants.TABLE_OR_SLOT_ERROR)
         return result
+
+    async def delete_multi(
+        self,
+        session: AsyncSession,
+        objs: list[BookingTableSlot],
+    ) -> None:
+        """Удаляет несколько объектов."""
+        await session.execute(
+            delete(BookingTableSlot).where(
+                BookingTableSlot.id.in_(obj.id for obj in objs),
+            ),
+        )
+        await session.commit()
+
+    async def get_capacity(
+        self,
+        session: AsyncSession,
+        tables_slots: list[dict[str, int]],
+    ) -> int:
+        """Получает вместимость бронирования."""
+        tables_ids = [slot['table_id'] for slot in tables_slots]
+        tables = await table_crud.get_by_list_of_id(session, tables_ids)
+        return sum(table.seat_number for table in tables)
 
 
 booking_crud = BookingCRUD(Booking)
