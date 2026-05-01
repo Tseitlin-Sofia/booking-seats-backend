@@ -99,7 +99,7 @@ async def create_new_action(
     ),
     response_description='Подробный вывод измененной акции',
 )
-async def update_cafe(
+async def update_action(
     session: SessionDep,
     action_id: int,
     new_action: ActionUpdate,

@@ -24,9 +24,7 @@ docker compose exec app alembic upgrade head
 ```
 
 Для создания 1 суперпользователя:
-```bash
-docker compose exec app python -m app.core.init_db create-superuser
-```
+Отправить POST запрос на users/ с валидными данными
 
 Проверка создания таблиц:
 ```bash
