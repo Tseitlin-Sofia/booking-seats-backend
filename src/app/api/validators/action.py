@@ -19,8 +19,8 @@ from app.schemas.action import ActionCreate, ActionUpdate
 logger = get_logger()
 
 
-async def check_cafe_list(cafes_id: Sequence, user: User) -> None:
-    """Проверка, является ли юзер менеджером кафе."""
+async def can_manager_change_cafes(cafes_id: Sequence, user: User) -> None:
+    """Проверка, что менеджер редактирует только свое кафе."""
     if len(cafes_id) > ActionConstants.MIN_LENGTH_CAFES_LIST:
         msg = (
             'Менеджер может управлять акциями только своего кафе c id '
@@ -51,9 +51,9 @@ async def can_manager_change_action(
     new_data = new_action.model_dump(exclude_unset=True)
     if db_action is not None:
         cafes_id = await cafe_crud.get_cafes_by_action(session, db_action.id)
-        await check_cafe_list(cafes_id, user)
+        await can_manager_change_cafes(cafes_id, user)
     if 'cafes_id' in new_data:
-        await check_cafe_list(new_data['cafes_id'], user)
+        await can_manager_change_cafes(new_data['cafes_id'], user)
 
 
 async def is_cafes_exists(
@@ -87,3 +87,24 @@ async def is_action_already_exists(
         msg = 'Акция с таким описанием уже существует!'
         logger.warning(msg)
         await raise_error(msg)
+
+
+async def can_actions_be_attached_to_cafe(
+        session: AsyncSession,
+        new_action: ActionUpdate,
+        db_action: Action,
+        cafes: Sequence[Cafe],
+) -> None:
+    """К активированному кафе можно привязать только активированные акции."""
+    if cafes is None:
+        return
+    for cafe in cafes:
+        if cafe.is_active is True and db_action.is_active is False:
+            msg = (
+                'Дезактивированные акции нельзя привязть '
+                f'к активиронному кафе: action_id: {db_action.id}, '
+                f'action.is_active: {db_action.is_active} | '
+                f'cafe_id: {cafe.id}, cafe.is_active: {cafe.is_active}!'
+            )
+            logger.warning(msg)
+            await raise_error(msg)
