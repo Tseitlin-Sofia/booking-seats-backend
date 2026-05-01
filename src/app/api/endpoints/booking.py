@@ -27,6 +27,7 @@ from app.schemas.booking import (
     BookingStatus,
     BookingTableSlotCreate,
     BookingUpdate,
+    BookingUpdateWithoutTablesSlots,
 )
 from app.services.task import get_reminder_id
 
@@ -257,8 +258,8 @@ async def update_booking(
     booking_upd = await booking_crud.update(
         session=session,
         db_obj=booking_db,
-        obj_in=BookingUpdate(**booking_data),
+        obj_in=BookingUpdateWithoutTablesSlots(**booking_data),
     )
     await session.refresh(booking_upd)
-    _make_notification_tasks_for_celery(booking_upd, method='PATCH')
+    # _make_notification_tasks_for_celery(booking_upd, method='PATCH')
     return BookingInfo.model_validate(booking_upd, from_attributes=True)
