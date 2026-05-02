@@ -55,13 +55,13 @@ async def validate_cafe_slot_table(
     slot_ids = [slot['slot_id'] for slot in slots]
     table_ids = [slot['table_id'] for slot in slots]
 
-    await booking_table_slot_crud.get_by_id_list(
+    await booking_table_slot_crud.get_by_id_list_bts(
         session=session,
         cafe_id=cafe_id,
         model=Slot,
         id_list=slot_ids,
     )
-    await booking_table_slot_crud.get_by_id_list(
+    await booking_table_slot_crud.get_by_id_list_bts(
         session=session,
         cafe_id=cafe_id,
         model=Table,

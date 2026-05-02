@@ -237,6 +237,18 @@ async def update_booking(
     booking_data = booking.model_dump(exclude_unset=True)
     booking_db = await validate_booking_exists(booking_id, session)
     await validate_user_rights(current_user, booking_db.user_id)
+    booking_table_slots_db = (
+        await booking_table_slot_crud.get_by_attribute_multi(
+            session=session,
+            attr_name='booking_id',
+            attr_value=booking_id,
+        )
+    )
+    if not booking_data.get('is_active'):
+        await booking_table_slot_crud.deactivate_multi(
+            session=session,
+            db_objs=booking_table_slots_db,
+        )
     await validate_booking_slots(
         slots=booking_data.get('tables_slots', []),
         booking_date=booking_data.get('booking_date', booking_db.booking_date),
@@ -246,13 +258,6 @@ async def update_booking(
         cafe_id=booking_db.cafe_id,
         slots=booking_data.get('tables_slots', []),
         session=session,
-    )
-    booking_table_slots_db = (
-        await booking_table_slot_crud.get_by_attribute_multi(
-            session=session,
-            attr_name='booking_id',
-            attr_value=booking_id,
-        )
     )
     tables_slots = booking_data.pop('tables_slots')
     await validate_start_time(
@@ -277,6 +282,7 @@ async def update_booking(
                 'booking_id': booking_id,
                 'table_id': table_slot['table_id'],
                 'slot_id': table_slot['slot_id'],
+                'is_active': booking_data.get('is_active', True),
             }),
         )
     booking_upd = await booking_crud.update(

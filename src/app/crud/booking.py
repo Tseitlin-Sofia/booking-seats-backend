@@ -156,7 +156,7 @@ class BookingTableSlotCRUD(CRUDBase):
             return False
         return True
 
-    async def get_by_id_list(
+    async def get_by_id_list_bts(
         self,
         session: AsyncSession,
         cafe_id: int,
