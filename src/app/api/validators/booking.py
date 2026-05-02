@@ -45,18 +45,36 @@ async def validate_booking_slots(
 
 async def validate_cafe_slot_table(
     cafe_id: int,
-    slots: list[dict[str, int]],
+    slots: list[BookingTableSlotSchema],
     session: AsyncSession,
 ) -> None:
-    """Валидация того что запрашиваемый слот и стол принадлежат одному кафе."""
+    """Проверяет, что запрашиваемые слоты и столы принадлежат указанному кафе.
+
+    Выполняет следующие проверки:
+        1. Существует ли кафе с указанным ID.
+        2. Все ли временные слоты (slot_id) принадлежат данному кафе.
+        3. Все ли столы (table_id) принадлежат данному кафе.
+
+    - Args:
+        - cafe_id: ID кафе, которому должны принадлежать слоты и столы.
+        - slots: Список Pydantic-схем BookingTableSlot,
+        содержащих пары table_id/slot_id.
+        - session: Асинхронная сессия SQLAlchemy для выполнения запросов к БД.
+
+    - Raises:
+        - HTTPException: 404 NOT_FOUND, если кафе с указанным ID не существует.
+        - HTTPException: 422 UNPROCESSABLE_ENTITY или 404 NOT_FOUND,
+            если какой-либо из слотов или столов не принадлежит указанному кафе
+            Детали ошибки формируются внутри CRUD-метода get_by_id_list.
+    """
     cafe_db = await cafe_crud.get(session=session, obj_id=cafe_id)
     if not cafe_db:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=Constants.CAFE_DOES_NOT_EXIST.format(cafe_id),
         )
-    slot_ids = [slot.get('slot_id') for slot in slots]
-    table_ids = [slot.get('table_id') for slot in slots]
+    slot_ids = [slot.slot_id for slot in slots]
+    table_ids = [slot.table_id for slot in slots]
 
     await booking_table_slot_crud.get_by_id_list(
         session=session,
@@ -114,9 +132,13 @@ async def validate_table_slots_exists(
 ) -> None:
     """Проверка передачи списка слотов."""
     booking_data = booking.model_dump()
-    if booking_data.get('tables_slots') is None or len(
-        booking_data['tables_slots'],
-    ) == 0:
+    if (
+        booking_data.get('tables_slots') is None
+        or len(
+            booking_data['tables_slots'],
+        )
+        == 0
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=Constants.LIST_SLOTS_ERROR,
