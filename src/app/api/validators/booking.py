@@ -14,6 +14,7 @@ from app.crud.cafe import cafe_crud
 from app.models import Dish, Slot, Table, User
 from app.models.booking import Booking
 from app.schemas.booking import (
+    BookingCreate,
     BookingUpdate,
 )
 from app.schemas.dish import PreOrderItemCreate
@@ -109,7 +110,7 @@ async def validate_booking_exists(
 
 
 async def validate_table_slots_exists(
-    booking: BookingUpdate,
+    booking: BookingUpdate | BookingCreate,
 ) -> None:
     """Проверка передачи списка слотов."""
     booking_data = booking.model_dump()

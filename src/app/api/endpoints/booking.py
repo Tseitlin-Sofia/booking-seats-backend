@@ -149,6 +149,9 @@ async def create_booking(
     current_user: UserDep,
 ) -> BookingInfo:
     """Создание бронирования."""
+    await validate_table_slots_exists(
+        booking=booking,
+    )
     tables_slots = [slot.model_dump() for slot in booking.tables_slots]
     await validate_booking_slots(
         slots=tables_slots,
