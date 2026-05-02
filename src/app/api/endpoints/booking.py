@@ -249,17 +249,17 @@ async def update_booking(
             session=session,
             db_objs=booking_table_slots_db,
         )
+    tables_slots = booking_data.pop('tables_slots')
     await validate_booking_slots(
-        slots=booking_data.get('tables_slots', []),
+        slots=tables_slots,
         booking_date=booking_data.get('booking_date', booking_db.booking_date),
         session=session,
     )
     await validate_cafe_slot_table(
         cafe_id=booking_db.cafe_id,
-        slots=booking_data.get('tables_slots', []),
+        slots=tables_slots,
         session=session,
     )
-    tables_slots = booking_data.pop('tables_slots')
     await validate_start_time(
         session=session,
         tables_slots=tables_slots,
