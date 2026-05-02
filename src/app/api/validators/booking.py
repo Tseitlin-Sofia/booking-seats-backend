@@ -45,7 +45,7 @@ async def validate_cafe_slot_table(
     slots: list[dict[str, int]],
     session: AsyncSession,
 ) -> None:
-    """Валидация того что запрашиваемый слот и стол принадлежат одному кафе."""
+    """Валидация того слот и стол существуют и принадлежат одному кафе."""
     cafe_db = await cafe_crud.get(session=session, obj_id=cafe_id)
     if not cafe_db:
         raise HTTPException(
