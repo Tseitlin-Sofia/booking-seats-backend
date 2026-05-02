@@ -112,7 +112,6 @@ class LoggingConstants:
     LOGGERS_TO_INTERCEPT: list[str] = [
         'uvicorn',
         'uvicorn.error',
-        'sqlalchemy',
         'alembic',
     ]
 

@@ -1,6 +1,5 @@
-from celery import Task
-
-from app.core.logging import get_logger
+from app.celery.base_task import LoguruTask
+from app.celery.celery_app import celery_app
 from app.services.task import (
     ADMIN_EMAIL,
     CLIENT_EMAIL,
@@ -11,17 +10,21 @@ from app.services.task import (
     send_email,
 )
 
-from .celery_app import celery_app
 
-# Настройка логирования для задач
-logger = get_logger()
-
-
-@celery_app.task(name='tasks.notify_admin', bind=True, max_retries=3)
-def notify_admin(self: Task, method: str, data: dict | None = None) -> None:
+@celery_app.task(
+    name='tasks.notify_admin',
+    bind=True,
+    base=LoguruTask,
+    max_retries=3,
+)
+def notify_admin(
+    self: LoguruTask,
+    method: str,
+    data: dict | None = None,
+) -> None:
     """Мгновенное уведомление админу о новой брони."""
     if data:
-        logger.info(
+        self.log.info(
             'Отправляю уведомление админу о столе {}',
             data.get('table_id'),
         )
@@ -40,17 +43,22 @@ def notify_admin(self: Task, method: str, data: dict | None = None) -> None:
             html_body=html_body,
         )
     except Exception as e:
-        logger.error('Ошибка отправки админу: {}', e)
+        self.log.error('Ошибка отправки админу: {}', e)
         raise self.retry(exc=e, countdown=60)
 
 
-@celery_app.task(name='tasks.notify_client', bind=True, max_retries=4)
-def notify_client(self: Task, data: dict | None = None) -> None:
+@celery_app.task(
+    name='tasks.notify_client',
+    bind=True,
+    base=LoguruTask,
+    max_retries=4,
+)
+def notify_client(self: LoguruTask, data: dict | None = None) -> None:
     """Отложенное напоминание клиенту о брони."""
     if data:
         user = data.get('user', {})
         client_email = user.get('email', CLIENT_EMAIL)
-        logger.info('Отправляю напоминание клиенту {}', user.get('username'))
+        self.log.info('Отправляю напоминание клиенту {}', user.get('username'))
         subject, text_body = build_client_reminder(data)
         html_body = get_html_for_client(data)
     else:
@@ -67,5 +75,5 @@ def notify_client(self: Task, data: dict | None = None) -> None:
             html_body=html_body,
         )
     except Exception as e:
-        logger.error('Ошибка отправки клиенту: {}', e)
+        self.log.error('Ошибка отправки клиенту: {}', e)
         raise self.retry(exc=e, countdown=30)
