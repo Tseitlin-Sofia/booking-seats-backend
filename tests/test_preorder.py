@@ -89,7 +89,7 @@ async def test_unauthorized_user_cannot_create_booking(
 ) -> None:
     """Попытка создать бронирование с предзаказом неавтор. пользователем.
 
-    Проверяет, что запрос без токена авторизации возвращает статус-код 401.
+    Проверяет, что запрос без токена авторизации возвращает статус-код 403.
     """
     payload = {
         'cafe_id': test_cafe.id,
@@ -105,7 +105,7 @@ async def test_unauthorized_user_cannot_create_booking(
     }
 
     response = await async_client.post('/bookings/', json=payload)
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -615,7 +615,7 @@ async def test_create_booking_with_pre_order_unauthorized(
 ) -> None:
     """Неавтор. пользователь не может создать бронирование с предзаказом.
 
-    Проверяет, что запрос без заголовка Authorization возвращает статус-код 401
+    Проверяет, что запрос без заголовка Authorization возвращает статус-код 403
     и тело ответа содержит поле detail.
     """
     payload = {
@@ -639,7 +639,7 @@ async def test_create_booking_with_pre_order_unauthorized(
         json=payload,
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 403
     assert 'detail' in response.json()
 
 
@@ -652,7 +652,7 @@ async def test_create_booking_unauthorized_without_pre_order(
     """Неавтор. пользователь не может создать бронирование без предзаказа.
 
     Проверяет, что даже без позиций предзаказа запрос без токена авторизации
-    возвращает статус-код 401.
+    возвращает статус-код 403.
     """
     payload = {
         'cafe_id': test_cafe.id,
@@ -671,7 +671,7 @@ async def test_create_booking_unauthorized_without_pre_order(
         json=payload,
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -767,7 +767,7 @@ async def test_create_booking_without_auth_header(
 ) -> None:
     """Попытка создать бронирование при отсутствии заголовка Authorization.
 
-    Проверяет, что сервер возвращает 401,
+    Проверяет, что сервер возвращает 403,
     когда заголовок Authorization не передан.
     """
     payload = {
@@ -787,4 +787,4 @@ async def test_create_booking_without_auth_header(
         json=payload,
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 403
