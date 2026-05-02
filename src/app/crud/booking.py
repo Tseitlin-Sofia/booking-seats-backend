@@ -188,8 +188,6 @@ class BookingTableSlotCRUD(CRUDBase):
                 BookingTableSlot.id.in_(obj.id for obj in objs),
             ),
         )
-        await session.flush()
-        await session.commit()
 
     async def get_capacity(
         self,
