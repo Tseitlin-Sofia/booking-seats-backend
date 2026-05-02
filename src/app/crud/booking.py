@@ -86,7 +86,7 @@ class BookingCRUD(CRUDBase):
         booking = await self.get(booking_id, session)
         if not booking:
             raise ValueError(Constants.BOOKING_NOT_FOUND)
-        booking_date = date.fromisoformat(booking.booking_date)
+        booking_date = booking.booking_date
         stmt = select(BookingTableSlot).where(
             BookingTableSlot.booking_id == booking_id,
             BookingTableSlot.is_active,
@@ -94,9 +94,9 @@ class BookingCRUD(CRUDBase):
         slots = await session.execute(stmt)
         booking_time = min(
             [
-                time.fromisoformat(slot.start_time)
+                slot.start_time
                 for slot
-                in slots.all()
+                in slots.scalars().all()
             ],
         )
         return datetime.combine(booking_date, booking_time)
