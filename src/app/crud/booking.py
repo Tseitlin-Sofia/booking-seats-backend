@@ -1,6 +1,6 @@
 """CRUD операции для бронирования."""
 
-from datetime import date, datetime, time
+from datetime import date, datetime
 from typing import Optional
 
 from sqlalchemy import and_, delete, or_, select
