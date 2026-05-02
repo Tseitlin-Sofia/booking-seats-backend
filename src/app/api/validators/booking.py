@@ -45,7 +45,7 @@ async def validate_cafe_slot_table(
     slots: list[dict[str, int]],
     session: AsyncSession,
 ) -> None:
-    """Валидация того слот и стол существуют и принадлежат одному кафе."""
+    """Валидация того слот и стол существуют и принадлежат правильному кафе."""
     cafe_db = await cafe_crud.get(session=session, obj_id=cafe_id)
     if not cafe_db:
         raise HTTPException(
@@ -85,10 +85,7 @@ async def validate_user_rights(
             detail=Constants.USER_NOT_AUTHENTICATED,
         )
 
-    if user.is_admin or user.is_manager:
-        return
-
-    if user.id == requested_user_id:
+    if user.is_admin or user.is_manager or user.id == requested_user_id:
         return
 
     raise HTTPException(
