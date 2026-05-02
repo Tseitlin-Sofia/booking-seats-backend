@@ -100,12 +100,16 @@ async def get_bookings(
         if user_id:
             await validate_user_rights(current_user, user_id)
 
-    return await booking_crud.get_bookings(
+    result = await booking_crud.get_bookings(
         session=session,
         show_active=show_active,
         cafe_id=cafe_id,
         user_id=user_id,
     )
+    return [
+        BookingInfo.model_validate(booking, from_attributes=True)
+        for booking in result
+    ]
 
 
 @router.get(
