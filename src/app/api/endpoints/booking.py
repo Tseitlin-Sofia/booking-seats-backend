@@ -244,11 +244,11 @@ async def update_booking(
             attr_value=booking_id,
         )
     )
-    if not booking_data.get('is_active'):
-        await booking_table_slot_crud.deactivate_multi(
-            session=session,
-            db_objs=booking_table_slots_db,
-        )
+    await booking_table_slot_crud.delete_multi(
+        session=session,
+        objs=booking_table_slots_db,
+    )
+    await session.refresh(booking_db, attribute_names=['tables_slots'])
     tables_slots = booking_data.pop('tables_slots')
     await validate_booking_slots(
         slots=tables_slots,
@@ -270,11 +270,6 @@ async def update_booking(
         tables_slots=tables_slots,
         session=session,
     )
-    await booking_table_slot_crud.delete_multi(
-        session=session,
-        objs=booking_table_slots_db,
-    )
-    await session.refresh(booking_db, attribute_names=['tables_slots'])
     for table_slot in tables_slots:
         await booking_table_slot_crud.create(
             session=session,
