@@ -2,17 +2,18 @@
 """Тестирование email-уведомлений с реальными импортами."""
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from app.services.task import (
-    send_email,
+    ADMIN_EMAIL,
+    CLIENT_EMAIL,
     build_admin_notification,
     build_client_reminder,
     generate_task_id,
     get_html_for_admin,
     get_html_for_client,
-    ADMIN_EMAIL,
-    CLIENT_EMAIL,
+    send_email,
 )
 
 test_data = {

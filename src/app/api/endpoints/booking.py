@@ -39,6 +39,7 @@ router = APIRouter()
 
 FORMAT = NotificationConstants.DATETIME_FORMAT
 
+
 async def _make_notification_tasks_for_celery(
     booking_obj: Base,
     session: SessionDep,
@@ -47,7 +48,7 @@ async def _make_notification_tasks_for_celery(
     booking_for_celery = BookingInfo.model_validate(booking_obj).model_dump()
     booking_id = booking_for_celery.get('id')
     booking_datetime = await booking_crud.get_start_datetime_by_booking_id(
-        booking_id=booking_id, session=session
+        booking_id=booking_id, session=session,
     )
     booking_for_celery['booking_date'] = booking_datetime.strftime(FORMAT)
 
@@ -217,7 +218,7 @@ async def create_booking(
     await _make_notification_tasks_for_celery(
         new_booking,
         session,
-        method='POST'
+        method='POST',
     )
     return BookingInfo.model_validate(new_booking, from_attributes=True)
 
@@ -302,6 +303,6 @@ async def update_booking(
     await _make_notification_tasks_for_celery(
         booking_upd,
         session,
-        method='PATCH'
+        method='PATCH',
     )
     return BookingInfo.model_validate(booking_upd, from_attributes=True)

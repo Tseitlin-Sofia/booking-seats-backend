@@ -10,6 +10,7 @@ from app.services.task import (
     send_email,
 )
 
+
 @celery_app.task(
     name='tasks.notify_admin',
     bind=True,
