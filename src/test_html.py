@@ -1,91 +1,35 @@
-"""Сервисные функции для работы с задачами в Celery."""
+# src/test_email_html.py
 import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from app.core.logging import get_logger
+from dotenv import load_dotenv
 
-logger = get_logger()
+load_dotenv()
 
-ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
-SMTP_HOST = os.getenv('SMTP_HOST')
-SMTP_PORT = os.getenv('SMTP_PORT')
-SMTP_USER = os.getenv('SMTP_USER')
+SMTP_HOST = os.getenv('SMTP_HOST', 'smtp.mail.ru')
+SMTP_PORT = int(os.getenv('SMTP_PORT', 465))
+SMTP_USER = os.getenv('SMTP_USER', 'adm_caffeteriy@bk.ru')
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
-CLIENT_EMAIL = os.getenv('CLIENT_EMAIL', 'test@mail.com')
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'adm_caffeteriy@bk.ru')
+CLIENT_EMAIL = os.getenv('CLIENT_EMAIL', 'hipstot@yandex.ru')
+
+test_data = {
+    'id': 999,
+    'table_id': 5,
+    'user': {
+        'username': 'Тестовый Гость',
+        'email': CLIENT_EMAIL,
+        'phone': '+7 999 123 45 67',
+    },
+    'booking_date': '2026-05-01 19:00',
+    'comment': 'Тестовое бронирование',
+}
 
 
-def send_email(
-        to: str,
-        subject: str,
-        text_body: str,
-        html_body: str | None = None,
-) -> None:
-    """Отправка email через SMTP-сервер с текстовой и HTML-версией."""
-    if html_body:
-        msg = MIMEMultipart("alternative")
-        msg.attach(MIMEText(text_body, "plain", "utf-8"))
-        msg.attach(MIMEText(html_body, "html", "utf-8"))
-    else:
-        msg = MIMEText(text_body, "plain", "utf-8")
-
-    msg['Subject'] = subject
-    msg['From'] = SMTP_USER
-    msg['To'] = to
-
-    with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
-        logger.info("Подключено к {}:{}", SMTP_HOST, SMTP_PORT)
-        server.login(SMTP_USER, SMTP_PASSWORD)
-        server.send_message(msg)
-        logger.info("Письмо отправлено на {}", to)
-
-
-def build_admin_notification(data: dict, method: str) -> tuple[str, str]:
-    """Формирует тему и тело письма для админа."""
-    user = data.get('user', {})
-    booking_id = data.get('id')
-    basic_body = f"""
-        👤 Клиент: {user.get('username', 'Неизвестно')}
-        📞 Телефон: {data.get('phone', 'Не указан')}
-        📧 Email клиента: {user.get('email', 'Неизвестно')}
-        📅 Дата и время: {data.get('booking_date', 'Неизвестно')}
-    """
-    if method == 'POST':
-        subject = f"🚨 НОВАЯ БРОНЬ №{booking_id}! Стол №{data['table_id']}"
-        body = f"Поступила новая бронь №{booking_id}:\n" + basic_body
-    elif method == 'PATCH':
-        subject = f"🚨 ИЗМЕНЕНИЕ БРОНИ №{data.get('id')}!"
-        body = f"Бронь № {booking_id} изменена:\n" + basic_body
-    return subject, body
-
-
-def build_client_reminder(data: dict) -> tuple[str, str]:
-    """Формирует тему и тело письма для клиента."""
-    user = data.get('user', {})
-    name = user.get('username', 'Неизвестно').capitalize()
-    subject = "⏰ Напоминание о брони стола в ресторане"
-    body = f"""
-    {name}, здравствуйте!
-
-    Напоминаем, что вы забронировали стол на \
-    {data.get('booking_date', 'Неизвестно')}.
-
-    Будем рады вас видеть!
-
-    С уважением,
-    Ресторан "Каффетерий"
-    """
-    return subject, body
-
-
-def generate_task_id(booking_id: int) -> str:
-    """Генерирует уникальный ID задачи на основе ID брони."""
-    return f"reminder-booking-{booking_id}"
-
-
-def get_html_for_admin(data: dict, method: str) -> str:
-    """Генерирует HTML для уведомления администратора."""
+def get_html_for_email(data: dict, method: str) -> str:
+    """Генерирует красивый HTML для email-уведомления."""
     user = data.get('user', {})
     booking_id = data.get('id')
     table_id = data.get('table_id', '—')
@@ -93,6 +37,7 @@ def get_html_for_admin(data: dict, method: str) -> str:
     client_phone = data.get('phone', 'Не указан')
     client_email = user.get('email', 'Неизвестно')
     booking_date = data.get('booking_date', 'Неизвестно')
+    comment = data.get('comment', 'Нет')
 
     if method == 'POST':
         title = f'🚨 Новая бронь №{booking_id}'
@@ -209,6 +154,11 @@ def get_html_for_admin(data: dict, method: str) -> str:
                         <span class="label">Стол №:</span>
                         <span class="value">{table_id}</span>
                     </div>
+                    <div class="info-row">
+                        <span class="emoji">💬</span>
+                        <span class="label">Комментарий:</span>
+                        <span class="value">{comment}</span>
+                    </div>
                 </div>
             </div>
             <div class="footer">
@@ -222,7 +172,7 @@ def get_html_for_admin(data: dict, method: str) -> str:
 
 
 def get_html_for_client(data: dict) -> str:
-    """Генерирует HTML для напоминания клиенту."""
+    """Генерирует красивый HTML для email-напоминания клиенту."""
     user = data.get('user', {})
     client_name = user.get('username', 'Гость').capitalize()
     booking_date = data.get('booking_date', 'Неизвестно')
@@ -371,3 +321,63 @@ def get_html_for_client(data: dict) -> str:
     </body>
     </html>
     """
+
+
+def send_test_email(
+        to: str,
+        subject: str,
+        text_body: str,
+        html_body: str | None = None
+) -> None:
+    """Отправка тестового email."""
+    if html_body:
+        msg = MIMEMultipart("alternative")
+        msg.attach(MIMEText(text_body, "plain", "utf-8"))
+        msg.attach(MIMEText(html_body, "html", "utf-8"))
+    else:
+        msg = MIMEText(text_body, "plain", "utf-8")
+
+    msg['Subject'] = subject
+    msg['From'] = SMTP_USER
+    msg['To'] = to
+
+    with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+        print(f"Подключено к {SMTP_HOST}:{SMTP_PORT}")
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.send_message(msg)
+        print(f"Письмо отправлено на {to}")
+
+
+if __name__ == '__main__':
+    print("=" * 60)
+    print("ТЕСТ 1: Отправка HTML-письма админу")
+    print("=" * 60)
+    subject_admin = "🚨 Новая бронь №999"
+    text_admin = f"""Поступила новая бронь:
+Клиент: Тестовый Гость
+Телефон: +7 999 123 45 67
+Email: {CLIENT_EMAIL}
+Дата и время: 2026-05-01 19:00
+Стол №: 5"""
+    html_admin = get_html_for_email(test_data, method='POST')
+    send_test_email(
+        to=ADMIN_EMAIL,
+        subject=subject_admin,
+        text_body=text_admin,
+        html_body=html_admin
+)
+
+    print("\n" + "=" * 60)
+    print("ТЕСТ 2: Отправка HTML-письма клиенту")
+    print("=" * 60)
+    subject_client = "⏰ Напоминание о брони"
+    text_client = """Тестовый Гость, здравствуйте!
+Напоминаем, что вы забронировали стол №5 на 2026-05-01 19:00."""
+    html_client = get_html_for_client(test_data)
+    send_test_email(to=CLIENT_EMAIL, subject=subject_client, text_body=text_client, html_body=html_client)
+
+    print("\n" + "=" * 60)
+    print("✅ Оба письма отправлены!")
+    print(f"   Админ: {ADMIN_EMAIL}")
+    print(f"   Клиент: {CLIENT_EMAIL}")
+    print("=" * 60)

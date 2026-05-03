@@ -1,6 +1,6 @@
 """Модуль эндпоинтов для загрузки на сервер и получения из него изображений."""
 import uuid
-from datetime import datetime, timedelta
+# from datetime import datetime, timedelta
 
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 
 from app.api.dependencies import UserDep
 from app.api.validators.media_validators import validate_image
-from app.celery.tasks import notify_admin, notify_client
+# from app.celery.tasks import notify_admin, notify_client
 from app.core.constants import MediaConstants
 from app.models.user import User
 from app.services.media import transform_to_jpeg
@@ -52,11 +52,11 @@ async def load_photo_to_server(
     jpeg_bytes = transform_to_jpeg(image_bytes)
     async with aiofiles.open(file_path, "wb") as f:
         await f.write(jpeg_bytes)
-    notify_admin.delay()
-    notify_client.apply_async(
-        args=[],
-        eta=datetime.now() + timedelta(minutes=1),
-    )
+    # notify_admin.delay()
+    # notify_client.apply_async(
+    #     args=[],
+    #     eta=datetime.now() + timedelta(minutes=1),
+    # )
 
     return {"media_id": media_id}
 

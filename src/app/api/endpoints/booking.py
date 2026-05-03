@@ -28,7 +28,7 @@ from app.schemas.booking import (
     BookingTableSlotCreate,
     BookingUpdate,
 )
-from app.services.task import get_reminder_id
+from app.services.task import generate_task_id
 
 logger = get_logger()
 router = APIRouter()
@@ -44,7 +44,7 @@ def _make_notification_tasks_for_celery(
     клиенту о брони.
     """
     booking_for_celery = BookingInfo.model_validate(booking_obj).model_dump()
-    task_id = get_reminder_id(booking_for_celery.get('id'))
+    task_id = generate_task_id(booking_for_celery.get('id'))
     if method == "PATCH":
         AsyncResult(task_id, app=celery_app).revoke()
     notify_admin.delay(method, booking_for_celery)
