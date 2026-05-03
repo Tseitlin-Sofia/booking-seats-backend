@@ -16,7 +16,7 @@ from app.schemas.slot import TimeSlotShortInfo
 from app.schemas.table import TableShortInfo
 from app.schemas.user import UserShortInfo
 from app.schemas.validators.booking import (
-    BookingUpdateFullValidatorMixin,
+    BookingTableSlotsValidatorMixin,
     BookingValidatorMixin,
 )
 
@@ -34,6 +34,7 @@ class BookingTableSlotCreate(BookingTableSlot):
     """Пара ID стола и ID временного слота для создания бронирования."""
 
     booking_id: int = Field(..., title="Booking Id")
+    is_active: bool = Field(..., title='Is Active')
 
 
 class BookingTableSlotShortInfo(BaseModel):
@@ -54,7 +55,7 @@ class BookingCommon(BaseModel):
     booking_date: date = Field(..., title='Booking Date')
 
 
-class BookingCreate(BookingUpdateFullValidatorMixin, BookingCommon):
+class BookingCreate(BookingTableSlotsValidatorMixin, BookingCommon):
     """Схема для создания бронирования."""
 
     cafe_id: int = Field(..., title='Cafe Id')
@@ -93,7 +94,7 @@ class BookingUpdateWithoutTablesSlots(BookingValidatorMixin, BaseModel):
 
 
 class BookingUpdate(
-    BookingUpdateFullValidatorMixin,
+    BookingTableSlotsValidatorMixin,
     BookingUpdateWithoutTablesSlots,
 ):
     """Схема для обновления бронирования."""

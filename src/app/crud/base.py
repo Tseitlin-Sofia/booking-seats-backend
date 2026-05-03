@@ -1,6 +1,6 @@
 """Базовый класс для CRUD операций с базой данных."""
 
-from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
+from typing import Any, Iterable, Optional, TypeVar, Union
 
 from pydantic import BaseModel
 from sqlalchemy import exists, select
@@ -9,16 +9,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import Base
 from app.models import User
 
-if TYPE_CHECKING:
-    from pydantic import BaseModel
-
-    from app.core.db import Base
+Model = TypeVar("Model", bound=Base)
 
 
 class CRUDBase:
     """Базовый класс для CRUD операций с базой данных."""
 
-    def __init__(self, model: type[Base]) -> None:
+    def __init__(self, model: type[Model]) -> None:
         """Инициализатор класса."""
         self.model = model
 
@@ -27,7 +24,7 @@ class CRUDBase:
         obj_id: int,
         session: AsyncSession,
         is_active: Optional[bool] = None,
-    ) -> Optional[Base]:
+    ) -> Optional[Model]:
         """Получает объект по его id, с учетом статуса активности."""
         stmt = select(self.model).where(
             self.model.id == obj_id,
@@ -43,7 +40,7 @@ class CRUDBase:
         self,
         session: AsyncSession,
         is_active: Optional[bool] = None,
-    ) -> list[Base]:
+    ) -> list[Model]:
         """Получает все объекты, с учетом статуса активности."""
         stmt = select(self.model)
         if is_active is not None:
@@ -58,7 +55,7 @@ class CRUDBase:
         obj_in: Union[BaseModel, dict],
         session: AsyncSession,
         user: Optional[User] = None,
-    ) -> Base:
+    ) -> Model:
         """Создает новую запись в базе данных."""
         if isinstance(obj_in, BaseModel):
             obj_in_data = obj_in.model_dump()
@@ -74,10 +71,10 @@ class CRUDBase:
 
     async def update(
         self,
-        db_obj: Base,
+        db_obj: Model,
         obj_in: BaseModel,
         session: AsyncSession,
-    ) -> Base:
+    ) -> Model:
         """Обновляет существующую запись в базе данных."""
         update_data = obj_in.model_dump(exclude_unset=True)
 
@@ -95,7 +92,7 @@ class CRUDBase:
         attr_value: Any,
         session: AsyncSession,
         is_active: Optional[bool] = True,
-    ) -> Optional[Base]:
+    ) -> Optional[Model]:
         """Получает объект по атрибуту, с учетом статуса активности."""
         if not hasattr(self.model, attr_name):
             raise AttributeError(
@@ -114,7 +111,7 @@ class CRUDBase:
         attr_value: Any,
         session: AsyncSession,
         is_active: Optional[bool] = True,
-    ) -> list[Base]:
+    ) -> list[Model]:
         """Получает объекты по атрибуту, с учетом статуса активности."""
         attr = getattr(self.model, attr_name)
         stmt = select(self.model).where(attr == attr_value)
@@ -127,7 +124,7 @@ class CRUDBase:
         self,
         session: AsyncSession,
         sequence_id: Iterable[int],
-    ) -> Iterable[Base]:
+    ) -> Iterable[Model]:
         """Возвращает кафе по последовательности из id."""
         result = await session.execute(
             select(self.model).where(self.model.id.in_(sequence_id)),
@@ -137,8 +134,8 @@ class CRUDBase:
     async def deactivate(
         self,
         session: AsyncSession,
-        db_obj: Base,
-    ) -> Base:
+        db_obj: Model,
+    ) -> Model:
         """Деактивирует объект."""
         db_obj.is_active = False
         await session.commit()
@@ -148,8 +145,8 @@ class CRUDBase:
     async def deactivate_multi(
         self,
         session: AsyncSession,
-        db_objs: list[Base],
-    ) -> list[Base]:
+        db_objs: list[Model],
+    ) -> list[Model]:
         """Деактивирует несколько объектов."""
         for db_obj in db_objs:
             db_obj.is_active = False
