@@ -1,7 +1,7 @@
 import random
 import uuid
 
-import pytest
+import pytest_asyncio
 from pwdlib import PasswordHash
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +12,7 @@ from app.models.user import User
 ph = PasswordHash.recommended()
 
 
-@pytest.fixture(scope='function')
+@pytest_asyncio.fixture(scope='function')
 async def auth_headers(session: AsyncSession) -> dict:
     """Генерирует JWT-токен для тестового пользователя."""
     unique_suffix = str(uuid.uuid4())[:8]
