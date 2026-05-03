@@ -217,3 +217,4 @@ http://localhost:10000/debug/sql-profiler
 [Максим Дацковский](https://github.com/NeSePeM) email: [<nspmax@ya.ru>](mailto:nspmax@ya.ru)
 [Петрушенко Алексей](https://github.com/OnyxFireGlow) email:[<onyx.fireglow@gmail.com>](mailto:onyx.fireglow@gmail.com)
 [Климов Даниил](https://github.com/Xek-YP) email:[<xek.97@yandex.ru>](mailto:xek.97@yandex.ru)
+[Софья Цейтлин](https://github.com/Tseitlin-Sofia) email: [<sofia.zeitlin@gmail.com>](mailto:sofia.zeitlin@gmail.com)
