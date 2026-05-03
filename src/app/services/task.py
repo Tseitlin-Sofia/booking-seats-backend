@@ -17,28 +17,28 @@ CLIENT_EMAIL = os.getenv('CLIENT_EMAIL', 'test@mail.com')
 
 
 def send_email(
-        to: str,
-        subject: str,
-        text_body: str,
-        html_body: str | None = None,
+    to: str,
+    subject: str,
+    text_body: str,
+    html_body: str | None = None,
 ) -> None:
     """Отправка email через SMTP-сервер с текстовой и HTML-версией."""
     if html_body:
-        msg = MIMEMultipart("alternative")
-        msg.attach(MIMEText(text_body, "plain", "utf-8"))
-        msg.attach(MIMEText(html_body, "html", "utf-8"))
+        msg = MIMEMultipart('alternative')
+        msg.attach(MIMEText(text_body, 'plain', 'utf-8'))
+        msg.attach(MIMEText(html_body, 'html', 'utf-8'))
     else:
-        msg = MIMEText(text_body, "plain", "utf-8")
+        msg = MIMEText(text_body, 'plain', 'utf-8')
 
     msg['Subject'] = subject
     msg['From'] = SMTP_USER
     msg['To'] = to
 
     with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
-        logger.info("Подключено к {}:{}", SMTP_HOST, SMTP_PORT)
+        logger.info('Подключено к {}:{}', SMTP_HOST, SMTP_PORT)
         server.login(SMTP_USER, SMTP_PASSWORD)
         server.send_message(msg)
-        logger.info("Письмо отправлено на {}", to)
+        logger.info('Письмо отправлено на {}', to)
 
 
 def build_admin_notification(data: dict, method: str) -> tuple[str, str]:
@@ -52,11 +52,11 @@ def build_admin_notification(data: dict, method: str) -> tuple[str, str]:
         📅 Дата и время: {data.get('booking_date', 'Неизвестно')}
     """
     if method == 'POST':
-        subject = f"🚨 НОВАЯ БРОНЬ №{booking_id}! Стол №{data['table_id']}"
-        body = f"Поступила новая бронь №{booking_id}:\n" + basic_body
+        subject = f'🚨 НОВАЯ БРОНЬ №{booking_id}! Стол №{data["table_id"]}'
+        body = f'Поступила новая бронь №{booking_id}:\n' + basic_body
     elif method == 'PATCH':
-        subject = f"🚨 ИЗМЕНЕНИЕ БРОНИ №{data.get('id')}!"
-        body = f"Бронь № {booking_id} изменена:\n" + basic_body
+        subject = f'🚨 ИЗМЕНЕНИЕ БРОНИ №{data.get("id")}!'
+        body = f'Бронь № {booking_id} изменена:\n' + basic_body
     return subject, body
 
 
@@ -64,7 +64,7 @@ def build_client_reminder(data: dict) -> tuple[str, str]:
     """Формирует тему и тело письма для клиента."""
     user = data.get('user', {})
     name = user.get('username', 'Неизвестно').capitalize()
-    subject = "⏰ Напоминание о брони стола в ресторане"
+    subject = '⏰ Напоминание о брони стола в ресторане'
     body = f"""
     {name}, здравствуйте!
 

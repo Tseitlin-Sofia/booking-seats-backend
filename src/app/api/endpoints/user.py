@@ -7,6 +7,7 @@ from app.api.dependencies import (
     UserDep,
 )
 from app.api.validators.user import (
+    validate_admin_cannot_change_own_role,
     validate_admin_or_manager_cannot_deactivate_self,
     validate_cannot_deactivate_last_manager,
     validate_manager_can_only_edit_users,
@@ -170,6 +171,11 @@ async def update_user(
         )
 
     try:
+        validate_admin_cannot_change_own_role(
+            current_user=current_user,
+            target_user=target_user,
+            new_role=user_in.role,
+        )
         validate_admin_or_manager_cannot_deactivate_self(
             current_user=current_user,
             target_user=target_user,

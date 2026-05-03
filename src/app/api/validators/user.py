@@ -74,3 +74,17 @@ def validate_manager_cannot_elevate_role(
                 'Менеджер не может изменять роль '
                 'администратора или другого менеджера.',
             )
+
+
+def validate_admin_cannot_change_own_role(
+    current_user: User,
+    target_user: User,
+    new_role: UserRole | None,
+) -> None:
+    """Админ не может изменить свою роль."""
+    if (
+        new_role is not None
+        and current_user.is_admin
+        and current_user.id == target_user.id
+    ):
+        raise ValueError('Администратор не может изменить свою роль')

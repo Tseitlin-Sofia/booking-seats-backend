@@ -15,7 +15,10 @@ from app.schemas.dish import PreOrderItemCreate, PreOrderItemInfo
 from app.schemas.slot import TimeSlotShortInfo
 from app.schemas.table import TableShortInfo
 from app.schemas.user import UserShortInfo
-from app.schemas.validators.booking import BookingValidatorMixin
+from app.schemas.validators.booking import (
+    BookingTableSlotsValidatorMixin,
+    BookingValidatorMixin,
+)
 
 
 class BookingTableSlot(BaseModel):
@@ -31,6 +34,7 @@ class BookingTableSlotCreate(BookingTableSlot):
     """Пара ID стола и ID временного слота для создания бронирования."""
 
     booking_id: int = Field(..., title="Booking Id")
+    is_active: bool = Field(..., title='Is Active')
 
 
 class BookingTableSlotShortInfo(BaseModel):
@@ -49,10 +53,9 @@ class BookingCommon(BaseModel):
     guest_number: int = Field(..., gt=0, title='Guest Number')
     note: Optional[str] = Field(None, title='Note')
     booking_date: date = Field(..., title='Booking Date')
-    # TODO: validate booking_date is in the future, slots arent empty, gn>0
 
 
-class BookingCreate(BookingValidatorMixin, BookingCommon):
+class BookingCreate(BookingTableSlotsValidatorMixin, BookingCommon):
     """Схема для создания бронирования."""
 
     cafe_id: int = Field(..., title='Cafe Id')
@@ -78,10 +81,9 @@ class BookingInfo(BookingCommon):
     model_config = ConfigDict(from_attributes=True)
 
 
-class BookingUpdate(BookingValidatorMixin, BaseModel):
-    """Схема для обновления бронирования."""
+class BookingUpdateWithoutTablesSlots(BookingValidatorMixin, BaseModel):
+    """Схема для обновления бронирования без полей tables_slots."""
 
-    tables_slots: Optional[list[BookingTableSlot]] = None
     guest_number: Optional[int] = Field(None, gt=0, title='Guest Number')
     note: Optional[str] = Field(None, title='Note')
     status: Optional[BookingStatus] = None
@@ -89,3 +91,12 @@ class BookingUpdate(BookingValidatorMixin, BaseModel):
     is_active: Optional[bool] = Field(None, title='Is Active')
 
     model_config = ConfigDict(extra='forbid')
+
+
+class BookingUpdate(
+    BookingTableSlotsValidatorMixin,
+    BookingUpdateWithoutTablesSlots,
+):
+    """Схема для обновления бронирования."""
+
+    tables_slots: list[BookingTableSlot]

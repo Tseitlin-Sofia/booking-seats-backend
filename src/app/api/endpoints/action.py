@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.api.dependencies import ManagerDep, SessionDep, UserDep
 from app.api.validators.action import (
+    can_actions_be_attached_to_cafe,
     can_manager_change_action,
     get_action_or_404,
     is_action_already_exists,
@@ -111,6 +112,9 @@ async def update_action(
     if user.is_manager:
         await can_manager_change_action(session, new_action, user, db_action)
     cafes = await is_cafes_exists(session, new_action)
+    await can_actions_be_attached_to_cafe(
+        session, new_action, db_action, cafes,
+    )
     return await action_crud.update_db_action(
-        session, db_action, new_action,  cafes,
+        session, db_action, new_action, cafes,
     )

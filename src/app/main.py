@@ -4,6 +4,10 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from fastapi import FastAPI
+from fastapi_sqlalchemy_profiler import (
+    SQLProfilerMiddleware,
+    profiler_router,
+)
 
 from app.api.routers import main_router
 from app.core.config import settings
@@ -38,7 +42,10 @@ app = FastAPI(
     # lifespan=lifespan,
 )
 app.add_middleware(LoggingMiddleware)
+if settings.environment != 'prod':
+    app.add_middleware(SQLProfilerMiddleware, enabled=True)
 app.include_router(main_router)
+app.include_router(profiler_router)
 
 
 # uvicorn app.main:app --reload

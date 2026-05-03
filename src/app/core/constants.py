@@ -31,6 +31,9 @@ class BookingConstants:
         'Некоторые временные слоты или столы не найдены в базе данных.'
     )
     ID_LIST_NEEDED = 'Необходимо передать список идентификаторов.'
+    INVALID_START_TIME_ERROR = (
+        'Время начала бронирования не может быть в прошлом.'
+    )
 
 
 class MediaConstants:
@@ -48,7 +51,7 @@ class CafeConstants:
     """Класс с константами для модели кафе."""
 
     ERROR_PHONE = (
-        'Номер телефона должен начинаться с +7 и не превышать 10 цифр после!'
+        'Номер телефона должен начинаться с +7 и содержать 10 цифр после!'
     )
     NAME_RESTRICTION = 20
     MIN_LENGTH_ADDRESS = 10
@@ -112,7 +115,6 @@ class LoggingConstants:
     LOGGERS_TO_INTERCEPT: list[str] = [
         'uvicorn',
         'uvicorn.error',
-        'sqlalchemy',
         'alembic',
     ]
 
@@ -140,4 +142,4 @@ class SlotConstants:
 class NotificationConstants:
     """Класс констант для уведомлений и напоминаний о бронировании."""
 
-    ADMIN_EMAIL = "test@mail.ru"
+    ADMIN_EMAIL = 'test@mail.ru'

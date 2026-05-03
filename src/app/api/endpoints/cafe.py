@@ -109,7 +109,7 @@ async def update_cafe(
         await is_manager_from_cafe(cafe_id, user)
     db_cafe = await get_cafe_or_404(session, cafe_id)
     await check_name_address(session, new_cafe, db_cafe)
-    managers = await is_managers_id(session, new_cafe, cafe_id)
+    managers = await is_managers_id(session, new_cafe, db_cafe)
     return await cafe_crud.update_db_cafe(
         session, db_cafe, new_cafe,  managers,
     )
