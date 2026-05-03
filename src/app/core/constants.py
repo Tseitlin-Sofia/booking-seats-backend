@@ -31,6 +31,9 @@ class BookingConstants:
         'Некоторые временные слоты или столы не найдены в базе данных.'
     )
     ID_LIST_NEEDED = 'Необходимо передать список идентификаторов.'
+    INVALID_START_TIME_ERROR = (
+        'Время начала бронирования не может быть в прошлом.'
+    )
 
 
 class MediaConstants:
@@ -112,7 +115,6 @@ class LoggingConstants:
     LOGGERS_TO_INTERCEPT: list[str] = [
         'uvicorn',
         'uvicorn.error',
-        'sqlalchemy',
         'alembic',
     ]
 
@@ -140,4 +142,4 @@ class SlotConstants:
 class NotificationConstants:
     """Класс констант для уведомлений и напоминаний о бронировании."""
 
-    ADMIN_EMAIL = "test@mail.ru"
+    ADMIN_EMAIL = 'test@mail.ru'
