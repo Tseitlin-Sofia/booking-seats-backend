@@ -17,6 +17,7 @@ alembic==1.18.4
 passlib[argon2,bcrypt]==1.7.4
 PyJWT==2.12.1
 email-validator==2.3.0
+pwdlib==0.2.0
 
 # Асинхронные задачи и брокер сообщений
 celery==5.6.3
