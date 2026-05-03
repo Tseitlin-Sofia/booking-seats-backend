@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import AsyncGenerator
 
+from fastapi_sqlalchemy_profiler import attach_sqlalchemy_listeners
 from sqlalchemy import Boolean, DateTime, Integer
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -55,6 +56,7 @@ class CommonMixin:
 
 
 engine = create_async_engine(settings.database_url)
+attach_sqlalchemy_listeners(engine)
 
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 

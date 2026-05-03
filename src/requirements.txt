@@ -29,3 +29,6 @@ pillow==12.2.0
 
 # Логирование
 loguru==0.7.3
+
+# Профилирование
+fastapi-sqlalchemy-profiler
