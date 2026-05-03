@@ -24,6 +24,7 @@ class CRUDBase:
         obj_id: int,
         session: AsyncSession,
         is_active: Optional[bool] = None,
+        eager_options: Optional[list] = None,
     ) -> Optional[Model]:
         """Получает объект по его id, с учетом статуса активности."""
         stmt = select(self.model).where(
@@ -33,6 +34,8 @@ class CRUDBase:
             stmt = stmt.where(
                 self.model.is_active == is_active,
             )
+        if eager_options:
+            stmt = stmt.options(*eager_options)
         result = await session.execute(stmt)
         return result.scalars().first()
 
