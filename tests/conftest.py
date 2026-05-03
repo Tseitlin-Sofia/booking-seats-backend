@@ -31,6 +31,7 @@ pytest_plugins = [
     'tests.fixtures.database',
     'tests.fixtures.logging',
     'tests.fixtures.payloads',
+    'tests.fixtures.celery',
 ]
 LOG_WRITE_DELAY_SEC = 0.5
 SQL_DIR = Path(__file__).parent / 'sql'

@@ -38,8 +38,8 @@ router = APIRouter()
 
 
 def _make_notification_tasks_for_celery(
-        booking_obj: Base,
-        method: str,
+    booking_obj: Base,
+    method: str,
 ) -> None:
     """Создание задачи в celery.
 
@@ -48,13 +48,13 @@ def _make_notification_tasks_for_celery(
     """
     booking_for_celery = BookingInfo.model_validate(booking_obj).model_dump()
     task_id = get_reminder_id(booking_for_celery.get('id'))
-    if method == "PATCH":
+    if method == 'PATCH':
         AsyncResult(task_id, app=celery_app).revoke()
-    notify_admin.delay(booking_for_celery)
+    notify_admin.delay(method, booking_for_celery)
     booking_date = booking_for_celery.get('booking_date')
     if not booking_date:
         logger.warning(
-            "Дата бронирования не указана для booking_id={}",
+            'Дата бронирования не указана для booking_id={}',
             booking_for_celery.get('id'),
         )
         return

@@ -11,7 +11,9 @@
 import contextvars
 import logging
 import sys
+from typing import Any
 
+from celery.signals import after_setup_logger, after_setup_task_logger
 from loguru import logger
 from loguru._logger import Logger
 
@@ -86,6 +88,31 @@ class InterceptHandler(logging.Handler):
             level,
             record.getMessage(),
             **extra,
+        )
+
+
+class CeleryLogInterceptor(logging.Handler):
+    """Перехватчик логов Celery для перенаправления в loguru."""
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Перенаправляет запись из стандартного logging в loguru."""
+        try:
+            level = logger.level(record.levelname).name
+        except ValueError:
+            level = record.levelno
+
+        extra = {}
+        if hasattr(record, 'task_id'):
+            extra['task_id'] = record.task_id
+        if hasattr(record, 'task_name'):
+            extra['task_name'] = record.task_name
+
+        # Добавляем информацию о модуле
+        extra['module'] = record.name
+
+        logger.opt(depth=3, exception=record.exc_info, **extra).log(
+            level,
+            record.getMessage(),
         )
 
 
@@ -180,6 +207,34 @@ def setup_logging(env: str = 'dev', log_level: str = 'INFO') -> None:
     # кастомного middleware не предоставляя при этом нужного контекста.
     logging.getLogger('uvicorn.access').handlers = []
     logging.getLogger('uvicorn.access').propagate = False
+
+
+@after_setup_logger.connect
+def setup_celery_logger(
+    logger_instance: logging.Logger,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    """Настраивает логгер Celery для использования loguru.
+
+    Вызывается при запуске Celery воркера.
+    """
+    logger_instance.handlers = []
+
+    handler = CeleryLogInterceptor()
+    logger_instance.addHandler(handler)
+
+    logger_instance.propagate = False
+
+
+@after_setup_task_logger.connect
+def setup_task_logger(
+    logger_instance: logging.Logger,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    """Настраивает логгер задач Celery для использования loguru."""
+    setup_celery_logger(logger_instance, *args, **kwargs)
 
 
 def get_logger() -> Logger:

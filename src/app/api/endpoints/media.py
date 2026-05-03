@@ -1,4 +1,5 @@
 """Модуль эндпоинтов для загрузки на сервер и получения из него изображений."""
+
 import uuid
 from datetime import datetime, timedelta
 
@@ -11,23 +12,23 @@ from app.api.validators.media_validators import validate_image
 from app.celery.tasks import notify_admin, notify_client
 from app.core.constants import MediaConstants
 from app.models.user import User
-from app.services.media_service import transform_to_jpeg
+from app.services.media import transform_to_jpeg
 
 router = APIRouter()
 
 
 def is_manager_or_admin(user: User) -> None:
     """Проверка авторзованного юзера на роль админа/менеджера."""
-    if user.role not in ["admin", "manager"]:
+    if user.role not in ['admin', 'manager']:
         raise HTTPException(
             status_code=403,
-            detail="Недостаточно прав для этого действия.",
+            detail='Недостаточно прав для этого действия.',
         )
 
 
 @router.post(
     '/',
-    summary="Загрузить png/jpeg на сервер",
+    summary='Загрузить png/jpeg на сервер',
     status_code=201,
 )
 async def load_photo_to_server(
@@ -43,14 +44,14 @@ async def load_photo_to_server(
 
     while True:
         media_id = uuid.uuid4()
-        filename = f"{media_id}.{MediaConstants.IMAGE_EXTENSION}"
+        filename = f'{media_id}.{MediaConstants.IMAGE_EXTENSION}'
         file_path = MediaConstants.MEDIA_DIR / filename
 
         if not file_path.exists():
             break
 
     jpeg_bytes = transform_to_jpeg(image_bytes)
-    async with aiofiles.open(file_path, "wb") as f:
+    async with aiofiles.open(file_path, 'wb') as f:
         await f.write(jpeg_bytes)
     notify_admin.delay()
     notify_client.apply_async(
@@ -58,19 +59,19 @@ async def load_photo_to_server(
         eta=datetime.now() + timedelta(minutes=1),
     )
 
-    return {"media_id": media_id}
+    return {'media_id': media_id}
 
 
-@router.get('/{media_id}', summary="Получить фото по его ID")
+@router.get('/{media_id}', summary='Получить фото по его ID')
 async def get_photo(media_id: str) -> FileResponse:
     """Возврат клиенту фотографии."""
-    filename = f"{media_id}.{MediaConstants.IMAGE_EXTENSION}"
+    filename = f'{media_id}.{MediaConstants.IMAGE_EXTENSION}'
     file_path = MediaConstants.MEDIA_DIR / filename
     if not file_path.exists():
-        detail = "Фото не найдено! Убедитесь, что правильно указали id."
+        detail = 'Фото не найдено! Убедитесь, что правильно указали id.'
         raise HTTPException(status_code=404, detail=detail)
     return FileResponse(
         path=file_path,
-        media_type="image/jpeg",
+        media_type='image/jpeg',
         filename=filename,
     )
