@@ -120,6 +120,7 @@ __pypackages__/
 # Celery stuff
 celerybeat-schedule
 celerybeat.pid
+src/test_html.py
 
 # SageMath parsed files
 *.sage.py
@@ -146,7 +147,7 @@ venv.bak/
 
 # mkdocs documentation
 /site
-.test_html.py
+
 # mypy
 .mypy_cache/
 .dmypy.json
