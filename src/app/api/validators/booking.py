@@ -100,7 +100,11 @@ async def validate_booking_exists(
     session: AsyncSession,
 ) -> Booking:
     """Проверка существования бронирования."""
-    booking = await booking_crud.get(session=session, obj_id=booking_id)
+    booking = await booking_crud.get(
+        session=session,
+        obj_id=booking_id,
+        eager_options=booking_crud.booking_full_load_options(),
+    )
     if not booking:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
