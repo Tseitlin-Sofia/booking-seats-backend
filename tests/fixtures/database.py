@@ -1,7 +1,7 @@
 import uuid
 from datetime import time as time_type
 
-import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.cafe import Cafe
@@ -10,7 +10,7 @@ from app.models.slot import Slot
 from app.models.table import Table
 
 
-@pytest.fixture(scope='function')
+@pytest_asyncio.fixture(scope='function')
 async def test_cafe(session: AsyncSession) -> Cafe:
     """Создаёт и возвращает тестовое кафе."""
     unique_suffix = str(uuid.uuid4())[:8]
@@ -27,13 +27,13 @@ async def test_cafe(session: AsyncSession) -> Cafe:
     return cafe
 
 
-@pytest.fixture(scope='function')
+@pytest_asyncio.fixture(scope='function')
 async def test_dish_500(session: AsyncSession, test_cafe: Cafe) -> Dish:
     """Создаёт блюдо с ценой 500."""
     return await _create_dish(session, test_cafe.id, price=500.0)
 
 
-@pytest.fixture(scope='function')
+@pytest_asyncio.fixture(scope='function')
 async def test_dish_350(session: AsyncSession, test_cafe: Cafe) -> Dish:
     """Создаёт блюдо с ценой 350."""
     return await _create_dish(session, test_cafe.id, price=350.0)
@@ -57,7 +57,7 @@ async def _create_dish(
     return dish
 
 
-@pytest.fixture(scope='function')
+@pytest_asyncio.fixture(scope='function')
 async def test_slots(session: AsyncSession, test_cafe: Cafe) -> list[dict]:
     """Создаёт и возвращает пару стол+слот для тестов."""
     table = Table(
