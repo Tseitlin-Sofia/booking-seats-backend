@@ -203,3 +203,9 @@ pre-commit install
 ## Требования к фронтенду.
 
 При PATCH-запросе на эндпойнт `{server}/booking/{booking_id}` требуется ВСЕГДА передавать новый список BookingTableSlots.
+
+## Авторы
+
+[Яндекс.Практикум](https://github.com/yandex-praktikum)
+
+[Максим Дацковский](https://github.com/NeSePeM) email: [<nspmax@ya.ru>](mailto:nspmax@ya.ru)
