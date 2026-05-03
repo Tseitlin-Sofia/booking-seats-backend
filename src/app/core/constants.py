@@ -143,3 +143,4 @@ class NotificationConstants:
     """Класс констант для уведомлений и напоминаний о бронировании."""
 
     ADMIN_EMAIL = 'test@mail.ru'
+    DATETIME_FORMAT = '%Y-%m-%d %H:%M'

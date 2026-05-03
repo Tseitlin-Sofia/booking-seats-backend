@@ -20,6 +20,7 @@ from app.api.validators.booking import (
 )
 from app.celery.celery_app import celery_app
 from app.celery.tasks import notify_admin, notify_client
+from app.core.constants import NotificationConstants
 from app.core.db import Base
 from app.core.logging import get_logger
 from app.crud.booking import booking_crud, booking_table_slot_crud
@@ -36,32 +37,29 @@ from app.services.task import generate_task_id
 logger = get_logger()
 router = APIRouter()
 
+FORMAT = NotificationConstants.DATETIME_FORMAT
 
-def _make_notification_tasks_for_celery(
+async def _make_notification_tasks_for_celery(
     booking_obj: Base,
+    session: SessionDep,
     method: str,
 ) -> None:
-    """Создание задачи в celery.
-
-    Созадется задача на отправку уведомления админинистратору и напоминания
-    клиенту о брони.
-    """
     booking_for_celery = BookingInfo.model_validate(booking_obj).model_dump()
-    task_id = generate_task_id(booking_for_celery.get('id'))
+    booking_id = booking_for_celery.get('id')
+    booking_datetime = await booking_crud.get_start_datetime_by_booking_id(
+        booking_id=booking_id, session=session
+    )
+    booking_for_celery['booking_date'] = booking_datetime.strftime(FORMAT)
+
+    task_id = generate_task_id(booking_id)
     if method == "PATCH":
         AsyncResult(task_id, app=celery_app).revoke()
     notify_admin.delay(method, booking_for_celery)
-    booking_date = booking_for_celery.get('booking_date')
-    if not booking_date:
-        logger.warning(
-            'Дата бронирования не указана для booking_id={}',
-            booking_for_celery.get('id'),
-        )
-        return
 
+    reminder_time = booking_datetime - timedelta(hours=2)
     notify_client.apply_async(
         args=[booking_for_celery],
-        eta=booking_date - timedelta(hours=2),
+        eta=reminder_time,
         task_id=task_id,
     )
 
@@ -189,9 +187,6 @@ async def create_booking(
         session=session,
         obj_in=booking_data,
     )
-    # Код для создания задачи на отправку напоминания клиенту
-    # и уведомления админа
-    # _make_notification_tasks_for_celery(new_booking, method='POST')
 
     for table_slot in tables_slots:
         await booking_table_slot_crud.create(
@@ -217,6 +212,13 @@ async def create_booking(
         )
 
     await session.refresh(new_booking)
+    # Код для создания задачи на отправку напоминания клиенту
+    # и уведомления админа
+    await _make_notification_tasks_for_celery(
+        new_booking,
+        session,
+        method='POST'
+    )
     return BookingInfo.model_validate(new_booking, from_attributes=True)
 
 
@@ -297,5 +299,9 @@ async def update_booking(
         obj_in=BookingUpdateWithoutTablesSlots(**booking_data),
     )
     await session.refresh(booking_upd)
-    # _make_notification_tasks_for_celery(booking_upd, method='PATCH')
+    await _make_notification_tasks_for_celery(
+        booking_upd,
+        session,
+        method='PATCH'
+    )
     return BookingInfo.model_validate(booking_upd, from_attributes=True)

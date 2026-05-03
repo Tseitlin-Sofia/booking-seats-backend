@@ -8,12 +8,12 @@ from app.core.logging import get_logger
 
 logger = get_logger()
 
-ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
-SMTP_HOST = os.getenv('SMTP_HOST')
-SMTP_PORT = os.getenv('SMTP_PORT')
-SMTP_USER = os.getenv('SMTP_USER')
-SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
-CLIENT_EMAIL = os.getenv('CLIENT_EMAIL', 'test@mail.com')
+ADMIN_EMAIL:str = os.getenv('ADMIN_EMAIL', 'admin@mail.com')
+SMTP_HOST: str = os.getenv('SMTP_HOST', 'smtp_host@host.ru')
+SMTP_PORT: int = int(os.getenv('SMTP_PORT', '465'))
+SMTP_USER: str = os.getenv('SMTP_USER', 'user')
+SMTP_PASSWORD:str = os.getenv('SMTP_PASSWORD', 'password')
+CLIENT_EMAIL: str = os.getenv('CLIENT_EMAIL', 'test@mail.com')
 
 
 def send_email(
@@ -41,21 +41,34 @@ def send_email(
         logger.info('Письмо отправлено на {}', to)
 
 
+def _get_table_ids(data: dict) -> str:
+    """Извлекает ID столов из данных бронирования."""
+    tables_slots = data.get('tables_slots', [])
+    if not tables_slots:
+        return data.get('table_id', '—')
+    table_ids = [slot.get('table_id', '?') for slot in tables_slots]
+    return ', '.join(str(t) for t in table_ids)
+
+
 def build_admin_notification(data: dict, method: str) -> tuple[str, str]:
     """Формирует тему и тело письма для админа."""
     user = data.get('user', {})
     booking_id = data.get('id')
+    table_ids = _get_table_ids(data)
     basic_body = f"""
         👤 Клиент: {user.get('username', 'Неизвестно')}
-        📞 Телефон: {data.get('phone', 'Не указан')}
+        📞 Телефон: {user.get('phone', 'Не указан')}
         📧 Email клиента: {user.get('email', 'Неизвестно')}
         📅 Дата и время: {data.get('booking_date', 'Неизвестно')}
+        🪑 Стол(-ы): {table_ids}
+        👥 Количество гостей: {data.get('guest_number', 'Не указано')}
+        📝 Заметка: {data.get('note', 'Нет')}
     """
     if method == 'POST':
-        subject = f'🚨 НОВАЯ БРОНЬ №{booking_id}! Стол №{data["table_id"]}'
+        subject = f'🚨 НОВАЯ БРОНЬ №{booking_id}!'
         body = f'Поступила новая бронь №{booking_id}:\n' + basic_body
     elif method == 'PATCH':
-        subject = f'🚨 ИЗМЕНЕНИЕ БРОНИ №{data.get("id")}!'
+        subject = f'🚨 ИЗМЕНЕНИЕ БРОНИ №{booking_id}!'
         body = f'Бронь № {booking_id} изменена:\n' + basic_body
     return subject, body
 
@@ -88,11 +101,13 @@ def get_html_for_admin(data: dict, method: str) -> str:
     """Генерирует HTML для уведомления администратора."""
     user = data.get('user', {})
     booking_id = data.get('id')
-    table_id = data.get('table_id', '—')
+    table_ids = _get_table_ids(data)
     client_name = user.get('username', 'Неизвестно')
-    client_phone = data.get('phone', 'Не указан')
+    client_phone = user.get('phone', 'Не указан')
     client_email = user.get('email', 'Неизвестно')
     booking_date = data.get('booking_date', 'Неизвестно')
+    guest_number = data.get('guest_number', 'Не указано')
+    note = data.get('note', 'Нет')
 
     if method == 'POST':
         title = f'🚨 Новая бронь №{booking_id}'
@@ -206,8 +221,18 @@ def get_html_for_admin(data: dict, method: str) -> str:
                     </div>
                     <div class="info-row">
                         <span class="emoji">🪑</span>
-                        <span class="label">Стол №:</span>
-                        <span class="value">{table_id}</span>
+                        <span class="label">Стол(-ы):</span>
+                        <span class="value">{table_ids}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="emoji">👥</span>
+                        <span class="label">Гостей:</span>
+                        <span class="value">{guest_number}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="emoji">📝</span>
+                        <span class="label">Заметка:</span>
+                        <span class="value">{note}</span>
                     </div>
                 </div>
             </div>
