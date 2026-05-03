@@ -198,6 +198,18 @@ ruff check --fix
 ```shell
 pre-commit install
 ```
+## Тестирование
+
+Для запуска тестов необходимо поднять контейнер с базой данных:
+```
+cd infra/
+docker compose up db
+```
+Возвращаемся в корневой каталог (или используем новый терминал) и запускаем pytest:
+```
+cd ..
+pytest
+```
 
 ## Проофилирование
 
@@ -215,6 +227,9 @@ http://localhost:10000/debug/sql-profiler
 [Яндекс.Практикум](https://github.com/yandex-praktikum)
 
 [Максим Дацковский](https://github.com/NeSePeM) email: [<nspmax@ya.ru>](mailto:nspmax@ya.ru)
+
 [Петрушенко Алексей](https://github.com/OnyxFireGlow) email:[<onyx.fireglow@gmail.com>](mailto:onyx.fireglow@gmail.com)
+
 [Климов Даниил](https://github.com/Xek-YP) email:[<xek.97@yandex.ru>](mailto:xek.97@yandex.ru)
+
 [Софья Цейтлин](https://github.com/Tseitlin-Sofia) email: [<sofia.zeitlin@gmail.com>](mailto:sofia.zeitlin@gmail.com)
