@@ -54,7 +54,8 @@ async def create_table(
 ) -> TableInfo:
     """Создаёт новый стол в указанном кафе."""
     await get_cafe_or_404(session, cafe_id, True)
-    await is_manager_from_cafe(cafe_id, user)
+    if user.is_manager:
+        await is_manager_from_cafe(cafe_id, user)
     return await table_crud.create_for_cafe(
         cafe_id=cafe_id,
         obj_in=table_in,
