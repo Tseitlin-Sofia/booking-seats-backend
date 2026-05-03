@@ -12,7 +12,9 @@ from app.api.validators.booking import (
     validate_booking_exists,
     validate_booking_slots,
     validate_cafe_slot_table,
+    validate_guest_number,
     validate_pre_order_items,
+    validate_start_time,
     validate_table_slots_exists,
     validate_user_rights,
 )
@@ -100,12 +102,16 @@ async def get_bookings(
         if user_id:
             await validate_user_rights(current_user, user_id)
 
-    return await booking_crud.get_bookings(
+    result = await booking_crud.get_bookings(
         session=session,
         show_active=show_active,
         cafe_id=cafe_id,
         user_id=user_id,
     )
+    return [
+        BookingInfo.model_validate(booking, from_attributes=True)
+        for booking in result
+    ]
 
 
 @router.get(
@@ -127,7 +133,7 @@ async def get_booking(
     """Получение бронирования по его ID."""
     booking_db = await validate_booking_exists(booking_id, session)
     await validate_user_rights(current_user, booking_db.user_id)
-    return booking_db
+    return BookingInfo.model_validate(booking_db, from_attributes=True)
 
 
 @router.post(
@@ -147,18 +153,32 @@ async def create_booking(
     current_user: UserDep,
 ) -> BookingInfo:
     """Создание бронирования."""
+    await validate_table_slots_exists(
+        booking=booking,
+    )
+    tables_slots = [slot.model_dump() for slot in booking.tables_slots]
     await validate_booking_slots(
-        slots=booking.tables_slots,
+        slots=tables_slots,
         booking_date=booking.booking_date,
         session=session,
     )
     await validate_cafe_slot_table(
         cafe_id=booking.cafe_id,
-        slots=booking.tables_slots,
+        slots=tables_slots,
         session=session,
     )
     booking_data = booking.model_dump(
         exclude={'tables_slots', 'pre_order_items'},
+    )
+    await validate_start_time(
+        session=session,
+        tables_slots=tables_slots,
+        booking_date=booking.booking_date,
+    )
+    await validate_guest_number(
+        guest_number=booking.guest_number,
+        tables_slots=tables_slots,
+        session=session,
     )
     booking_data.update({
         'status': BookingStatus.BOOKING,
@@ -173,13 +193,13 @@ async def create_booking(
     # и уведомления админа
     # _make_notification_tasks_for_celery(new_booking, method='POST')
 
-    for table_slot in booking.tables_slots:
+    for table_slot in tables_slots:
         await booking_table_slot_crud.create(
             session=session,
             obj_in={
                 'booking_id': new_booking.id,
-                'table_id': table_slot.table_id,
-                'slot_id': table_slot.slot_id,
+                'table_id': table_slot['table_id'],
+                'slot_id': table_slot['slot_id'],
             },
         )
 
@@ -224,35 +244,51 @@ async def update_booking(
     booking_data = booking.model_dump(exclude_unset=True)
     booking_db = await validate_booking_exists(booking_id, session)
     await validate_user_rights(current_user, booking_db.user_id)
-    await validate_booking_slots(
-        slots=booking_data.get('tables_slots', []),
-        booking_date=booking_data.get('booking_date', booking_db.booking_date),
-        session=session,
-    )
-    await validate_cafe_slot_table(
-        cafe_id=booking_db.cafe_id,
-        slots=booking_data.get('tables_slots', []),
-        session=session,
-    )
     booking_table_slots_db = (
         await booking_table_slot_crud.get_by_attribute_multi(
             session=session,
             attr_name='booking_id',
             attr_value=booking_id,
+            is_active=None,
         )
     )
-    await booking_table_slot_crud.deactivate_multi(
+    await booking_table_slot_crud.delete_multi(
         session=session,
-        db_objs=booking_table_slots_db,
+        objs=booking_table_slots_db,
     )
-
-    for table_slot in booking_data.pop('tables_slots'):
+    await session.flush()
+    session.expire(booking_db, ['tables_slots'])
+    await session.refresh(booking_db)
+    await session.commit()
+    tables_slots = booking_data.pop('tables_slots')
+    await validate_booking_slots(
+        slots=tables_slots,
+        booking_date=booking_data.get('booking_date', booking_db.booking_date),
+        session=session,
+    )
+    await validate_cafe_slot_table(
+        cafe_id=booking_db.cafe_id,
+        slots=tables_slots,
+        session=session,
+    )
+    await validate_start_time(
+        session=session,
+        tables_slots=tables_slots,
+        booking_date=booking_data.get('booking_date', booking_db.booking_date),
+    )
+    await validate_guest_number(
+        guest_number=booking_data.get('guest_number', booking_db.guest_number),
+        tables_slots=tables_slots,
+        session=session,
+    )
+    for table_slot in tables_slots:
         await booking_table_slot_crud.create(
             session=session,
             obj_in=BookingTableSlotCreate(**{
                 'booking_id': booking_id,
-                'table_id': table_slot.get('table_id'),
-                'slot_id': table_slot.get('slot_id'),
+                'table_id': table_slot['table_id'],
+                'slot_id': table_slot['slot_id'],
+                'is_active': booking_data.get('is_active', True),
             }),
         )
     booking_upd = await booking_crud.update(
