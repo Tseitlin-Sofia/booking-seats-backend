@@ -5,18 +5,7 @@ from typing import Optional, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-
-class CafeShortInfo(BaseModel):
-    """Краткая информация о кафе (для вложенных ответов)."""
-
-    id: int
-    name: str
-    address: str
-    phone: str
-    description: Optional[str] = None
-    photo_id: Optional[str] = None
-
-    model_config = ConfigDict(from_attributes=True)
+from app.schemas.cafe import CafeShortInfo
 
 
 class TableCreate(BaseModel):
