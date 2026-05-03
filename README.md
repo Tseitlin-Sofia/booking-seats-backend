@@ -64,6 +64,13 @@ ruff check --fix
 pre-commit install
 ```
 
+## Проофилирование
+
+Профилирование запросов к БД (дашборд):
+```
+http://localhost:10000/debug/sql-profiler
+```
+
 ## Требования к фронтенду.
 
 При PATCH-запросе на эндпойнт `{server}/booking/{booking_id}` требуется ВСЕГДА передавать новый список BookingTableSlots.

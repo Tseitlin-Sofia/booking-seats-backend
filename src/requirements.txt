@@ -32,6 +32,9 @@ pillow==12.2.0
 # Логирование
 loguru==0.7.3
 
+# Профилирование
+fastapi-sqlalchemy-profiler
+
 # Тестирование
 pytest==9.0.3
 httpx==0.28.1
