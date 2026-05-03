@@ -209,3 +209,4 @@ pre-commit install
 [Яндекс.Практикум](https://github.com/yandex-praktikum)
 
 [Максим Дацковский](https://github.com/NeSePeM) email: [<nspmax@ya.ru>](mailto:nspmax@ya.ru)
+[Петрушенко Алексей](https://github.com/OnyxFireGlow) email:[<onyx.fireglow@gmail.com>](mailto:onyx.fireglow@gmail.com)
