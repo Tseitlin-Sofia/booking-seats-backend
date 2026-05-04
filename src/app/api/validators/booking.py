@@ -56,13 +56,13 @@ async def validate_cafe_slot_table(
     slot_ids = [slot['slot_id'] for slot in slots]
     table_ids = [slot['table_id'] for slot in slots]
 
-    slot_ids_db = await booking_table_slot_crud.get_by_id_list_bts(
+    slots_db = await booking_table_slot_crud.get_by_id_list_bts(
         session=session,
         cafe_id=cafe_id,
         model=Slot,
         id_list=slot_ids,
     )
-    table_ids_db = await booking_table_slot_crud.get_by_id_list_bts(
+    tables_db = await booking_table_slot_crud.get_by_id_list_bts(
         session=session,
         cafe_id=cafe_id,
         model=Table,
@@ -78,8 +78,8 @@ async def validate_cafe_slot_table(
             )
         unique_set.add(slot_tuple)
     if (
-        len(table_ids) != len(table_ids_db)
-        or len(slot_ids) != len(slot_ids_db)
+        len(table_ids) != len(tables_db)
+        or len(slot_ids) != len(slots_db)
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
