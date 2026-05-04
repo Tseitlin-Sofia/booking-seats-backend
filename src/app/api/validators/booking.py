@@ -36,7 +36,7 @@ async def validate_booking_slots(
 
     if not is_available:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=Constants.SLOTS_UNAVAILABLE,
         )
 
@@ -56,22 +56,34 @@ async def validate_cafe_slot_table(
     slot_ids = [slot['slot_id'] for slot in slots]
     table_ids = [slot['table_id'] for slot in slots]
 
-    await booking_table_slot_crud.get_by_id_list_bts(
+    slots_db = await booking_table_slot_crud.get_by_id_list_bts(
         session=session,
         cafe_id=cafe_id,
         model=Slot,
         id_list=slot_ids,
     )
-    await booking_table_slot_crud.get_by_id_list_bts(
+    tables_db = await booking_table_slot_crud.get_by_id_list_bts(
         session=session,
         cafe_id=cafe_id,
         model=Table,
         id_list=table_ids,
     )
-    if len(slots) != len(slot_ids) or len(slots) != len(table_ids):
+    unique_set = set()
+    for table_slot in slots:
+        slot_tuple = tuple(sorted(table_slot.items()))
+        if slot_tuple in unique_set:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=Constants.DUBLICATE_SLOTS,
+            )
+        unique_set.add(slot_tuple)
+    if (
+        len(set(table_ids)) != len(tables_db)
+        or len(set(slot_ids)) != len(slots_db)
+    ):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=Constants.LIST_SLOTS_ERROR,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=Constants.SLOTS_OR_TABLES_NOT_IN_CAFE,
         )
 
 
@@ -143,7 +155,7 @@ async def validate_start_time(
         session=session,
     ) < datetime.now():
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=Constants.INVALID_START_TIME_ERROR,
         )
 
@@ -159,7 +171,7 @@ async def validate_guest_number(
     )
     if guest_number > max_guests or guest_number < Constants.MIN_GUESTS:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=Constants.GUEST_NUMBER_ERROR.format(
                 Constants.MIN_GUESTS, max_guests,
             ),
