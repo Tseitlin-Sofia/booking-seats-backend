@@ -45,7 +45,7 @@ async def check_name_address(
     db_cafe: Optional[Cafe] = None,
 ) -> None:
     """Проверка, существует ли кафе с одинаковой парой name-address."""
-    new_data = new_cafe.model_dump(exclude_unset=True)
+    new_data = new_cafe.model_dump(exclude_unset=True, exclude_none=True)
     name = new_data['name'] if 'name' in new_data else None
     address = new_data['address'] if 'address' in new_data else None
     is_exist = await cafe_crud.is_unique_name_address(
@@ -64,7 +64,7 @@ async def is_managers_id(
     db_cafe: Optional[Cafe] = None,
 ) -> Optional[List[User]]:
     """Проверка, указаны ли реальные менеджеры."""
-    new_data = new_cafe.model_dump(exclude_unset=True)
+    new_data = new_cafe.model_dump(exclude_unset=True, exclude_none=True)
     if 'managers_id' not in new_data:
         return None
     users_id = set(new_data['managers_id'])
@@ -102,7 +102,16 @@ async def is_managers_id(
             and db_cafe is not None
             and user.cafe_id != db_cafe.id
         ):
-            """Проверка, обеспечивающая любому кафе наличие менеджеров."""
+            """При обновлении кафе нельзя назначить занятого менджера."""
+            msg = (
+                'ААААПопытка назначить занятого менеджера - '
+                'замените или исключите его из привязанного кафе: '
+                f'manager_id: {user.id} | manager.cafe_id: {user.cafe_id}!'
+            )
+            logger.warning(msg)
+            await raise_error(msg)
+        elif user.cafe_id is not None and db_cafe is None:
+            """При создании кафе нельзя назначить занятого менджера."""
             msg = (
                 'Попытка назначить занятого менеджера - '
                 'замените или исключите его из привязанного кафе: '
