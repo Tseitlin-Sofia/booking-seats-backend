@@ -4,6 +4,7 @@ from pwdlib import PasswordHash
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import UserDuplicateError, UserValidationError
 from app.crud.user import user_crud
 from app.models import User
 from app.models.user import UserRole
@@ -47,13 +48,21 @@ class UserService:
     ) -> None:
         """Выбрасывает исключение с указанием конфликтующего поля."""
         if email and conflicting_user.email == email:
-            raise ValueError('Пользователь с таким email уже существует.')
+            raise UserDuplicateError(
+                'Пользователь с таким email уже существует.',
+            )
         if phone and conflicting_user.phone == phone:
-            raise ValueError('Пользователь с таким phone уже существует.')
+            raise UserDuplicateError(
+                'Пользователь с таким phone уже существует.',
+            )
         if username and conflicting_user.username == username:
-            raise ValueError('Пользователь с таким username уже существует.')
+            raise UserDuplicateError(
+                'Пользователь с таким username уже существует.',
+            )
         if tg_id and conflicting_user.tg_id == tg_id:
-            raise ValueError('Пользователь с таким tg_id уже существует.')
+            raise UserDuplicateError(
+                'Пользователь с таким tg_id уже существует.',
+            )
 
     async def check_unique_fields(
         self,
@@ -99,8 +108,7 @@ class UserService:
     ) -> None:
         """Метод для проверки наличия хотя бы одного из полей email, phone."""
         if not email and not phone:
-            # TODO лог о некоректном предоставлении полей
-            raise ValueError(
+            raise UserValidationError(
                 'Хотя бы одно из полей email или phone должно быть заполено',
             )
 
@@ -161,6 +169,10 @@ class UserService:
 
         if user_in.phone:
             user_update_data['phone'] = self.normalize_phone(user_in.phone)
+
+        updated_email = user_update_data.get('email', user.email)
+        updated_phone = user_update_data.get('phone', user.phone)
+        self.check_email_or_phone_required(updated_email, updated_phone)
 
         return await user_crud.update(
             session=session,

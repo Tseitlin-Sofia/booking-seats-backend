@@ -97,7 +97,11 @@ async def is_managers_id(
             )
             logger.warning(msg)
             await raise_error(msg)
-        if user.cafe_id is not None and user.cafe_id != db_cafe.id:
+        if (
+            user.cafe_id is not None
+            and db_cafe is not None
+            and user.cafe_id != db_cafe.id
+        ):
             """Проверка, обеспечивающая любому кафе наличие менеджеров."""
             msg = (
                 'Попытка назначить занятого менеджера - '

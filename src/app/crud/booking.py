@@ -29,6 +29,16 @@ logger = get_logger()
 class BookingCRUD(CRUDBase):
     """CRUD операции для бронирования."""
 
+    def booking_full_load_options(self) -> list:
+        """Загружает все необходимые связи для BookingInfo."""
+        return [
+            selectinload(Booking.user),
+            selectinload(Booking.cafe),
+            selectinload(Booking.tables_slots),
+            selectinload(Booking.pre_order_items)
+                .selectinload(BookingDish.dish),
+        ]
+
     async def get_bookings(
         self,
         session: AsyncSession,
@@ -38,9 +48,7 @@ class BookingCRUD(CRUDBase):
     ) -> list[Booking]:
         """Получает бронирования."""
         stmt = select(Booking).options(
-            selectinload(
-                Booking.tables_slots,
-            ),
+            *self.booking_full_load_options(),
         )
         if show_active is not None:
             stmt = stmt.where(Booking.is_active == show_active)
@@ -172,10 +180,7 @@ class BookingTableSlotCRUD(CRUDBase):
             model.is_active,
         )
         query = await session.execute(stmt)
-        result = list(query.scalars().all())
-        if len(result) != len(id_list):
-            raise ValueError(Constants.TABLE_OR_SLOT_ERROR)
-        return result
+        return list(query.scalars().all())
 
     async def delete_multi(
         self,
