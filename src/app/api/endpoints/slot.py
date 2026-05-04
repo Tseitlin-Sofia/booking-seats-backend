@@ -1,51 +1,81 @@
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
-from app.api.dependencies import SessionDep
+from app.api.dependencies import SessionDep, UserDep
 from app.api.validators.cafe import get_cafe_or_404
-from app.api.validators.slot import check_slots_intersections
-from app.crud.base import CRUDBase
+from app.api.validators.slot import (
+    check_slots_intersections,
+    validate_slot,
+)
 from app.crud.slot import slot_crud
-from app.schemas.slot import SlotBase, SlotCreate, SlotUpdate
+from app.schemas.slot import (
+    TimeSlotCreate,
+    TimeSlotInfo,
+    TimeSlotUpdate,
+)
 
 router = APIRouter()
 
 
 @router.get(
     '/',
-    response_model=list[SlotBase],
+    response_model=list[TimeSlotInfo],
     summary='Получение списка слотов в кафе',
 )
 async def get_slots(
     cafe_id: int,
     session: SessionDep,
-    active: Optional[bool] = True,
-) -> list[SlotBase]:
+    user: UserDep,
+    show_active: Optional[bool] = True,
+) -> list[TimeSlotInfo]:
     """Возвращает все слоты для заданного кафе."""
     await get_cafe_or_404(session, cafe_id, True)
-    if not active:
-        return await slot_crud.get_slots_by_cafe(cafe_id, session)
-    return await CRUDBase.get_by_attribute_multi(
-        self=slot_crud,
-        attr_name='cafe_id',
-        attr_value=cafe_id,
+    if user.is_user:
+        show_active = True
+    slots = await slot_crud.get_slots_by_cafe(cafe_id, session, show_active)
+    return [
+        TimeSlotInfo.model_validate(slot, from_attributes=True)
+        for slot in slots
+    ]
+
+
+@router.get(
+    '/{slot_id}',
+    response_model=TimeSlotInfo,
+    summary='Получение слота по ID',
+)
+async def get_slot(
+    cafe_id: int,
+    slot_id: int,
+    session: SessionDep,
+    user: UserDep,
+) -> TimeSlotInfo:
+    """Возвращает информацию о конкретном слоте в кафе."""
+    slot = await validate_slot(
+        cafe_id=cafe_id,
         session=session,
-        is_active=True,
+        slot_id=slot_id,
     )
+    if user.is_user and not slot.is_active:
+        raise HTTPException(404, detail='Слот не найден!')
+    return TimeSlotInfo.model_validate(slot, from_attributes=True)
 
 
 @router.post(
     '/',
-    response_model=SlotBase,
+    response_model=TimeSlotInfo,
     summary='Создание нового слота в кафе',
 )
 async def create_slot(
     cafe_id: int,
-    slot_data: SlotCreate,
+    slot_data: TimeSlotCreate,
     session: SessionDep,
-) -> SlotBase:
+    user: UserDep,
+) -> TimeSlotInfo:
     """Создание нового слота в кафе."""
+    if not (user.is_admin or user.is_manager):
+        raise HTTPException(403, detail='Доступ запрещен!')
     await get_cafe_or_404(session, cafe_id, True)
     await check_slots_intersections(
         start_time=slot_data.start_time,
@@ -60,23 +90,31 @@ async def create_slot(
 
 @router.patch(
     '/{slot_id}',
-    response_model=SlotBase,
+    response_model=TimeSlotInfo,
     summary='Обновление информации о слоте',
 )
 async def update_slot(
     cafe_id: int,
     slot_id: int,
-    slot_data: SlotUpdate,
+    slot_in: TimeSlotUpdate,
     session: SessionDep,
-) -> SlotBase:
+    user: UserDep,
+) -> TimeSlotInfo:
     """Обновление информации о слоте в кафе."""
+    if not (user.is_admin or user.is_manager):
+        raise HTTPException(403, detail='Доступ запрещен!')
     await get_cafe_or_404(session, cafe_id, True)
+    slot_db = await slot_crud.get_slot_or_404(session=session, slot_id=slot_id)
     await check_slots_intersections(
-        start_time=slot_data.start_time,
-        end_time=slot_data.end_time,
+        start_time=slot_in.start_time or slot_db.start_time,
+        end_time=slot_in.end_time or slot_db.end_time,
         cafe_id=cafe_id,
         session=session,
         slot_id=slot_id,
     )
-    slot_data_dict = slot_data.model_dump(exclude_unset=True)
-    return await slot_crud.update(slot_id, slot_data_dict, session)
+    slot_upd = await slot_crud.update(
+        obj_in=slot_in,
+        db_obj=slot_db,
+        session=session,
+    )
+    return TimeSlotInfo.model_validate(slot_upd, from_attributes=True)
