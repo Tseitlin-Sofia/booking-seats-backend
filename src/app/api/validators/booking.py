@@ -56,22 +56,34 @@ async def validate_cafe_slot_table(
     slot_ids = [slot['slot_id'] for slot in slots]
     table_ids = [slot['table_id'] for slot in slots]
 
-    await booking_table_slot_crud.get_by_id_list_bts(
+    slot_ids_db = await booking_table_slot_crud.get_by_id_list_bts(
         session=session,
         cafe_id=cafe_id,
         model=Slot,
         id_list=slot_ids,
     )
-    await booking_table_slot_crud.get_by_id_list_bts(
+    table_ids_db = await booking_table_slot_crud.get_by_id_list_bts(
         session=session,
         cafe_id=cafe_id,
         model=Table,
         id_list=table_ids,
     )
-    if len(slots) != len(slot_ids) or len(slots) != len(table_ids):
+    unique_set = set()
+    for table_slot in slots:
+        slot_tuple = tuple(sorted(table_slot.items()))
+        if slot_tuple in unique_set:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=Constants.DUBLICATE_SLOTS,
+            )
+        unique_set.add(slot_tuple)
+    if (
+        len(table_ids) != len(table_ids_db)
+        or len(slot_ids) != len(slot_ids_db)
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=Constants.LIST_SLOTS_ERROR,
+            detail=Constants.SLOTS_OR_TABLES_NOT_IN_CAFE,
         )
 
 
