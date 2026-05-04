@@ -167,9 +167,7 @@ async def create_booking(
         slots=tables_slots,
         session=session,
     )
-    booking_data = booking.model_dump(
-        exclude={'tables_slots', 'pre_order_items'},
-    )
+
     await validate_start_time(
         session=session,
         tables_slots=tables_slots,
@@ -180,6 +178,10 @@ async def create_booking(
         tables_slots=tables_slots,
         session=session,
     )
+
+    booking_data = booking.model_dump(
+        exclude={'tables_slots', 'pre_order_items'},
+    )
     booking_data.update({
         'status': BookingStatus.BOOKING,
         'user_id': current_user.id,
@@ -189,6 +191,15 @@ async def create_booking(
         session=session,
         obj_in=booking_data,
     )
+
+    dishes_map = None
+    if booking.pre_order_items:
+        dishes_map = await validate_pre_order_items(
+            booking.pre_order_items,
+            booking.cafe_id,
+            session,
+        )
+
     # Код для создания задачи на отправку напоминания клиенту
     # и уведомления админа
     # _make_notification_tasks_for_celery(new_booking, method='POST')
@@ -204,11 +215,6 @@ async def create_booking(
         )
 
     if booking.pre_order_items:
-        dishes_map = await validate_pre_order_items(
-            booking.pre_order_items,
-            booking.cafe_id,
-            session,
-        )
         await booking_crud.add_pre_order_items(
             new_booking.id,
             booking.pre_order_items,
