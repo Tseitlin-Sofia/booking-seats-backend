@@ -36,7 +36,7 @@ async def validate_booking_slots(
 
     if not is_available:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=Constants.SLOTS_UNAVAILABLE,
         )
 
