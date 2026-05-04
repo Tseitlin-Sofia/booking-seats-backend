@@ -180,10 +180,7 @@ class BookingTableSlotCRUD(CRUDBase):
             model.is_active,
         )
         query = await session.execute(stmt)
-        result = list(query.scalars().all())
-        if len(result) != len(id_list):
-            raise ValueError(Constants.TABLE_OR_SLOT_ERROR)
-        return result
+        return list(query.scalars().all())
 
     async def delete_multi(
         self,
