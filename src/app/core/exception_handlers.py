@@ -31,7 +31,7 @@ async def validation_exception_handler(
         message = 'Ошибка в структуре JSON запроса'
     elif error_type == 'missing' and msg == 'Field required':
         field = loc[-1] if loc else 'unknown'
-        message = f'Поле "{field}" обязательно'
+        message = f'Поле «{field}» обязательно'
     else:
         if msg.startswith('Value error, '):
             msg = msg[13:]
