@@ -23,10 +23,11 @@ async def can_manager_change_cafes(cafes_id: Sequence, user: User) -> None:
     """Проверка, что менеджер редактирует только свое кафе."""
     if len(cafes_id) > ActionConstants.MIN_LENGTH_CAFES_LIST:
         msg = (
-            'Менеджер может управлять акциями только своего кафе c id '
-            f'{user.cafe_id}!'
+            'Менеджер может управлять акциями только привязанного к нему кафе!'
         )
-        logger.warning(msg)
+        logger.warning(
+            msg + f'user_id: {user.id }  | user.cafe_id: {user.cafe_id}!'
+        )
         await raise_error(msg, HTTPStatus.FORBIDDEN)
     await is_manager_from_cafe(cafes_id.pop(), user)
 
@@ -35,8 +36,8 @@ async def get_action_or_404(session: AsyncSession, action_id: int) -> Self:
     """Возвращает акцию по ее id и выдает 404, если она не найдена."""
     db_action = await action_crud.get(action_id, session)
     if db_action is None:
-        msg = f'Акция не найдена! action_id: {action_id}'
-        logger.debug(msg)
+        msg = f'Акция не найдена!'
+        logger.debug(msg + f'action_id: {action_id}')
         await raise_error(msg, HTTPStatus.NOT_FOUND)
     return db_action
 
@@ -49,6 +50,14 @@ async def can_manager_change_action(
 ) -> None:
     """Менеджер может управлять акциями только привязанного к нему кафе."""
     new_data = new_action.model_dump(exclude_unset=True, exclude_none=True)
+    if db_action is not None and db_action.is_active is False:
+        msg = 'Менеджер может редактировать только активные акции!'
+        logger.warning((
+            msg + f'manager_id: {user.id} | '
+            f'db_action.id: {db_action.id} | '
+            f'db_action.is_active: {db_action.is_active}'
+        ))
+        await raise_error(msg, HTTPStatus.FORBIDDEN)
     if db_action is not None:
         cafes_id = await cafe_crud.get_cafes_by_action(session, db_action.id)
         await can_manager_change_cafes(cafes_id, user)
@@ -66,10 +75,13 @@ async def is_cafes_exists(
     cafes_id = set(new_data['cafes_id'])
     cafes = await cafe_crud.get_by_list_of_id(session, cafes_id)
     if len(cafes_id) != len(cafes):
+        db_cafes_name = (cafe.name for cafe in cafes)
         db_cafes_id = set(cafe.id for cafe in cafes)
         missing_ids = cafes_id - db_cafes_id
-        logger.warning(f'Кафе с id {missing_ids} не существуют!')
-        await raise_error(f'Кафе с id {missing_ids} не существуют!')
+        logger.warning(f'Есть несуществующие кафе! missing_id: {missing_ids}')
+        await raise_error(
+            f'Кафе {db_cafes_name} существуют! Другие не найдены!'
+        )
     return cafes
 
 
@@ -101,10 +113,10 @@ async def can_actions_be_attached_to_cafe(
     for cafe in cafes:
         if cafe.is_active is True and db_action.is_active is False:
             msg = (
-                'Дезактивированные акции нельзя привязть '
-                f'к активиронному кафе: action_id: {db_action.id}, '
-                f'action.is_active: {db_action.is_active} | '
-                f'cafe_id: {cafe.id}, cafe.is_active: {cafe.is_active}!'
+                'Дезактивированные акции нельзя привязть к активиронному кафе!'
             )
-            logger.warning(msg)
+            logger.warning((
+                msg + f'action.is_active: {db_action.is_active} | '
+                f'cafe_id: {cafe.id}, cafe.is_active: {cafe.is_active}!'
+            ))
             await raise_error(msg)
