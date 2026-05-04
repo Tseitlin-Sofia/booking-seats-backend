@@ -87,7 +87,7 @@ http://localhost:10000/docs
 │       │   ├── dependencies.py   # DI-зависимости (например, get_current_user, get_db)
 │       │   ├── routers.py        # Объединение эндпоинтов в роутеры
 │       │   ├── endpoints/        # Обработчики HTTP-запросов (ручки API)
-│       │   │   ├── action.py     # Логирование действий пользователя
+│       │   │   ├── action.py     # Управление акциями (CRUD)
 │       │   │   ├── auth.py       # Регистрация, логин, logout, сброс пароля
 │       │   │   ├── booking.py    # Бронирование столиков
 │       │   │   ├── cafe.py       # Управление кафе (CRUD)
@@ -121,7 +121,7 @@ http://localhost:10000/docs
 │       │
 │       ├── crud/                 # Слой работы с БД (CRUD операции)
 │       │   ├── base.py           # Generic CRUD класс (наследуемый всеми)
-│       │   ├── action.py         # Запись действий пользователя
+│       │   ├── action.py         
 │       │   ├── booking.py        # Создание/обновление броней
 │       │   ├── cafe.py
 │       │   ├── dish.py
@@ -198,6 +198,18 @@ ruff check --fix
 ```shell
 pre-commit install
 ```
+## Тестирование
+
+Для запуска тестов необходимо поднять контейнер с базой данных:
+```
+cd infra/
+docker compose up db
+```
+Возвращаемся в корневой каталог (или используем новый терминал) и запускаем pytest:
+```
+cd ..
+pytest
+```
 
 ## Проофилирование
 
@@ -215,6 +227,11 @@ http://localhost:10000/debug/sql-profiler
 [Яндекс.Практикум](https://github.com/yandex-praktikum)
 
 [Максим Дацковский](https://github.com/NeSePeM) email: [<nspmax@ya.ru>](mailto:nspmax@ya.ru)
+
 [Петрушенко Алексей](https://github.com/OnyxFireGlow) email:[<onyx.fireglow@gmail.com>](mailto:onyx.fireglow@gmail.com)
+
 [Климов Даниил](https://github.com/Xek-YP) email:[<xek.97@yandex.ru>](mailto:xek.97@yandex.ru)
+
 [Софья Цейтлин](https://github.com/Tseitlin-Sofia) email: [<sofia.zeitlin@gmail.com>](mailto:sofia.zeitlin@gmail.com)
+
+[Тимур Бикмаев](https://github.com/TimurBikmaev) email: [<bikma2004@gmail.com>](mailto:bikma2004@gmail.com)
