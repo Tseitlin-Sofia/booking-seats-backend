@@ -35,7 +35,7 @@ class CRUDCafe(CRUDBase):
     ) -> Self:
         """Создает новое кафе в базе данных."""
         db_cafe = self.model(**new_cafe.model_dump(
-            exclude={"managers_id"}, exclude_unset=True, exclude_none=True,
+            exclude={'managers_id'}, exclude_unset=True, exclude_none=True,
         ))
         db_cafe.managers = managers
         session.add(db_cafe)
