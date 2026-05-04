@@ -155,7 +155,7 @@ async def validate_start_time(
         session=session,
     ) < datetime.now():
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=Constants.INVALID_START_TIME_ERROR,
         )
 
@@ -171,7 +171,7 @@ async def validate_guest_number(
     )
     if guest_number > max_guests or guest_number < Constants.MIN_GUESTS:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=Constants.GUEST_NUMBER_ERROR.format(
                 Constants.MIN_GUESTS, max_guests,
             ),
