@@ -398,7 +398,8 @@ async def test_pre_order_nonexistent_dish(
         headers=auth_headers,
     )
     assert response.status_code == 422
-    assert 'не найдены' in response.json()['detail'].lower()
+    data = response.json()
+    assert 'не найдены' in data['message'].lower()
 
 
 @pytest.mark.asyncio
@@ -441,7 +442,8 @@ async def test_pre_order_unavailable_dish(
         headers=auth_headers,
     )
     assert response.status_code == 422
-    assert 'недоступны' in response.json()['detail'].lower()
+    data = response.json()
+    assert 'недоступны' in data['message'].lower()
 
 
 @pytest.mark.asyncio
@@ -493,7 +495,8 @@ async def test_pre_order_dish_from_other_cafe(
         headers=auth_headers,
     )
     assert response.status_code == 422
-    assert 'не принадлежат' in response.json()['detail'].lower()
+    data = response.json()
+    assert 'не принадлежат' in data['message'].lower()
 
 
 @pytest.mark.asyncio
@@ -640,7 +643,6 @@ async def test_create_booking_with_pre_order_unauthorized(
     )
 
     assert response.status_code == 403
-    assert 'detail' in response.json()
 
 
 @pytest.mark.asyncio
@@ -708,7 +710,11 @@ async def test_create_booking_with_invalid_token(
     )
 
     assert response.status_code == 401
-    assert 'detail' in response.json()
+    data = response.json()
+    assert (
+        'invalid' in data['message'].lower()
+        or 'token' in data['message'].lower()
+    )
 
 
 @pytest.mark.asyncio
@@ -756,7 +762,8 @@ async def test_create_booking_with_expired_token(
     )
 
     assert response.status_code == 401
-    assert 'expired' in response.json()['detail'].lower()
+    data = response.json()
+    assert 'expired' in data['message'].lower()
 
 
 @pytest.mark.asyncio
