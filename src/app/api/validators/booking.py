@@ -78,8 +78,8 @@ async def validate_cafe_slot_table(
             )
         unique_set.add(slot_tuple)
     if (
-        len(table_ids) != len(tables_db)
-        or len(slot_ids) != len(slots_db)
+        len(set(table_ids)) != len(tables_db)
+        or len(set(slot_ids)) != len(slots_db)
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
