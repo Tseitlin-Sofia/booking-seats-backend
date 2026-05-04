@@ -75,30 +75,30 @@ async def is_managers_id(
         db_usernames = (db_user.username for db_user in db_users)
         logger.warning(f'Юзеры id: {missing_id} не существуют!')
         await raise_error(
-            f'Существующие пользователи: {db_usernames}. Другие не найдены!'
+            f'Существующие пользователи: {db_usernames}. Другие не найдены!',
         )
     for user in db_users:
         if not user.is_manager:
             msg = 'К кафе можно привязать только менеджера!'
             logger.warning(
-                msg + f'user_id: {user.id} | user_role: {user.role}!'
+                msg + f'user_id: {user.id} | user_role: {user.role}!',
             )
             await raise_error(f'{user.username} не является менеджером!' + msg)
         if db_cafe and (not user.is_active and db_cafe.is_active is True):
             msg = 'К кафе можно привязать только активированных менеджеров!'
             logger.warning(
-                msg + f'user_id: {user.id} | is_active: {user.is_active}'
+                msg + f'user_id: {user.id} | is_active: {user.is_active}',
             )
             await raise_error(
-                f'Пользователь {user.username} дезактивирован!' + msg
+                f'Пользователь {user.username} дезактивирован!' + msg,
             )
         elif not user.is_active:
             msg = 'Кафе можно создать только с активированными менеджерами!'
             logger.warning(
-                msg + f'user_id: {user.id} | is_active: {user.is_active}'
+                msg + f'user_id: {user.id} | is_active: {user.is_active}',
             )
             await raise_error(
-                f'Пользователь {user.username} дезактивирован!' + msg
+                f'Пользователь {user.username} дезактивирован!' + msg,
             )
         if (
             user.cafe_id is not None
@@ -109,7 +109,8 @@ async def is_managers_id(
             user_cafe = get_cafe_or_404(session, user.cafe_id)
             msg = 'К кафе нельзя назначить занятого менеджера!'
             logger.warning(
-                msg + f'manger_id: {user.id} | manager.cafe_id: {user.cafe_id}'
+                msg + f'manger_id: {user.id} | '
+                f'manager.cafe_id: {user.cafe_id}',
             )
             await raise_error((
                 f'Пользователь {user.username} '
@@ -133,7 +134,7 @@ async def is_managers_id(
 async def is_manager_from_cafe(
     cafe_id: int,
     user: User,
-    db_cafe: Optional[Cafe] = None
+    db_cafe: Optional[Cafe] = None,
 ) -> None:
     """Проверка, что менеджер может редактировать только свое кафе."""
     if db_cafe is not None and db_cafe.is_active is False:
@@ -156,6 +157,6 @@ async def is_manager_from_cafe(
     if user.cafe_id != cafe_id:
         msg = 'Вы можете редактировать только свое привязанное кафе!'
         logger.warning(
-            msg + f'user.id: {user.id} | user.cafe_id: {user.cafe_id}'
+            msg + f'user.id: {user.id} | user.cafe_id: {user.cafe_id}',
         )
         await raise_error(msg, HTTPStatus.FORBIDDEN)

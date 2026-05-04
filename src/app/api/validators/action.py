@@ -26,7 +26,7 @@ async def can_manager_change_cafes(cafes_id: Sequence, user: User) -> None:
             'Менеджер может управлять акциями только привязанного к нему кафе!'
         )
         logger.warning(
-            msg + f'user_id: {user.id }  | user.cafe_id: {user.cafe_id}!'
+            msg + f'user_id: {user.id }  | user.cafe_id: {user.cafe_id}!',
         )
         await raise_error(msg, HTTPStatus.FORBIDDEN)
     await is_manager_from_cafe(cafes_id.pop(), user)
@@ -36,7 +36,7 @@ async def get_action_or_404(session: AsyncSession, action_id: int) -> Self:
     """Возвращает акцию по ее id и выдает 404, если она не найдена."""
     db_action = await action_crud.get(action_id, session)
     if db_action is None:
-        msg = f'Акция не найдена!'
+        msg = 'Акция не найдена!'
         logger.debug(msg + f'action_id: {action_id}')
         await raise_error(msg, HTTPStatus.NOT_FOUND)
     return db_action
@@ -80,7 +80,7 @@ async def is_cafes_exists(
         missing_ids = cafes_id - db_cafes_id
         logger.warning(f'Есть несуществующие кафе! missing_id: {missing_ids}')
         await raise_error(
-            f'Кафе {db_cafes_name} существуют! Другие не найдены!'
+            f'Кафе {db_cafes_name} существуют! Другие не найдены!',
         )
     return cafes
 
