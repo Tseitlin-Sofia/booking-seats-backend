@@ -12,8 +12,8 @@ from app.schemas.user import UserShortInfo
 class CafeBase(BaseModel):
     """Базовая схема."""
 
-    name: str = Field(min_length=CafeConstants.MIN_LENGTH_NAME,)
-    address: str = Field(min_length=CafeConstants.MIN_LENGTH_NAME,)
+    name: str = Field(min_length=CafeConstants.MIN_LENGTH_NAME)
+    address: str = Field(min_length=CafeConstants.MIN_LENGTH_NAME)
     phone: str = Field(examples=['+78005553535'])
     description: Optional[str] = None
     photo_id: Optional[UUID] = None

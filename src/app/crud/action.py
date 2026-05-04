@@ -22,8 +22,8 @@ class CRUDAction(CRUDBase):
     ) -> Self:
         """Создает новую акцию в базе данных."""
         db_action = self.model(**new_action.model_dump(
-            exclude={"cafes_id"}, exclude_unset=True, exclude_none=True
-        ),)
+            exclude={"cafes_id"}, exclude_unset=True, exclude_none=True,
+        ))
         db_action.cafes = cafes
         session.add(db_action)
         await session.commit()

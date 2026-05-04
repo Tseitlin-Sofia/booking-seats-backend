@@ -1,9 +1,8 @@
-import re
 import uuid
 from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import UUID, String, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import CafeConstants
 from app.core.db import Base, CommonMixin
