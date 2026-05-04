@@ -50,12 +50,5 @@ class Cafe(CommonMixin, Base):
         lazy="selectin",
     )
 
-    @validates("phone")
-    def validate_phone(self, key: str, value: str) -> str:
-        """Проверка, указал ли правильный формат телефона."""
-        if not re.match(CafeConstants.PHONE_FORMAT, value):
-            raise ValueError(CafeConstants.ERROR_PHONE)
-        return value
-
     def __repr__(self) -> str:
         return self.name[:CafeConstants.NAME_RESTRICTION]
