@@ -82,7 +82,7 @@ async def is_managers_id(
                 msg + f'user_id: {user.id} | user_role: {user.role}!',
             )
             await raise_error(
-                f"'{user.username}' не является менеджером! " + msg
+                f"'{user.username}' не является менеджером! " + msg,
             )
         if db_cafe and (not user.is_active and db_cafe.is_active is True):
             msg = 'К кафе можно привязать только активированных менеджеров!'
