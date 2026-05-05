@@ -12,6 +12,7 @@ from app.models.action import action_cafe
 if TYPE_CHECKING:
     from app.models.action import Action
     from app.models.booking import Booking
+    from app.models.slot import Slot
     from app.models.table import Table as TableModel
     from app.models.user import User
 
@@ -47,6 +48,11 @@ class Cafe(CommonMixin, Base):
     actions: Mapped[List['Action']] = relationship(
         secondary=action_cafe,
         back_populates="cafes",
+        lazy="selectin",
+    )
+    slots: Mapped[List['Slot']] = relationship(
+        'Slot',
+        back_populates="cafe",
         lazy="selectin",
     )
 

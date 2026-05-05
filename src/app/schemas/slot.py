@@ -1,6 +1,7 @@
 """Схема для модели интервала времени бронирования столика."""
 
-from datetime import time
+from datetime import datetime, time
+from typing import Optional
 
 from pydantic import (
     BaseModel,
@@ -11,7 +12,7 @@ from pydantic import (
 from typing_extensions import Self
 
 from app.core.constants import SlotConstants
-from app.schemas.cafe import CafeInfo
+from app.schemas.cafe import CafeShortInfo
 
 
 class TimeSlotBase(BaseModel):
@@ -22,14 +23,14 @@ class TimeSlotBase(BaseModel):
         examples=[SlotConstants.FROM_TIME],
         description='Время начала интервала (HH:MM или HH:MM:SS)',
     )
-    description: str | None = Field(
-        None,
-        description='Описание слота',
-    )
     end_time: time = Field(
         ...,
         examples=[SlotConstants.TO_TIME],
         description='Время окончания интервала (HH:MM или HH:MM:SS)',
+    )
+    description: str | None = Field(
+        None,
+        description='Описание слота',
     )
 
     @model_validator(mode='after')
@@ -46,8 +47,10 @@ class TimeSlotInfo(TimeSlotBase):
     """Схема для информации о слоте в кафе."""
 
     id: int = Field(..., description='ID слота')
-    cafe: CafeInfo = Field(..., description='Информация о кафе')
+    cafe: CafeShortInfo = Field(..., description='Информация о кафе')
     is_active: bool = Field(..., description='Активен ли слот')
+    created_at: datetime = Field(..., title='Created At')
+    updated_at: datetime = Field(..., title='Updated At')
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -61,15 +64,16 @@ class TimeSlotCreate(TimeSlotBase):
 class TimeSlotUpdate(BaseModel):
     """Схема для обновления интервала времени бронирования слота в кафе."""
 
-    start_time: time | None = Field(..., description='Время начала интервала')
-    end_time: time | None = Field(
-        ..., description='Время окончания интервала')
-    id: int | None = Field(..., description='ID временного слота')
-    description: str | None = Field(
-        ..., description='Описание временного слота',
+    start_time: Optional[time] = Field(
+        None, description='Время начала интервала',
     )
-    is_active: bool | None = Field(
-        ..., description='Активен ли временной слот',
+    end_time: Optional[time] = Field(
+        None, description='Время окончания интервала')
+    description: Optional[str] = Field(
+        None, description='Описание временного слота',
+    )
+    is_active: Optional[bool] = Field(
+        None, description='Активен ли временной слот',
     )
 
     model_config = ConfigDict(extra='forbid')

@@ -44,3 +44,15 @@ async def check_slots_intersections(
             status_code=422,
             detail='Слот пересекается с уже существующим слотом в этом кафе.',
         )
+
+
+async def validate_slot_times(
+    start_time: time,
+    end_time: time,
+) -> None:
+    """Проверяет корректность временного интервала слота."""
+    if start_time >= end_time:
+        raise HTTPException(
+            status_code=422,
+            detail='Время начала слота должно быть меньше времени окончания.',
+        )

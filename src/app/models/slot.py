@@ -24,10 +24,10 @@ class Slot(Base, CommonMixin):
         nullable=False,
     )
     description: Mapped[str | None] = mapped_column(String, nullable=True)
-    tables_slots = relationship(
-        'BookingTableSlot',
-        back_populates='slot',
-        lazy='selectin',
+    cafe = relationship(
+        'Cafe',
+        back_populates="slots",
+        lazy="selectin",
     )
 
     @validates("start_time")
