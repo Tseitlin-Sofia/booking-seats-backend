@@ -49,19 +49,19 @@ class UserService:
         """Выбрасывает исключение с указанием конфликтующего поля."""
         if email and conflicting_user.email == email:
             raise UserDuplicateError(
-                'Пользователь с таким email уже существует.',
+                'Пользователь с такими учетными данными уже существует.',
             )
         if phone and conflicting_user.phone == phone:
             raise UserDuplicateError(
-                'Пользователь с таким phone уже существует.',
+                'Пользователь с такими учетными данными уже существует.',
             )
         if username and conflicting_user.username == username:
             raise UserDuplicateError(
-                'Пользователь с таким username уже существует.',
+                'Пользователь с такими учетными данными уже существует.',
             )
         if tg_id and conflicting_user.tg_id == tg_id:
             raise UserDuplicateError(
-                'Пользователь с таким tg_id уже существует.',
+                'Пользователь с такими учетными данными уже существует.',
             )
 
     async def check_unique_fields(
@@ -109,7 +109,8 @@ class UserService:
         """Метод для проверки наличия хотя бы одного из полей email, phone."""
         if not email and not phone:
             raise UserValidationError(
-                'Хотя бы одно из полей email или phone должно быть заполено',
+                'Хотя бы одно из полей email '
+                'или телефон должно быть заполено',
             )
 
     async def create_user(
