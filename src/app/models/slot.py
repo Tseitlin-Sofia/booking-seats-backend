@@ -23,12 +23,16 @@ class Slot(Base, CommonMixin):
         ForeignKey('cafe.id'),
         nullable=False,
     )
-<<<<<<< HEAD
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     cafe = relationship(
         'Cafe',
         back_populates="slots",
         lazy="selectin",
+    )
+    tables_slots = relationship(
+        'BookingTableSlot',
+        back_populates='slot',
+        lazy='selectin',
     )
 
     @validates("start_time")
@@ -50,13 +54,6 @@ class Slot(Base, CommonMixin):
                 f"(получено start={self.start_time}, end={value})",
             )
         return value
-=======
-    tables_slots = relationship(
-        'BookingTableSlot',
-        back_populates='slot',
-        lazy='selectin',
-    )
->>>>>>> origin
 
     def __repr__(self) -> str:
         return (
