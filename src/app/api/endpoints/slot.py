@@ -31,7 +31,7 @@ async def get_slots(
     show_active: Optional[bool] = True,
 ) -> list[TimeSlotInfo]:
     """Возвращает все слоты для заданного кафе."""
-    await get_cafe_or_404(session, cafe_id)
+    await get_cafe_or_404(session, cafe_id, is_exist=True)
     if user.is_user:
         show_active = True
     slots = await slot_crud.get_slots_by_cafe(cafe_id, session, show_active)
@@ -117,11 +117,11 @@ async def update_slot(
     user: ManagerDep,
 ) -> TimeSlotInfo:
     """Обновление информации о слоте в кафе."""
-    await get_cafe_or_404(session, cafe_id)
+    await get_cafe_or_404(session, cafe_id, is_exist=True)
     slot_db = await slot_crud.get_slot_or_404(session=session, slot_id=slot_id)
     slot_data = slot_in.model_dump(exclude_unset=True)
-    start_time=slot_data.get('start_time', slot_db.start_time)
-    end_time=slot_data.get('end_time', slot_db.end_time)
+    start_time = slot_data.get('start_time', slot_db.start_time)
+    end_time = slot_data.get('end_time', slot_db.end_time)
     await validate_slot_times(
         start_time=start_time,
         end_time=end_time,

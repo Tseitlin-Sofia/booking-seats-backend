@@ -12,8 +12,14 @@ from app.schemas.user import UserShortInfo
 class CafeBase(BaseModel):
     """Базовая схема."""
 
-    name: str = Field(min_length=CafeConstants.MIN_LENGTH_NAME)
-    address: str = Field(min_length=CafeConstants.MIN_LENGTH_NAME)
+    name: str = Field(
+        min_length=CafeConstants.MIN_LENGTH_NAME,
+        examples=['YA'],
+    )
+    address: str = Field(
+        min_length=CafeConstants.MIN_LENGTH_ADDRESS,
+        examples=['ул.Ли, д.5'],
+    )
     phone: str = Field(examples=['+78005553535'])
     description: Optional[str] = None
     photo_id: Optional[UUID] = None
@@ -42,10 +48,14 @@ class CafeUpdate(BaseModel):
     """Схема для метода PATCH."""
 
     name: Optional[str] = Field(
-        default=None, min_length=CafeConstants.MIN_LENGTH_NAME,
+        default=None,
+        min_length=CafeConstants.MIN_LENGTH_NAME,
+        examples=['YA'],
     )
     address: Optional[str] = Field(
-        default=None, min_length=CafeConstants.MIN_LENGTH_ADDRESS,
+        default=None,
+        min_length=CafeConstants.MIN_LENGTH_ADDRESS,
+        examples=['ул.Ли, д.5'],
     )
     phone: Optional[str] = Field(default=None, examples=['+78005553535'])
     description: Optional[str] = Field(

@@ -25,6 +25,7 @@ async def raise_error(
 async def get_cafe_or_404(
         session: AsyncSession,
         cafe_id: int,
+        *,
         is_exist: Optional[bool] = False,
 ) -> Self:
     """Возвращает кафе по его id и выдает 404, если оно не найдено."""
