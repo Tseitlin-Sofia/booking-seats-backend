@@ -14,11 +14,11 @@ class CafeBase(BaseModel):
 
     name: str = Field(
         min_length=CafeConstants.MIN_LENGTH_NAME,
-        examples=['YA']
+        examples=['YA'],
     )
     address: str = Field(
         min_length=CafeConstants.MIN_LENGTH_ADDRESS,
-        examples=['ул.Ли, д.5']
+        examples=['ул.Ли, д.5'],
     )
     phone: str = Field(examples=['+78005553535'])
     description: Optional[str] = None
@@ -50,12 +50,12 @@ class CafeUpdate(BaseModel):
     name: Optional[str] = Field(
         default=None,
         min_length=CafeConstants.MIN_LENGTH_NAME,
-        examples=['YA']
+        examples=['YA'],
     )
     address: Optional[str] = Field(
         default=None,
         min_length=CafeConstants.MIN_LENGTH_ADDRESS,
-        examples=['ул.Ли, д.5']
+        examples=['ул.Ли, д.5'],
     )
     phone: Optional[str] = Field(default=None, examples=['+78005553535'])
     description: Optional[str] = Field(
