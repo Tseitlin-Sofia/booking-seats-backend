@@ -19,7 +19,7 @@ async def validate_slot(
     """Получает слот по id или возвращает 404 ошибку."""
     from app.api.validators.cafe import get_cafe_or_404
 
-    await get_cafe_or_404(session, cafe_id, is_active)
+    await get_cafe_or_404(session, cafe_id)
     return await slot_crud.get_slot_or_404(session, slot_id, is_active)
 
 

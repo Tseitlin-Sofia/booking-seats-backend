@@ -117,7 +117,7 @@ async def update_slot(
     user: ManagerDep,
 ) -> TimeSlotInfo:
     """Обновление информации о слоте в кафе."""
-    await get_cafe_or_404(session, cafe_id, True)
+    await get_cafe_or_404(session, cafe_id)
     slot_db = await slot_crud.get_slot_or_404(session=session, slot_id=slot_id)
     slot_data = slot_in.model_dump(exclude_unset=True)
     start_time=slot_data.get('start_time', slot_db.start_time)
