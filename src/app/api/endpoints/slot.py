@@ -23,7 +23,7 @@ async def get_slots(
     active: Optional[bool] = True,
 ) -> list[SlotBase]:
     """Возвращает все слоты для бронирования столиков в заданном кафе."""
-    await get_cafe_or_404(session, cafe_id, True)
+    await get_cafe_or_404(session, cafe_id, is_exist=True)
     slots = await slot_crud.get_slots_by_cafe(cafe_id, session)
     if not active:
         return slots
@@ -39,7 +39,7 @@ async def create_slot(
     session: SessionDep,
 ) -> SlotBase:
     """Создание нового слота для бронирования столика."""
-    await get_cafe_or_404(session, slot_data.cafe_id, True)
+    await get_cafe_or_404(session, slot_data.cafe_id, is_exist=True)
     await check_slots_intersections(
         **slot_data.model_dump(), session=session,
     )
