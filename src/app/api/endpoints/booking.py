@@ -1,9 +1,7 @@
 """Эндпоинты бронирования."""
 
-from datetime import timedelta
 from typing import Annotated, Optional
 
-from celery.result import AsyncResult
 from fastapi import APIRouter, status
 from fastapi.param_functions import Query
 
@@ -18,8 +16,6 @@ from app.api.validators.booking import (
     validate_table_slots_exists,
     validate_user_rights,
 )
-from app.celery.celery_app import celery_app
-from app.celery.tasks import notify_admin, notify_client
 from app.core.logging import get_logger
 from app.crud.booking import booking_crud, booking_table_slot_crud
 from app.schemas.booking import (
@@ -30,31 +26,10 @@ from app.schemas.booking import (
     BookingUpdate,
     BookingUpdateWithoutTablesSlots,
 )
-from app.services.task import get_reminder_id
+from app.services.booking import booking_service
 
 logger = get_logger()
 router = APIRouter()
-
-
-def _make_notification_tasks_for_celery(
-    booking: BookingInfo,
-    method: str,
-) -> None:
-    """Создание задачи в celery.
-
-    Созадется задача на отправку уведомления админинистратору и напоминания
-    клиенту о брони.
-    """
-    task_id = get_reminder_id(booking.id)
-    if method == 'PATCH':
-        AsyncResult(task_id, app=celery_app).revoke()
-    notify_admin.delay(method, booking)
-    booking_date = booking.booking_date
-    notify_client.apply_async(
-        args=[booking],
-        eta=booking_date - timedelta(hours=2),
-        task_id=task_id,
-    )
 
 
 @router.get(
@@ -209,7 +184,9 @@ async def create_booking(
     booking_response = BookingInfo.model_validate(
         new_booking, from_attributes=True,
     )
-    _make_notification_tasks_for_celery(booking_response, method='POST')
+    await booking_service._make_notification_tasks_for_celery(
+        booking_response, method='POST', session=session,
+    )
     return booking_response
 
 
@@ -319,5 +296,7 @@ async def update_booking(
     booking_response = BookingInfo.model_validate(
         booking_upd, from_attributes=True,
     )
-    _make_notification_tasks_for_celery(booking_response, method='PATCH')
+    await booking_service._make_notification_tasks_for_celery(
+        booking_response, method='PATCH', session=session,
+    )
     return booking_response

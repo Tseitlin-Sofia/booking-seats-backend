@@ -29,11 +29,6 @@ class Slot(Base, CommonMixin):
         back_populates="slots",
         lazy="selectin",
     )
-    tables_slots = relationship(
-        'BookingTableSlot',
-        back_populates='slot',
-        lazy='selectin',
-    )
 
     @validates("start_time")
     def _validate_start_time(self, key: str, value: time) -> time:
