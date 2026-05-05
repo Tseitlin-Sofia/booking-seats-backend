@@ -103,3 +103,7 @@ class BookingUpdate(
     """Схема для обновления бронирования."""
 
     tables_slots: list[BookingTableSlot]
+    pre_order_items: Optional[List[PreOrderItemCreate]] = Field(
+        default=None,
+        title='Pre-order items',
+    )

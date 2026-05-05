@@ -171,6 +171,12 @@ async def create_booking(
         tables_slots=tables_slots,
         session=session,
     )
+    if booking.pre_order_items:
+        dishes_map = await validate_pre_order_items(
+            booking.pre_order_items,
+            booking.cafe_id,
+            session,
+        )
     booking_data.update({
         'status': BookingStatus.BOOKING,
         'user_id': current_user.id,
@@ -192,11 +198,6 @@ async def create_booking(
         )
 
     if booking.pre_order_items:
-        dishes_map = await validate_pre_order_items(
-            booking.pre_order_items,
-            booking.cafe_id,
-            session,
-        )
         await booking_crud.add_pre_order_items(
             new_booking.id,
             booking.pre_order_items,
@@ -273,6 +274,26 @@ async def update_booking(
         tables_slots=tables_slots,
         session=session,
     )
+    if booking.pre_order_items:
+        await booking_crud.delete_multi(
+            session=session,
+            objs=booking_db.pre_order_items,
+        )
+        await session.flush()
+        session.expire(booking_db, ['pre_order_items'])
+        await session.refresh(booking_db)
+        await session.commit()
+        dishes_map = await validate_pre_order_items(
+            booking.pre_order_items,
+            booking_db.cafe_id,
+            session,
+        )
+        await booking_crud.add_pre_order_items(
+            booking_db.id,
+            booking.pre_order_items,
+            dishes_map,
+            session,
+        )
     for table_slot in tables_slots:
         await booking_table_slot_crud.create(
             session=session,
