@@ -48,7 +48,7 @@ async def can_manager_change_action(
     db_action: Optional[Action] = None,
 ) -> None:
     """Менеджер может управлять акциями только привязанного к нему кафе."""
-    new_data = new_action.model_dump(exclude_unset=True)
+    new_data = new_action.model_dump(exclude_unset=True, exclude_none=True)
     if db_action is not None:
         cafes_id = await cafe_crud.get_cafes_by_action(session, db_action.id)
         await can_manager_change_cafes(cafes_id, user)
@@ -60,7 +60,7 @@ async def is_cafes_exists(
         session: AsyncSession, new_action: Union[ActionCreate, ActionUpdate],
 ) -> Optional[Sequence[Cafe]]:
     """Проверка, существуют ли кафе из списка в бд."""
-    new_data = new_action.model_dump(exclude_unset=True)
+    new_data = new_action.model_dump(exclude_unset=True, exclude_none=True)
     if 'cafes_id' not in new_data:
         return None
     cafes_id = set(new_data['cafes_id'])
@@ -77,7 +77,7 @@ async def is_action_already_exists(
         session: AsyncSession, new_action: Union[ActionCreate, ActionUpdate],
 ) -> None:
     """Проверка на наличие акции в бд с тем же описанием."""
-    new_data = new_action.model_dump(exclude_unset=True)
+    new_data = new_action.model_dump(exclude_unset=True, exclude_none=True)
     if 'description' not in new_data:
         return
     is_exist = await action_crud.is_obj_exist(
