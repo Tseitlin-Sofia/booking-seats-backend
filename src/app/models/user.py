@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sqlalchemy import CheckConstraint, Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
@@ -53,16 +53,19 @@ class User(CommonMixin, Base):
         ),
         default=UserConstants.DEFAULT_USER_ROLE,
     )
-    cafe_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("cafe.id"), nullable=True
+    cafe_id: Mapped[int | None] = mapped_column(
+        ForeignKey('cafe.id'),
+        nullable=True,
     )
-    cafe: Mapped[Optional['Cafe']] = relationship(
-        back_populates="managers", lazy="selectin",
+    cafe: Mapped["Cafe | None"] = relationship(
+        'Cafe',
+        back_populates='managers',
+        lazy='selectin',
     )
-    bookings: Mapped[list["Booking"]] = relationship(
-        "Booking",
-        back_populates="user",
-        lazy="selectin",
+    bookings: Mapped[list['Booking']] = relationship(
+        'Booking',
+        back_populates='user',
+        lazy='selectin',
     )
 
     @property
@@ -91,7 +94,7 @@ class User(CommonMixin, Base):
     def validate_manager(self, key: int, value: int) -> int:
         """Проверка, что только менеджер может быть привязан к кафе."""
         if value is not None and not self.is_manager:
-            raise ValueError("К кафе можно привязать только менеджера!")
+            raise ValueError('К кафе можно привязать только менеджера!')
         return value
 
     def __str__(self) -> str:

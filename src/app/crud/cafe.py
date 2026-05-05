@@ -1,4 +1,4 @@
-from typing import List, Optional, Self
+from typing import List, Optional, Self, Sequence
 
 from sqlalchemy import and_, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import get_logger
 from app.crud.base import CRUDBase
 from app.models import Cafe, User
+from app.models.action import action_cafe
 from app.schemas.cafe import CafeCreate, CafeUpdate
 
 logger = get_logger()
@@ -13,6 +14,18 @@ logger = get_logger()
 
 class CRUDCafe(CRUDBase):
     """CRUD для объектов модели кафе."""
+
+    async def get_cafes_by_action(
+        self,
+        session: AsyncSession,
+        action_id: int,
+    ) -> Sequence[Cafe]:
+        """Возвращает список кафе по id акции."""
+        result = await session.execute(
+            select(action_cafe.c.cafe_id)
+            .where(action_cafe.c.action_id == action_id),
+        )
+        return result.scalars().all()
 
     async def create_new_cafe(
         self,
@@ -22,8 +35,8 @@ class CRUDCafe(CRUDBase):
     ) -> Self:
         """Создает новое кафе в базе данных."""
         db_cafe = self.model(**new_cafe.model_dump(
-            exclude={"managers_id"}, exclude_unset=True),
-        )
+            exclude={'managers_id'}, exclude_unset=True, exclude_none=True,
+        ))
         db_cafe.managers = managers
         session.add(db_cafe)
         await session.commit()
@@ -43,7 +56,7 @@ class CRUDCafe(CRUDBase):
         managers: Optional[List[User]] = None,
     ) -> Self:
         """Обновляет существующее кафе в базе данных."""
-        new_data = new_cafe.model_dump(exclude_unset=True)
+        new_data = new_cafe.model_dump(exclude_unset=True, exclude_none=True)
         for key in new_data.keys():
             if key == 'managers_id':
                 db_cafe.managers = managers

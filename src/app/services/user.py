@@ -1,9 +1,10 @@
 import re
 
 from pwdlib import PasswordHash
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import UserDuplicateError, UserValidationError
 from app.crud.user import user_crud
 from app.models import User
 from app.models.user import UserRole
@@ -37,6 +38,32 @@ class UserService:
             cleaned = '+7' + cleaned[1:]
         return cleaned
 
+    def raise_duplicate_error(
+        self,
+        email: str | None,
+        phone: str | None,
+        username: str | None,
+        tg_id: str | None,
+        conflicting_user: User,
+    ) -> None:
+        """Выбрасывает исключение с указанием конфликтующего поля."""
+        if email and conflicting_user.email == email:
+            raise UserDuplicateError(
+                'Пользователь с такими учетными данными уже существует.',
+            )
+        if phone and conflicting_user.phone == phone:
+            raise UserDuplicateError(
+                'Пользователь с такими учетными данными уже существует.',
+            )
+        if username and conflicting_user.username == username:
+            raise UserDuplicateError(
+                'Пользователь с такими учетными данными уже существует.',
+            )
+        if tg_id and conflicting_user.tg_id == tg_id:
+            raise UserDuplicateError(
+                'Пользователь с такими учетными данными уже существует.',
+            )
+
     async def check_unique_fields(
         self,
         session: AsyncSession,
@@ -46,39 +73,33 @@ class UserService:
         tg_id: str | None = None,
     ) -> None:
         """Проверяет поля email, phone и username на уникальность."""
+        conditions = []
+        normalized_phone = self.normalize_phone(phone) if phone else None
+
         if email:
-            if await user_crud.get_by_attribute(
-                attr_name='email',
-                attr_value=email,
-                session=session,
-            ):
-                raise ValueError('Пользователь с таким email уже существует.')
-        if phone:
-            normalized_phone = self.normalize_phone(phone)
-            if await user_crud.get_by_attribute(
-                attr_name='phone',
-                attr_value=normalized_phone,
-                session=session,
-            ):
-                raise ValueError('Пользователь с таким phone уже существует')
+            conditions.append(User.email == email)
+        if normalized_phone:
+            conditions.append(User.phone == normalized_phone)
         if username:
-            if await user_crud.get_by_attribute(
-                attr_name='username',
-                attr_value=username,
-                session=session,
-            ):
-                raise ValueError(
-                    'Пользоваетль с таким username уже существует.',
-                )
+            conditions.append(User.username == username)
         if tg_id:
-            if await user_crud.get_by_attribute(
-                attr_name='tg_id',
-                attr_value=tg_id,
-                session=session,
-            ):
-                raise ValueError(
-                    'Пользоваетль с таким tg_id уже существует.',
-                )
+            conditions.append(User.tg_id == tg_id)
+
+        if not conditions:
+            return
+
+        stmt = select(User).where(
+            User.is_active,
+            or_(*conditions),
+        )
+
+        result = await session.execute(stmt)
+        conflicting_user = result.scalars().first()
+
+        if conflicting_user:
+            self.raise_duplicate_error(
+                email, normalized_phone, username, tg_id, conflicting_user,
+            )
 
     @staticmethod
     def check_email_or_phone_required(
@@ -87,9 +108,9 @@ class UserService:
     ) -> None:
         """Метод для проверки наличия хотя бы одного из полей email, phone."""
         if not email and not phone:
-            # TODO лог о некоректном предоставлении полей
-            raise ValueError(
-                'Хотя бы одно из полей email или phone должно быть заполено',
+            raise UserValidationError(
+                'Хотя бы одно из полей email '
+                'или телефон должно быть заполено',
             )
 
     async def create_user(
@@ -98,6 +119,7 @@ class UserService:
         user_in: UserCreate,
     ) -> User:
         """Создаёт нового пользователя и проводит необходимые проверки."""
+        self.check_email_or_phone_required(user_in.email, user_in.phone)
         await self.check_unique_fields(
             session=session,
             email=user_in.email,
@@ -105,7 +127,6 @@ class UserService:
             username=user_in.username,
             tg_id=user_in.tg_id,
         )
-        self.check_email_or_phone_required(user_in.email, user_in.phone)
 
         user_data = user_in.model_dump(exclude={'password'})
         user_data['password_hash'] = get_password_hash(user_in.password)
@@ -149,6 +170,10 @@ class UserService:
 
         if user_in.phone:
             user_update_data['phone'] = self.normalize_phone(user_in.phone)
+
+        updated_email = user_update_data.get('email', user.email)
+        updated_phone = user_update_data.get('phone', user.phone)
+        self.check_email_or_phone_required(updated_email, updated_phone)
 
         return await user_crud.update(
             session=session,

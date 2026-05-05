@@ -7,9 +7,16 @@ from app.api.dependencies import (
     UserDep,
 )
 from app.api.validators.user import (
+    validate_admin_cannot_change_own_role,
     validate_admin_or_manager_cannot_deactivate_self,
     validate_cannot_deactivate_last_manager,
     validate_manager_can_only_edit_users,
+    validate_manager_cannot_elevate_role,
+)
+from app.core.exceptions import (
+    PermissionDeniedError,
+    UserDuplicateError,
+    UserValidationError,
 )
 from app.core.user import get_current_user, get_manager_user
 from app.crud.user import user_crud
@@ -57,13 +64,18 @@ async def create_user(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=(
-                'Авторизированный пользователь не'
+                'Авторизированный пользователь не '
                 'может создать нового пользователя'
             ),
         )
     try:
         user = await user_service.create_user(session=session, user_in=user_in)
-    except ValueError as e:
+    except UserValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        )
+    except UserDuplicateError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
@@ -85,7 +97,7 @@ async def get_me_info(
     user: UserDep,
 ) -> UserInfo:
     """Возвращает данные текущего авторизованного пользователя."""
-    return UserInfo.model_validate(user)
+    return user
 
 
 @router.patch(
@@ -106,15 +118,23 @@ async def patch_me(
     if user_in.role is not None or user_in.is_active is not None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Вы не можете поменять поля role и is_active самому себе.',
+            detail=(
+                'Вы не можете поменять '
+                'роль и статус активности самому себе.'
+            ),
         )
     try:
         return await user_service.update_user(
             session=session, user=current_user, user_in=user_in,
         )
-    except ValueError as e:
+    except UserDuplicateError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except UserValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e),
         )
 
@@ -138,7 +158,7 @@ async def get_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Пользователь с таким id не найден.',
+            detail='Пользователь не найден.',
         )
     return user
 
@@ -165,10 +185,15 @@ async def update_user(
     if not target_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Пользователь с таким id не найден',
+            detail='Пользователь не найден',
         )
 
     try:
+        validate_admin_cannot_change_own_role(
+            current_user=current_user,
+            target_user=target_user,
+            new_role=user_in.role,
+        )
         validate_admin_or_manager_cannot_deactivate_self(
             current_user=current_user,
             target_user=target_user,
@@ -178,6 +203,11 @@ async def update_user(
             current_user=current_user,
             target_user=target_user,
         )
+        validate_manager_cannot_elevate_role(
+            current_user=current_user,
+            target_user=target_user,
+            new_role=user_in.role,
+        )
         await validate_cannot_deactivate_last_manager(
             session=session,
             user=target_user,
@@ -185,6 +215,21 @@ async def update_user(
         )
         return await user_service.update_user(
             session=session, user=target_user, user_in=user_in,
+        )
+    except PermissionDeniedError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e),
+        )
+    except UserValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        )
+    except UserDuplicateError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
         )
     except ValueError as e:
         raise HTTPException(

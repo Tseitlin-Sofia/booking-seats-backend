@@ -27,10 +27,8 @@ from app.core.logging import (
     user_id_ctx,
     username_ctx,
 )
-
-from .conftest import SinkType
-
-LOG_WRITE_DELAY_SEC = 0.3
+from tests.conftest import LOG_WRITE_DELAY_SEC
+from tests.fixtures.logging import SinkType
 
 LOG_STRUCTURE_PATTERN: re.Pattern[str] = re.compile(
     r'^'  # Начало строки

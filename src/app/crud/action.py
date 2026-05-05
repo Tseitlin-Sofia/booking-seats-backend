@@ -1,14 +1,12 @@
-from typing import List, Optional, Self, TYPE_CHECKING
+from typing import List, Optional, Self
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.crud.base import CRUDBase
-from app.models import Action
-
-if TYPE_CHECKING:
-    from app.models.cafe import Cafe
-    from app.schemas.action import ActionCreate, ActionUpdate
+from app.models.action import Action
+from app.models.cafe import Cafe
+from app.schemas.action import ActionCreate, ActionUpdate
 
 logger = get_logger()
 
@@ -20,12 +18,12 @@ class CRUDAction(CRUDBase):
         self,
         session: AsyncSession,
         new_action: ActionCreate,
-        cafes: List[Cafe]
+        cafes: List[Cafe],
     ) -> Self:
         """Создает новую акцию в базе данных."""
         db_action = self.model(**new_action.model_dump(
-            exclude={"cafes_id"}, exclude_unset=True),
-        )
+            exclude={"cafes_id"}, exclude_unset=True, exclude_none=True,
+        ))
         db_action.cafes = cafes
         session.add(db_action)
         await session.commit()
@@ -44,7 +42,7 @@ class CRUDAction(CRUDBase):
         cafes: Optional[List[Cafe]] = None,
     ) -> Self:
         """Обновляет существующее кафе в базе данных."""
-        new_data = new_action.model_dump(exclude_unset=True)
+        new_data = new_action.model_dump(exclude_unset=True, exclude_none=True)
         for key in new_data.keys():
             if key == 'cafes_id':
                 db_action.cafes = cafes

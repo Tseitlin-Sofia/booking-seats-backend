@@ -1,6 +1,6 @@
 import re
 import uuid
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import UUID, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
@@ -12,6 +12,7 @@ from app.models.action import action_cafe
 if TYPE_CHECKING:
     from app.models.action import Action
     from app.models.booking import Booking
+    from app.models.slot import Slot
     from app.models.table import Table as TableModel
     from app.models.user import User
 
@@ -21,9 +22,9 @@ class Cafe(CommonMixin, Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "name",
-            "address",
-            name="cafe_unique_name_and_address",
+            'name',
+            'address',
+            name='cafe_unique_name_and_address',
         ),
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
@@ -32,25 +33,30 @@ class Cafe(CommonMixin, Base):
     description: Mapped[Optional[str]] = mapped_column(String)
     photo_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID)
     managers: Mapped[List['User']] = relationship(
-        back_populates="cafe", lazy="selectin",
+        back_populates='cafe', lazy='selectin',
     )
     tables: Mapped[List['TableModel']] = relationship(
         'Table',
-        back_populates="cafe",
-        lazy="selectin",
+        back_populates='cafe',
+        lazy='selectin',
     )
     bookings: Mapped[List['Booking']] = relationship(
         'Booking',
-        back_populates="cafe",
-        lazy="selectin",
+        back_populates='cafe',
+        lazy='selectin',
     )
     actions: Mapped[List['Action']] = relationship(
         secondary=action_cafe,
-        back_populates="cafes",
+        back_populates='cafes',
+        lazy='selectin',
+    )
+    slots: Mapped[List['Slot']] = relationship(
+        'Slot',
+        back_populates="cafe",
         lazy="selectin",
     )
 
-    @validates("phone")
+    @validates('phone')
     def validate_phone(self, key: str, value: str) -> str:
         """Проверка, указал ли правильный формат телефона."""
         if not re.match(CafeConstants.PHONE_FORMAT, value):

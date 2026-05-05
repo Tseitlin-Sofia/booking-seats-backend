@@ -11,7 +11,7 @@ from app.schemas.cafe import CafeShortInfo
 class ActionBase(BaseModel):
     """Базовая схема."""
 
-    photo_id: Optional[UUID] = None
+    photo_id: UUID
 
     model_config = ConfigDict(extra='forbid')
 
@@ -19,8 +19,13 @@ class ActionBase(BaseModel):
 class ActionUpdate(ActionBase):
     """Схема для метода PATCH."""
 
-    cafes_id: Optional[List[int]] = None
-    description: Optional[str] = None
+    photo_id: Optional[UUID] = Field(default=None)
+    cafes_id: Optional[List[int]] = Field(
+        default=None, min_length=ActionConstants.MIN_LENGTH_CAFES_LIST,
+    )
+    description: Optional[str] = Field(
+        default=None, min_length=ActionConstants.MIN_DESCRIPTION,
+    )
     is_active: Optional[bool] = None
 
 
@@ -37,11 +42,10 @@ class ActionInfo(ActionBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ActionCreate(BaseModel):
+class ActionCreate(ActionBase):
     """Схема для метода POST."""
 
     cafes_id: List[int] = Field(
         min_length=ActionConstants.MIN_LENGTH_CAFES_LIST,
     )
-    description: str
-    photo_id: UUID = Field(default=None)
+    description: str = Field(min_length=ActionConstants.MIN_DESCRIPTION)

@@ -11,8 +11,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import jwt
-from fastapi import Depends, HTTPException, Response, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, Security, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import ExpiredSignatureError, InvalidTokenError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,20 +22,14 @@ from app.core.db import get_async_session
 from app.models.user import User
 from app.services.user import ph
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')
-oauth2_scheme_optional = OAuth2PasswordBearer(
-    tokenUrl='/auth/login', auto_error=False,
-)
+bearer_scheme = HTTPBearer()
+bearer_scheme_optional = HTTPBearer(auto_error=False)
 
 EMAIL_REGEX = re.compile(r'^[^@]+@[^@]+\.[^@]+$')
 
 
 class AuthService:
-    """Сервис аутентификации и работы с JWT-токенами."""
-
-    def __init__(self, session: AsyncSession) -> None:
-        """Инициализация сервиса аутентификации."""
-        self.session = session
+    """Stateless-сервис аутентификации и работы с JWT."""
 
     @staticmethod
     def create_token(user_id: int, role: str) -> str:
@@ -44,7 +38,7 @@ class AuthService:
         inactivity = settings.jwt_token_inactivity_minutes
         payload = {
             'sub': str(user_id),
-            'role': role,
+            'role': str(role),
             'iat': now,
             'exp': now + timedelta(minutes=inactivity),
         }
@@ -63,33 +57,34 @@ class AuthService:
                 settings.jwt_secret_key,
                 algorithms=[settings.jwt_algorithm],
             )
-        except ExpiredSignatureError:
+        except ExpiredSignatureError as error:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail='Token expired',
                 headers={'WWW-Authenticate': 'Bearer'},
-            )
-        except InvalidTokenError:
+            ) from error
+        except InvalidTokenError as error:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail='Invalid token',
                 headers={'WWW-Authenticate': 'Bearer'},
-            )
+            ) from error
 
     async def authenticate_user(
         self,
+        session: AsyncSession,
         login: str,
         password: str,
     ) -> Optional[User]:
-        """Аутентифицирует пользователя по логину и паролю."""
+        """Аутентифицирует пользователя по телефону/email и паролю."""
         if EMAIL_REGEX.match(login):
             query = select(User).where(User.email == login)
         elif login.startswith('+'):
             query = select(User).where(User.phone == login)
         else:
-            query = select(User).where(User.username == login)
+            return None
 
-        result = await self.session.execute(query)
+        result = await session.execute(query)
         user = result.scalar_one_or_none()
 
         if not user or not user.is_active:
@@ -99,73 +94,60 @@ class AuthService:
         return user
 
 
+async def get_user_from_token(
+    token: str,
+    session: AsyncSession,
+) -> User:
+    """Возвращает пользователя по JWT-токену."""
+    credentials_exc = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail='Invalid authentication',
+        headers={'WWW-Authenticate': 'Bearer'},
+    )
+
+    payload = auth_service.decode_token(token)
+
+    user_id = payload.get('sub')
+    if not user_id:
+        raise credentials_exc
+
+    try:
+        user_id_int = int(user_id)
+    except (TypeError, ValueError) as error:
+        raise credentials_exc from error
+
+    result = await session.execute(
+        select(User).where(User.id == user_id_int),
+    )
+    user = result.scalar_one_or_none()
+
+    if not user or not user.is_active:
+        raise credentials_exc
+
+    return user
+
+
 async def get_current_user(
-    response: Response,
-    token: str = Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials = Security(bearer_scheme),
     session: AsyncSession = Depends(get_async_session),
 ) -> User:
     """Возвращает текущего авторизованного пользователя."""
-    credentials_exc = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='Invalid authentication',
-        headers={'WWW-Authenticate': 'Bearer'},
-    )
-
-    auth = AuthService(session)
-    payload = auth.decode_token(token)
-
-    user_id = payload.get('sub')
-    if not user_id:
-        raise credentials_exc
-
-    result = await session.execute(
-        select(User).where(User.id == int(user_id)),
-    )
-    user = result.scalar_one_or_none()
-
-    if not user or not user.is_active:
-        raise credentials_exc
-
-    new_token = auth.create_token(user.id, user.role)
-    response.headers['X-New-Token'] = new_token
-
-    return user
+    token = credentials.credentials
+    return await get_user_from_token(token, session)
 
 
 async def get_current_user_optional(
-    response: Response,
-    token: Optional[str] = Depends(oauth2_scheme_optional),
+    credentials: Optional[HTTPAuthorizationCredentials] = Security(
+        bearer_scheme_optional,
+    ),
     session: AsyncSession = Depends(get_async_session),
 ) -> Optional[User]:
     """Возвращает пользователя или None, если токен не передан."""
-    if not token:
+    if not credentials:
         return None
 
-    credentials_exc = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='Invalid authentication',
-        headers={'WWW-Authenticate': 'Bearer'},
-    )
-
-    auth = AuthService(session)
-    payload = auth.decode_token(token)
-
-    user_id = payload.get('sub')
-    if not user_id:
-        raise credentials_exc
-
-    result = await session.execute(
-        select(User).where(User.id == int(user_id)),
-    )
-    user = result.scalar_one_or_none()
-
-    if not user or not user.is_active:
-        raise credentials_exc
-
-    new_token = auth.create_token(user.id, user.role)
-    response.headers['X-New-Token'] = new_token
-
-    return user
+    token = credentials.credentials
+    return await get_user_from_token(token, session)
 
 
 async def get_admin_user(
@@ -190,3 +172,6 @@ async def get_manager_user(
             detail='Недостаточно прав',
         )
     return current_user
+
+
+auth_service = AuthService()

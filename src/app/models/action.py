@@ -1,7 +1,7 @@
-from typing import TYPE_CHECKING, List, Optional
 import uuid
+from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Column, ForeignKey, String, Table, UUID
+from sqlalchemy import UUID, Column, ForeignKey, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base, CommonMixin
@@ -16,12 +16,12 @@ action_cafe = Table(
     Column(
         "action_id",
         ForeignKey("action.id"),
-        primary_key=True
+        primary_key=True,
     ),
     Column(
         "cafe_id",
         ForeignKey("cafe.id"),
-        primary_key=True
+        primary_key=True,
     ),
 )
 
@@ -32,7 +32,7 @@ class Action(CommonMixin, Base):
     description: Mapped[str] = mapped_column(
         String,
         nullable=False,
-        unique=True
+        unique=True,
     )
     photo_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID, nullable=True)
     cafes: Mapped[List['Cafe']] = relationship(

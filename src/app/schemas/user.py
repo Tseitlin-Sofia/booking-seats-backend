@@ -10,6 +10,7 @@ from pydantic import (
 )
 
 from app.core.constants import UserConstants
+from app.core.exceptions import UserValidationError
 from app.models.user import UserRole
 
 
@@ -41,7 +42,7 @@ class UserBase(BaseModel):
         """Проверяет корректность ввода телефона."""
         if phone is not None:
             if not UserConstants.PHONE_REGEX.match(phone):
-                raise ValueError(
+                raise UserValidationError(
                     'Телефон должен начинаться +7 и содержать 10 цифр.',
                 )
         return phone
@@ -64,9 +65,9 @@ class UserCreate(UserBase):
         Проверяет, что email или phone не пустые.
         """
         if not self.email and not self.phone:
-            raise ValueError(
+            raise UserValidationError(
                 'Хотя бы одно из следующих полей '
-                'должно быть заполнено: email, phone',
+                'должно быть заполнено: email, телефон',
             )
         return self
 
@@ -78,17 +79,25 @@ class UserCreate(UserBase):
             (len(password) < UserConstants.MIN_PASSWORD_LENGTH)
             or (len(password) > UserConstants.MAX_PASSWORD_LENGTH)
         ):
-            raise ValueError(
+            raise UserValidationError(
                 'Пароль должен '
                 f'содержать минимум {UserConstants.MIN_PASSWORD_LENGTH} '
                 f'и не более {UserConstants.MAX_PASSWORD_LENGTH}.',
             )
 
         if not UserConstants.PASSWORD_REGEX.match(password):
-            raise ValueError(
+            raise UserValidationError(
                 'Пароль должен содержать хотя бы одну букву и одну цифру.',
             )
         return password
+
+    @field_validator('username')
+    @classmethod
+    def validate_username_not_empty(cls, username: str | None) -> str | None:
+        """Username не может быть пустым или null при обновлении."""
+        if username is not None and not username.strip():
+            raise UserValidationError('Имя пользователя не может быть пустым')
+        return username
 
 
 class UserUpdate(UserBase):
@@ -97,9 +106,9 @@ class UserUpdate(UserBase):
     username: str | None = Field(
         None, max_length=UserConstants.MAX_USERNAME_LENGTH,
     )
-    role: UserRole | None = Field(None)
+    role: UserRole | None = Field(None, example='user')
     password: str | None = Field(
-        None, max_length=UserConstants.MAX_PASSWORD_LENGTH,
+        None, max_length=UserConstants.MAX_PASSWORD_LENGTH, example='qwer1',
     )
     is_active: bool | None = Field(None)
 
@@ -114,17 +123,45 @@ class UserUpdate(UserBase):
             (len(password) < UserConstants.MIN_PASSWORD_LENGTH)
             or (len(password) > UserConstants.MAX_PASSWORD_LENGTH)
         ):
-            raise ValueError(
+            raise UserValidationError(
                 'Пароль должен '
                 f'содержать минимум {UserConstants.MIN_PASSWORD_LENGTH} '
                 f'и не более {UserConstants.MAX_PASSWORD_LENGTH}.',
             )
 
         if not UserConstants.PASSWORD_REGEX.match(password):
-            raise ValueError(
+            raise UserValidationError(
                 'Пароль должен содержать хотя бы одну букву и одну цифру.',
             )
         return password
+
+    @field_validator('username')
+    @classmethod
+    def validate_username_not_empty(cls, username: str | None) -> str | None:
+        """Username не может быть пустым или null при обновлении."""
+        if (
+            (username is not None and not username.strip()) or username is None
+        ):
+            raise UserValidationError('Имя пользователя не может быть пустым')
+        return username
+
+    @field_validator('role')
+    @classmethod
+    def validate_role_not_null(cls, role: UserRole | None) -> UserRole | None:
+        """Роль не может быть явно установлена в None."""
+        if role is None:
+            raise UserValidationError('Роль не может быть пустой')
+        return role
+
+    @field_validator('is_active')
+    @classmethod
+    def validate_is_active_not_null(
+        cls, is_active: bool | None,
+    ) -> bool | None:
+        """is_active не может быть явно установлен в None."""
+        if is_active is None:
+            raise UserValidationError('Статус активности не может быть пустым')
+        return is_active
 
 
 class UserInfo(UserBase):
