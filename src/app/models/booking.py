@@ -124,9 +124,6 @@ class Booking(Base, CommonMixin):
             self.user_id,
         )
 
-    # TODO: возможно стоит добавить property для статусов (
-    # in_active, in_booked, in_canceled, in_completed)
-
 
 class BookingDish(CommonMixin, Base):
     """Позиция предзаказа, привязанная к бронированию."""

@@ -1,25 +1,26 @@
 from datetime import time
-from typing import Any
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging import get_logger
 from app.crud.slot import slot_crud
+from app.models.slot import Slot
+
+logger = get_logger()
 
 
-async def get_slot_or_404(
+async def validate_slot(
+    cafe_id: int,
     session: AsyncSession,
     slot_id: int,
     is_active: bool = True,
-) -> Any:
+) -> Slot:
     """Получает слот по id или возвращает 404 ошибку."""
-    slot = await slot_crud.get_slot_or_404(session, slot_id, is_active)
-    if not slot:
-        raise HTTPException(
-            status_code=404,
-            detail='Слот для бронирования столика не найден.',
-        )
-    return slot
+    from app.api.validators.cafe import get_cafe_or_404
+
+    await get_cafe_or_404(session, cafe_id)
+    return await slot_crud.get_slot_or_404(session, slot_id, is_active)
 
 
 async def check_slots_intersections(
@@ -42,4 +43,16 @@ async def check_slots_intersections(
         raise HTTPException(
             status_code=422,
             detail='Слот пересекается с уже существующим слотом в этом кафе.',
+        )
+
+
+async def validate_slot_times(
+    start_time: time,
+    end_time: time,
+) -> None:
+    """Проверяет корректность временного интервала слота."""
+    if start_time >= end_time:
+        raise HTTPException(
+            status_code=422,
+            detail='Время начала слота должно быть меньше времени окончания.',
         )
