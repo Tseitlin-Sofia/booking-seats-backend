@@ -118,7 +118,10 @@ async def patch_me(
     if user_in.role is not None or user_in.is_active is not None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Вы не можете поменять поля role и is_active самому себе.',
+            detail=(
+                'Вы не можете поменять '
+                'роль и статус активности самому себе.'
+            ),
         )
     try:
         return await user_service.update_user(
@@ -155,7 +158,7 @@ async def get_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Пользователь с таким id не найден.',
+            detail='Пользователь не найден.',
         )
     return user
 
@@ -182,7 +185,7 @@ async def update_user(
     if not target_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Пользователь с таким id не найден',
+            detail='Пользователь не найден',
         )
 
     try:
