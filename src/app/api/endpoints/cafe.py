@@ -105,9 +105,9 @@ async def update_cafe(
     session: SessionDep,
 ) -> CRUDCafe:
     """Ручка patch."""
-    if user.is_manager:
-        await is_manager_from_cafe(cafe_id, user)
     db_cafe = await get_cafe_or_404(session, cafe_id)
+    if user.is_manager:
+        await is_manager_from_cafe(cafe_id, user, db_cafe)
     await check_name_address(session, new_cafe, db_cafe)
     managers = await is_managers_id(session, new_cafe, db_cafe)
     return await cafe_crud.update_db_cafe(

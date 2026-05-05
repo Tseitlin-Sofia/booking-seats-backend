@@ -39,6 +39,11 @@ class Table(CommonMixin, Base):
         back_populates='tables',
         lazy='selectin',
     )
+    tables_slots = relationship(
+        'BookingTableSlot',
+        back_populates='table',
+        lazy='selectin',
+    )
 
     def __repr__(self) -> str:
         """Строковое представление стола."""
