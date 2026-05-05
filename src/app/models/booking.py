@@ -47,8 +47,8 @@ class BookingTableSlot(Base, CommonMixin):
         ),
     )
     booking = relationship('Booking', back_populates='tables_slots')
-    slot = relationship('Slot', back_populates='tables_slots', lazy='joined')
-    table = relationship('Table', back_populates='tables_slots', lazy='joined')
+    slot = relationship('Slot', lazy='joined')
+    table = relationship('Table', lazy='joined')
 
 
 class Booking(Base, CommonMixin):
