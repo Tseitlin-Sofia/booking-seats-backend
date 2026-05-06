@@ -1,7 +1,7 @@
 import asyncio
 import sys
 from pathlib import Path
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Generator
 
 import httpx
 import pytest
@@ -40,6 +40,16 @@ DATABASE_URL = (
     f':{settings.postgres_password.get_secret_value()}'
     f'@localhost:5432/{settings.postgres_db}'
 )
+
+
+@pytest.fixture(autouse=True)
+def celery_eager_mode() -> Generator:
+    """Celery задачи выполняются синхронно, без Redis."""
+    from app.celery.celery_app import celery_app
+
+    celery_app.conf.update(task_always_eager=True)
+    yield
+    celery_app.conf.update(task_always_eager=False)
 
 
 @pytest_asyncio.fixture(scope='function')

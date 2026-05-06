@@ -44,13 +44,13 @@ class CRUDSlot(CRUDBase):
         return db_slots.scalars().all()
 
     async def get_slots_at_the_same_time(
-            self,
-            *,
-            slot_id: int | None = None,
-            start_time: time,
-            end_time: time,
-            cafe_id: int,
-            session: AsyncSession,
+        self,
+        *,
+        slot_id: int | None = None,
+        start_time: time,
+        end_time: time,
+        cafe_id: int,
+        session: AsyncSession,
     ) -> list[Slot]:
         """Возвращает слоты в этом кафе, пересекающиеся с заданным интервалом.
 
