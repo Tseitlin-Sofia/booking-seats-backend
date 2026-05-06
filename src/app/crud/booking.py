@@ -171,6 +171,30 @@ class BookingCRUD(CRUDBase):
             raise ValueError(Constants.BOOKING_NOT_FOUND)
         return booking
 
+    async def refresh_booking(
+        self,
+        session: AsyncSession,
+        booking_id: int,
+    ) -> Booking:
+        """Обновляет состояние бронирования."""
+        await session.flush()
+        # session.expunge_all()
+        stmt = select(Booking).where(Booking.id == booking_id).options(
+            selectinload(Booking.tables_slots)
+                .joinedload(BookingTableSlot.slot),
+            selectinload(Booking.tables_slots)
+                .joinedload(BookingTableSlot.table),
+            selectinload(Booking.pre_order_items)
+                .selectinload(BookingDish.dish),
+            selectinload(Booking.user),
+            selectinload(Booking.cafe),
+        )
+        result = await session.execute(stmt)
+        booking = result.scalar_one_or_none()
+        if not booking:
+            raise ValueError(Constants.BOOKING_NOT_FOUND)
+        return booking
+
 
 class BookingTableSlotCRUD(CRUDBase):
     """CRUD операции для слотов бронирования."""
