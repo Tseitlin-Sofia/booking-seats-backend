@@ -129,6 +129,18 @@ class BookingCRUD(CRUDBase):
         )
         return datetime.combine(booking_date, booking_time)
 
+    async def delete_multi(
+        self,
+        session: AsyncSession,
+        objs: list[BookingDish],
+    ) -> None:
+        """Удаляет несколько объектов."""
+        await session.execute(
+            delete(BookingDish).where(
+                BookingDish.id.in_(obj.id for obj in objs),
+            ),
+        )
+
 
 class BookingTableSlotCRUD(CRUDBase):
     """CRUD операции для слотов бронирования."""

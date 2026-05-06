@@ -1,9 +1,7 @@
 """Эндпоинты бронирования."""
 
-from datetime import timedelta
 from typing import Annotated, Optional
 
-from celery.result import AsyncResult
 from fastapi import APIRouter, status
 from fastapi.param_functions import Query
 
@@ -18,10 +16,6 @@ from app.api.validators.booking import (
     validate_table_slots_exists,
     validate_user_rights,
 )
-from app.celery.celery_app import celery_app
-from app.celery.tasks import notify_admin, notify_client
-from app.core.constants import NotificationConstants
-from app.core.db import Base
 from app.core.logging import get_logger
 from app.crud.booking import booking_crud, booking_table_slot_crud
 from app.schemas.booking import (
@@ -32,39 +26,10 @@ from app.schemas.booking import (
     BookingUpdate,
     BookingUpdateWithoutTablesSlots,
 )
-from app.services.task import generate_task_id
+from app.services.booking import booking_service
 
 logger = get_logger()
 router = APIRouter()
-
-FORMAT = NotificationConstants.DATETIME_FORMAT
-
-
-async def _make_notification_tasks_for_celery(
-    booking_obj: Base,
-    session: SessionDep,
-    method: str,
-) -> None:
-    booking_for_celery = BookingInfo.model_validate(
-        booking_obj, from_attributes=True
-    ).model_dump()
-    booking_id = booking_for_celery.get('id')
-    booking_datetime = await booking_crud.get_start_datetime_by_booking_id(
-        booking_id=booking_id, session=session,
-    )
-    booking_for_celery['booking_date'] = booking_datetime.strftime(FORMAT)
-
-    task_id = generate_task_id(booking_id)
-    if method == "PATCH":
-        AsyncResult(task_id, app=celery_app).revoke()
-    notify_admin.delay(method, booking_for_celery)
-
-    reminder_time = booking_datetime - timedelta(hours=2)
-    notify_client.apply_async(
-        args=[booking_for_celery],
-        eta=reminder_time,
-        task_id=task_id,
-    )
 
 
 @router.get(
@@ -181,6 +146,12 @@ async def create_booking(
         tables_slots=tables_slots,
         session=session,
     )
+    if booking.pre_order_items:
+        dishes_map = await validate_pre_order_items(
+            booking.pre_order_items,
+            booking.cafe_id,
+            session,
+        )
     booking_data.update({
         'status': BookingStatus.BOOKING,
         'user_id': current_user.id,
@@ -202,11 +173,6 @@ async def create_booking(
         )
 
     if booking.pre_order_items:
-        dishes_map = await validate_pre_order_items(
-            booking.pre_order_items,
-            booking.cafe_id,
-            session,
-        )
         await booking_crud.add_pre_order_items(
             new_booking.id,
             booking.pre_order_items,
@@ -215,14 +181,13 @@ async def create_booking(
         )
 
     await session.refresh(new_booking)
-    # Код для создания задачи на отправку напоминания клиенту
-    # и уведомления админа
-    await _make_notification_tasks_for_celery(
-        new_booking,
-        session,
-        method='POST',
+    booking_response = BookingInfo.model_validate(
+        new_booking, from_attributes=True,
     )
-    return BookingInfo.model_validate(new_booking, from_attributes=True)
+    await booking_service.make_notification_tasks_for_celery(
+        booking_response, method='POST', session=session,
+    )
+    return booking_response
 
 
 @router.patch(
@@ -286,6 +251,26 @@ async def update_booking(
         tables_slots=tables_slots,
         session=session,
     )
+    if booking.pre_order_items:
+        await booking_crud.delete_multi(
+            session=session,
+            objs=booking_db.pre_order_items,
+        )
+        await session.flush()
+        session.expire(booking_db, ['pre_order_items'])
+        await session.refresh(booking_db)
+        await session.commit()
+        dishes_map = await validate_pre_order_items(
+            booking.pre_order_items,
+            booking_db.cafe_id,
+            session,
+        )
+        await booking_crud.add_pre_order_items(
+            booking_db.id,
+            booking.pre_order_items,
+            dishes_map,
+            session,
+        )
     for table_slot in tables_slots:
         await booking_table_slot_crud.create(
             session=session,
@@ -301,6 +286,7 @@ async def update_booking(
         db_obj=booking_db,
         obj_in=BookingUpdateWithoutTablesSlots(**booking_data),
     )
+<<<<<<< HEAD
     await session.refresh(booking_upd)
     await _make_notification_tasks_for_celery(
         booking_upd,
@@ -308,3 +294,19 @@ async def update_booking(
         method='PATCH',
     )
     return BookingInfo.model_validate(booking_upd, from_attributes=True)
+=======
+    await session.refresh(booking_upd, attribute_names=[
+        "tables_slots",
+        "tables_slots.slot",
+        "tables_slots.table",
+        "pre_order_items",
+        "pre_order_items.dish",
+    ])
+    booking_response = BookingInfo.model_validate(
+        booking_upd, from_attributes=True,
+    )
+    await booking_service.make_notification_tasks_for_celery(
+        booking_response, method='PATCH', session=session,
+    )
+    return booking_response
+>>>>>>> ebd6990bfa083a1e41173f25aa64525226758365

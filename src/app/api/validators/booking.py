@@ -51,7 +51,7 @@ async def validate_cafe_slot_table(
     if not cafe_db:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=Constants.CAFE_DOES_NOT_EXIST.format(cafe_id),
+            detail=Constants.CAFE_DOES_NOT_EXIST,
         )
     slot_ids = [slot['slot_id'] for slot in slots]
     table_ids = [slot['table_id'] for slot in slots]
@@ -120,7 +120,7 @@ async def validate_booking_exists(
     if not booking:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=Constants.BOOKING_NOT_FOUND.format(booking_id),
+            detail=Constants.BOOKING_NOT_FOUND,
         )
     return booking
 

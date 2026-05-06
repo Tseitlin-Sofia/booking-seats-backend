@@ -35,8 +35,8 @@ class CRUDCafe(CRUDBase):
     ) -> Self:
         """Создает новое кафе в базе данных."""
         db_cafe = self.model(**new_cafe.model_dump(
-            exclude={"managers_id"}, exclude_unset=True),
-        )
+            exclude={'managers_id'}, exclude_unset=True, exclude_none=True,
+        ))
         db_cafe.managers = managers
         session.add(db_cafe)
         await session.commit()
@@ -56,7 +56,7 @@ class CRUDCafe(CRUDBase):
         managers: Optional[List[User]] = None,
     ) -> Self:
         """Обновляет существующее кафе в базе данных."""
-        new_data = new_cafe.model_dump(exclude_unset=True)
+        new_data = new_cafe.model_dump(exclude_unset=True, exclude_none=True)
         for key in new_data.keys():
             if key == 'managers_id':
                 db_cafe.managers = managers
