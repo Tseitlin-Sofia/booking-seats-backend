@@ -217,12 +217,8 @@ async def update_booking(
     """Обновление бронирования."""
     await validate_table_slots_exists(booking=booking)
     booking_data = booking.model_dump(exclude_unset=True)
-    tables_slots = booking_data.get('tables_slots')
-    if tables_slots is not None:
-        booking_data.pop('tables_slots')
-    pre_order_items = booking_data.get('pre_order_items')
-    if pre_order_items is not None:
-        booking_data.pop('pre_order_items')
+    tables_slots = booking_data.get('tables_slots', None)
+    pre_order_items = booking_data.get('pre_order_items', None)
     booking_db = await validate_booking_exists(booking_id, session)
     booking_table_slots_db = (
         await booking_table_slot_crud.get_by_attribute_multi(
