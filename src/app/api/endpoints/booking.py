@@ -23,6 +23,7 @@ from app.schemas.booking import (
     BookingInfo,
     BookingStatus,
     BookingTableSlotCreate,
+    BookingTableSlotShortInfo,
     BookingUpdate,
     BookingUpdateWithoutTablesSlots,
 )
@@ -352,6 +353,14 @@ async def update_booking(
     booking_response = BookingInfo.model_validate(
         booking_upd, from_attributes=True,
     )
+    booking_response.tables_slots = [
+        BookingTableSlotShortInfo.model_validate(
+            table_slot, from_attributes=True,
+        )
+        for table_slot in await booking_table_slot_crud.get_by_attribute_multi(
+            session=session, attr_value=booking_id, attr_name='booking_id',
+        )
+    ]
     await booking_service.make_notification_tasks_for_celery(
         booking_response,
         method='PATCH',
