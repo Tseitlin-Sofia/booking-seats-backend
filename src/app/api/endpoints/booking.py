@@ -28,7 +28,6 @@ from app.schemas.booking import (
     BookingTableSlotCreate,
     BookingUpdate,
     BookingUpdateWithoutTablesSlots,
-    PreOrderItemCreate,
 )
 from app.services.booking import booking_service
 
@@ -154,11 +153,6 @@ async def create_booking(
             booking.cafe_id,
             session,
         )
-    booking_data.update({
-        'status': BookingStatus.BOOKING,
-        'user_id': current_user.id,
-    })
-
     dishes_map = None
     if booking.pre_order_items:
         dishes_map = await validate_pre_order_items(
@@ -166,6 +160,13 @@ async def create_booking(
             booking.cafe_id,
             session,
         )
+    booking_data = booking.model_dump(
+        exclude={'tables_slots', 'pre_order_items'},
+    )
+    booking_data.update({
+        'status': BookingStatus.BOOKING,
+        'user_id': current_user.id,
+    })
 
     new_booking = await booking_crud.create(
         session=session,
@@ -192,7 +193,8 @@ async def create_booking(
 
     await session.refresh(new_booking)
     booking_response = BookingInfo.model_validate(
-        new_booking, from_attributes=True,
+        new_booking,
+        from_attributes=True,
     )
     await booking_service.make_notification_tasks_for_celery(
         booking_response,
@@ -320,6 +322,7 @@ async def create_booking(
 #     )
 #     return booking_response
 
+
 @router.patch(
     '/{booking_id}',
     response_model=BookingInfo,
@@ -437,7 +440,9 @@ async def update_booking(
         .where(Booking.id == booking_id)
         .options(
             joinedload(Booking.tables_slots).joinedload(BookingTableSlot.slot),
-            joinedload(Booking.tables_slots).joinedload(BookingTableSlot.table),
+            joinedload(Booking.tables_slots).joinedload(
+                BookingTableSlot.table,
+            ),
             joinedload(Booking.pre_order_items).joinedload(BookingDish.dish),
             joinedload(Booking.user),
             joinedload(Booking.cafe),
@@ -448,7 +453,8 @@ async def update_booking(
 
     # Формируем ответ и задачи Celery
     booking_response = BookingInfo.model_validate(
-        booking_upd, from_attributes=True,
+        booking_upd,
+        from_attributes=True,
     )
     await booking_service.make_notification_tasks_for_celery(
         booking_response,
