@@ -128,8 +128,22 @@ async def validate_table_slots_exists(
     booking: BookingUpdate | BookingCreate,
 ) -> None:
     """Проверка передачи списка слотов."""
+    if (
+        'tables_slots' in booking.model_dump(exclude_unset=True)
+        and booking.tables_slots is None
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=Constants.LIST_SLOTS_ERROR,
+        )
     booking_data = booking.model_dump()
-    if len(booking_data['tables_slots']) == 0:
+    tables_slots = booking_data.get('tables_slots')
+    if (
+        isinstance(booking, BookingUpdate)
+        and tables_slots is None
+    ):
+        return
+    if len(tables_slots or []) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=Constants.LIST_SLOTS_ERROR,

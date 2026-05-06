@@ -97,12 +97,14 @@ class BookingUpdateWithoutTablesSlots(BookingValidatorMixin, BaseModel):
 
 
 class BookingUpdate(
-    BookingTableSlotsValidatorMixin,
     BookingUpdateWithoutTablesSlots,
 ):
     """Схема для обновления бронирования."""
 
-    tables_slots: list[BookingTableSlot]
+    tables_slots: Optional[list[BookingTableSlot]] = Field(
+        default=None,
+        title='Table‑Slot pairs (optional)',
+    )
     pre_order_items: Optional[List[PreOrderItemCreate]] = Field(
         default=None,
         title='Pre-order items',

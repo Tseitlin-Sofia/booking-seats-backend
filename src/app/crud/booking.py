@@ -148,32 +148,22 @@ class BookingCRUD(CRUDBase):
     ) -> Booking:
         """Обновляет состояние бронирования."""
         await session.flush()
-        session.expunge_all()
-        if (booking := await self.get(booking_id, session)):
-            return booking
-        raise ValueError(Constants.BOOKING_NOT_FOUND)
-
-    async def load_related_fields(
-        self,
-        session: AsyncSession,
-        booking_id: int,
-    ) -> Booking:
-        """Загружает связанные поля бронирования."""
-        await session.commit()
-
-        stmt = (
-            select(Booking)
-            .where(Booking.id == booking_id)
-            .options(
-                joinedload(Booking.tables_slots).joinedload(BookingTableSlot.slot),
-                joinedload(Booking.tables_slots).joinedload(BookingTableSlot.table),
-                joinedload(Booking.pre_order_items).joinedload(BookingDish.dish),
-                joinedload(Booking.user),
-                joinedload(Booking.cafe),
-            )
+        # session.expunge_all()
+        stmt = select(Booking).where(Booking.id == booking_id).options(
+            selectinload(Booking.tables_slots)
+                .joinedload(BookingTableSlot.slot),
+            selectinload(Booking.tables_slots)
+                .joinedload(BookingTableSlot.table),
+            selectinload(Booking.pre_order_items)
+                .selectinload(BookingDish.dish),
+            selectinload(Booking.user),
+            selectinload(Booking.cafe),
         )
         result = await session.execute(stmt)
-        return result.unique().scalar_one()
+        booking = result.scalar_one_or_none()
+        if not booking:
+            raise ValueError(Constants.BOOKING_NOT_FOUND)
+        return booking
 
 
 class BookingTableSlotCRUD(CRUDBase):
@@ -199,6 +189,7 @@ class BookingTableSlotCRUD(CRUDBase):
                                 (BookingStatus.BOOKING, BookingStatus.ACTIVE),
                             ),
                             Booking.booking_date == date,
+                            Booking.is_active,
                         ),
                     ),
                 ),

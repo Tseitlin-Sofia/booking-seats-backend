@@ -1,6 +1,5 @@
 """Эндпоинты бронирования."""
 
-from audioop import reverse
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, HTTPException, status
@@ -135,8 +134,11 @@ async def create_booking(
         session=session,
     )
     booking_data = booking.model_dump(
-        exclude={'tables_slots', 'pre_order_items'},
+        exclude={'tables_slots'},
     )
+    pre_order_items = booking_data.get('pre_order_items')
+    if pre_order_items is not None:
+        booking_data.pop('pre_order_items')
     await validate_start_time(
         session=session,
         tables_slots=tables_slots,
@@ -149,7 +151,7 @@ async def create_booking(
     )
     if booking.pre_order_items:
         dishes_map = await validate_pre_order_items(
-            booking.pre_order_items,
+            pre_order_items,
             booking.cafe_id,
             session,
         )
@@ -176,7 +178,7 @@ async def create_booking(
     if booking.pre_order_items:
         await booking_crud.add_pre_order_items(
             new_booking.id,
-            booking.pre_order_items,
+            pre_order_items,
             dishes_map,
             session,
         )
@@ -214,8 +216,12 @@ async def update_booking(
     """Обновление бронирования."""
     await validate_table_slots_exists(booking=booking)
     booking_data = booking.model_dump(exclude_unset=True)
-    tables_slots = booking_data.pop('tables_slots')
-    pre_order_items = booking_data.pop('pre_order_items')
+    tables_slots = booking_data.get('tables_slots')
+    if tables_slots is not None:
+        booking_data.pop('tables_slots')
+    pre_order_items = booking_data.get('pre_order_items')
+    if pre_order_items is not None:
+        booking_data.pop('pre_order_items')
     booking_db = await validate_booking_exists(booking_id, session)
     booking_table_slots_db = (
         await booking_table_slot_crud.get_by_attribute_multi(
@@ -225,28 +231,35 @@ async def update_booking(
             is_active=None,
         )
     )
+    booking_table_slots_db_data = [
+        {'slot_id': int(slot.slot_id), 'table_id': int(slot.table_id)}
+        for slot in booking_table_slots_db
+    ]
     await validate_user_rights(current_user, booking_db.user_id)
     if tables_slots:
         await validate_cafe_slot_table(
             cafe_id=booking_db.cafe_id,
-            slots=tables_slots or booking_table_slots_db,
+            slots=tables_slots,
             session=session,
         )
     await validate_start_time(
         session=session,
-        tables_slots=tables_slots or booking_table_slots_db,
+        tables_slots=(
+            tables_slots if tables_slots else booking_table_slots_db_data
+        ),
         booking_date=booking_data.get('booking_date', booking_db.booking_date),
     )
     await validate_guest_number(
         guest_number=booking_data.get('guest_number', booking_db.guest_number),
-        tables_slots=tables_slots or booking_table_slots_db,
+        tables_slots=(
+            tables_slots if tables_slots else booking_table_slots_db_data
+        ),
         session=session,
     )
-    if tables_slots:
-        await booking_table_slot_crud.deactivate_multi(
-            session=session,
-            db_objs=booking_table_slots_db,
-        )
+    await booking_table_slot_crud.deactivate_multi(
+        session=session,
+        db_objs=booking_table_slots_db,
+    )
     if pre_order_items:
         dishes_map = await validate_pre_order_items(
             pre_order_items,
@@ -258,13 +271,25 @@ async def update_booking(
             session=session,
             objs=pre_order_items_db,
         )
+        booking_db = await booking_crud.refresh_booking(
+            session=session,
+            booking_id=booking_id,
+        )
+        await booking_crud.add_pre_order_items(
+            booking_id=booking_id,
+            items=pre_order_items,
+            dishes_map=dishes_map,
+            session=session,
+        )
     booking_db = await booking_crud.refresh_booking(
         session=session,
         booking_id=booking_id,
     )
     try:
         await validate_booking_slots(
-            slots=tables_slots or booking_table_slots_db,
+            slots=(
+                tables_slots if tables_slots else booking_table_slots_db_data
+            ),
             booking_date=booking_data.get(
                 'booking_date', booking_db.booking_date,
             ),
@@ -274,10 +299,12 @@ async def update_booking(
             session=session,
             objs=booking_table_slots_db,
         )
-        booking_db = await booking_crud.refresh_booking(
+        await booking_crud.refresh_booking(
             session=session,
             booking_id=booking_id,
         )
+        booking_db.tables_slots = []
+        await session.flush()
     except HTTPException as exc:
         # Возвращаем деактивированные слоты
         await booking_table_slot_crud.deactivate_multi(
@@ -286,7 +313,10 @@ async def update_booking(
             reverse=True,
         )
         raise exc
-
+    booking_db = await booking_crud.refresh_booking(
+        session=session,
+        booking_id=booking_id,
+    )
     # Обновляем основные поля бронирования
     booking_upd = await booking_crud.update(
         session=session,
@@ -295,17 +325,18 @@ async def update_booking(
     )
 
     # Создаём новые tables_slots
-    if tables_slots:
-        for table_slot in tables_slots:
-            await booking_table_slot_crud.create(
-                session=session,
-                obj_in=BookingTableSlotCreate(**{
-                    'booking_id': booking_id,
-                    'table_id': table_slot['table_id'],
-                    'slot_id': table_slot['slot_id'],
-                    'is_active': booking_data.get('is_active', True),
-                }),
-            )
+    for table_slot in (
+        tables_slots if tables_slots else booking_table_slots_db_data
+    ):
+        await booking_table_slot_crud.create(
+            session=session,
+            obj_in=BookingTableSlotCreate(**{
+                'booking_id': booking_id,
+                'table_id': table_slot['table_id'],
+                'slot_id': table_slot['slot_id'],
+                'is_active': True,
+            }),
+        )
 
     # Создаём новые pre_order_items
     if pre_order_items:
@@ -315,15 +346,9 @@ async def update_booking(
             dishes_map,
             session,
         )
-    booking_upd = await booking_crud.refresh_booking(
-        session=session,
-        booking_id=booking_id,
-    )
-    booking_upd = await booking_crud.load_related_fields(
-        session=session,
-        booking_id=booking_id,
-    )
-    # Формируем ответ и задачи Celery
+    booking_upd = await booking_crud.refresh_booking(session, booking_id)
+    await session.commit()
+    booking_upd = await booking_crud.refresh_booking(session, booking_id)
     booking_response = BookingInfo.model_validate(
         booking_upd, from_attributes=True,
     )
