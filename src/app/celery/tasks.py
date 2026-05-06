@@ -7,6 +7,7 @@ from app.services.task import (
     build_client_reminder,
     get_html_for_admin,
     get_html_for_client,
+    is_canceled,
     send_email,
 )
 
@@ -24,12 +25,16 @@ def notify_admin(
 ) -> None:
     """Мгновенное уведомление админу о новой брони."""
     if data:
+        if is_canceled(data):
+            self.log.info('Бронь отменена, уведомление админу не придёт')
+            return
         self.log.info(
             'Отправляю уведомление админу о столе {}',
             data.get('table_id'),
         )
         subject, text_body = build_admin_notification(data, method)
         html_body = get_html_for_admin(data, method)
+
     else:
         subject = 'Тестовое сообщение'
         text_body = 'Фото сформировано'

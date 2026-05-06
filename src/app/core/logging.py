@@ -13,7 +13,7 @@ import logging
 import sys
 from typing import Any
 
-from celery.signals import after_setup_logger, after_setup_task_logger
+from celery.signals import after_setup_task_logger
 from loguru import logger
 from loguru._logger import Logger
 
@@ -210,31 +210,31 @@ def setup_logging(env: str = 'dev', log_level: str = 'INFO') -> None:
 
 
 # docker compose restart celery-worker@after_setup_logger.connect
-# def setup_celery_logger(
-#     logger_instance: logging.Logger,
-#     *args: Any,
-#     **kwargs: Any,
-# ) -> None:
-#     """Настраивает логгер Celery для использования loguru.
+def setup_celery_logger(
+    logger_instance: logging.Logger,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    """Настраивает логгер Celery для использования loguru.
 
-#     Вызывается при запуске Celery воркера.
-#     """
-#     logger_instance.handlers = []
+    Вызывается при запуске Celery воркера.
+    """
+    logger_instance.handlers = []
 
-#     handler = CeleryLogInterceptor()
-#     logger_instance.addHandler(handler)
+    handler = CeleryLogInterceptor()
+    logger_instance.addHandler(handler)
 
-#     logger_instance.propagate = False
+    logger_instance.propagate = False
 
 
-# @after_setup_task_logger.connect
-# def setup_task_logger(
-#     logger_instance: logging.Logger,
-#     *args: Any,
-#     **kwargs: Any,
-# ) -> None:
-#     """Настраивает логгер задач Celery для использования loguru."""
-#     setup_celery_logger(logger_instance, *args, **kwargs)
+@after_setup_task_logger.connect
+def setup_task_logger(
+    logger_instance: logging.Logger,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    """Настраивает логгер задач Celery для использования loguru."""
+    setup_celery_logger(logger_instance, *args, **kwargs)
 
 
 def get_logger() -> Logger:

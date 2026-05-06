@@ -1,19 +1,20 @@
-"""Сервис для работы с бронированиями."""
-
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from celery.result import AsyncResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.celery.celery_app import celery_app
 from app.celery.tasks import notify_admin, notify_client
+from app.core.constants import NotificationConstants
 from app.crud.booking import booking_crud
 from app.schemas.booking import BookingInfo
-from app.services.task import get_reminder_id
+from app.services.task import generate_task_id
 
 
 class BookingService:
     """Сервис для работы с бронированиями."""
+
+    FORMAT = NotificationConstants.DATETIME_FORMAT
 
     async def make_notification_tasks_for_celery(
         self,
@@ -21,22 +22,23 @@ class BookingService:
         method: str,
         session: AsyncSession,
     ) -> None:
-        """Создание задачи в celery.
-
-        Созадется задача на отправку уведомления админинистратору и напоминания
-        клиенту о брони.
-        """
-        task_id = get_reminder_id(booking.id)
+        """Создание задачи в celery."""
+        task_id = generate_task_id(booking.id)
         if method == 'PATCH':
             AsyncResult(task_id, app=celery_app).revoke()
-        booking_json = booking.model_dump_json(exclude_unset=False)
-        notify_admin.delay(method, booking_json)
+
+        booking_dict = booking.model_dump()
+
         booking_datetime = await booking_crud.get_start_datetime_by_booking_id(
             booking.id, session,
         )
+        booking_dict['booking_date'] = booking_datetime.strftime(self.FORMAT)
+        # prod_reminder_time = booking_datetime - timedelta(hours=2)
+        demo_reminder_time = datetime.now() + timedelta(seconds=30)
+        notify_admin.delay(method, booking_dict)
         notify_client.apply_async(
-            args=[booking_json],
-            eta=booking_datetime - timedelta(hours=2),
+            args=[booking_dict],
+            eta=demo_reminder_time,
             task_id=task_id,
         )
 

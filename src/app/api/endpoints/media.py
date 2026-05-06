@@ -63,7 +63,11 @@ async def load_photo_to_server(
     return {'media_id': media_id}
 
 
-@router.get('/{media_id}', summary='Получить фото по его ID')
+@router.get(
+    '/{media_id}',
+    summary='Получить фото по его ID',
+    response_class=FileResponse,
+)
 async def get_photo(media_id: str) -> FileResponse:
     """Возврат клиенту фотографии."""
     filename = f'{media_id}.{MediaConstants.IMAGE_EXTENSION}'

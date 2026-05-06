@@ -3,13 +3,13 @@ from logging import Logger
 from typing import Any
 
 from celery import Celery
-# from celery.signals import after_setup_logger, after_setup_task_logger
+from celery.signals import after_setup_logger, after_setup_task_logger
 
 from app.core.logging import (
     get_logger,
-    # setup_celery_logger,
+    setup_celery_logger,
     setup_logging,
-    # setup_task_logger,
+    setup_task_logger,
 )
 
 # Получение настроек из переменных окружения
@@ -70,25 +70,25 @@ celery_app.conf.update(
 )
 
 
-# # Регистрируем сигналы для настройки логгеров Celery
-# @after_setup_logger.connect
-# def on_celery_logger_setup(
-#     logger_instance: Logger,
-#     *args: Any,
-#     **kwargs: Any,
-# ) -> None:
-#     """Обработчик сигнала настройки логгера Celery."""
-#     setup_celery_logger(logger_instance, *args, **kwargs)
+# Регистрируем сигналы для настройки логгеров Celery
+@after_setup_logger.connect
+def on_celery_logger_setup(
+    logger_instance: Logger,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    """Обработчик сигнала настройки логгера Celery."""
+    setup_celery_logger(logger_instance, *args, **kwargs)
 
 
-# @after_setup_task_logger.connect
-# def on_task_logger_setup(
-#     logger_instance: Logger,
-#     *args: Any,
-#     **kwargs: Any,
-# ) -> None:
-#     """Обработчик сигнала настройки логгера задачи Celery."""
-#     setup_task_logger(logger_instance, *args, **kwargs)
+@after_setup_task_logger.connect
+def on_task_logger_setup(
+    logger_instance: Logger,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    """Обработчик сигнала настройки логгера задачи Celery."""
+    setup_task_logger(logger_instance, *args, **kwargs)
 
 
 logger.info('Celery приложение успешно инициализировано')

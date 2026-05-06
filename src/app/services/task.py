@@ -5,6 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from app.core.logging import get_logger
+from app.models.booking import BookingStatus
 
 logger = get_logger()
 
@@ -14,6 +15,19 @@ SMTP_PORT: int = int(os.getenv('SMTP_PORT', '465'))
 SMTP_USER: str = os.getenv('SMTP_USER', 'user')
 SMTP_PASSWORD:str = os.getenv('SMTP_PASSWORD', 'password')
 CLIENT_EMAIL: str = os.getenv('CLIENT_EMAIL', 'test@mail.com')
+
+
+def is_canceled(data: dict) -> bool:
+    """Проверяет, отменена ли бронь."""
+    status: str = data.get('status', '')
+    is_active: bool = data.get('is_active', True)
+    return status == BookingStatus.CANCELED or not is_active
+
+
+def _is_completed(data: dict) -> bool:
+    """Проверяет, завершена ли бронь."""
+    status: str = data.get('status', '')
+    return status == BookingStatus.COMPLETED
 
 
 def send_email(
@@ -81,18 +95,50 @@ def build_client_reminder(data: dict) -> tuple[str, str]:
     """Формирует тему и тело письма для клиента."""
     user = data.get('user', {})
     name = user.get('username', 'Неизвестно').capitalize()
-    subject = '⏰ Напоминание о брони стола в ресторане'
-    body = f"""
-    {name}, здравствуйте!
+    booking_date = data.get('booking_date', 'Неизвестно')
+    table_ids = _get_table_ids(data)
 
-    Напоминаем, что вы забронировали стол на \
-    {data.get('booking_date', 'Неизвестно')}.
+    if is_canceled(data):
+        subject = '❌ Бронь отменена'
+        body = f"""
+        {name}, здравствуйте!
 
-    Будем рады вас видеть!
+        Ваша бронь на {booking_date} (столы: {table_ids}) была отменена.
 
-    С уважением,
-    Ресторан "Каффетерий"
-    """
+        Если вы передумаете, будем рады видеть вас снова!
+
+        С уважением,
+        Ресторан "Каффетерий"
+        """
+    elif _is_completed(data):
+        subject = '⭐ Оцените ваш визит'
+        body = f"""
+        {name}, здравствуйте!
+
+        Спасибо, что посетили нас {booking_date}!
+
+        Пожалуйста, оставьте обратную связь о сервисе:
+        http://наше_кафе/обратная_связь.ru
+
+        Мы ценим Ваше мнение!
+
+        С уважением,
+        Ресторан "Каффетерий"
+        """
+    else:
+        subject = '⏰ Напоминание о брони стола в ресторане'
+        body = f"""
+        {name}, здравствуйте!
+
+        Напоминаем, что вы забронировали стол на \
+        {booking_date}.
+
+        Будем рады вас видеть!
+
+        С уважением,
+        Ресторан "Каффетерий"
+        """
+
     return subject, body
 
 
@@ -258,6 +304,41 @@ def get_html_for_client(data: dict) -> str:
     table_ids = _get_table_ids(data)
     note = data.get('note', '')
 
+    if is_canceled(data):
+        title = 'Бронь отменена'
+        subtitle = 'Мы будем ждать вас снова'
+        icon = '❌'
+        extra_info = ''
+        footer_text = 'Если вы передумаете, будем рады видеть вас снова!'
+    elif _is_completed(data):
+        title = 'Спасибо за визит!'
+        subtitle = 'Пожалуйста, оцените наш сервис'
+        icon = '⭐'
+        extra_info = f"""
+        <div class="feedback-section">
+            <p style="text-align: center; font-size: 16px; color: #3d3226;
+                      margin: 20px 0;">
+                Оставьте обратную связь о вашем визите:
+            </p>
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="{data.get('feedback_link', '#')}"
+                   style="background: #c9a96e; color: #fff;
+                          padding: 12px 30px;
+                          text-decoration: none; border-radius: 8px;
+                          font-weight: 600;">
+                    Оставить отзыв
+                </a>
+            </div>
+        </div>
+        """
+        footer_text = 'Ваше мнение очень важно для нас!'
+    else:
+        title = 'Ждём вас!'
+        subtitle = 'Напоминание о бронировании'
+        icon = '⏰'
+        extra_info = ''
+        footer_text = 'Мы подготовили для вас лучший стол.'
+
     return f"""
     <html>
     <head>
@@ -362,9 +443,9 @@ def get_html_for_client(data: dict) -> str:
     <body>
         <div class="container">
             <div class="header">
-                <div class="icon">⏰</div>
-                <h1>Ждём вас!</h1>
-                <p class="subtitle">Напоминание о бронировании</p>
+                <div class="icon">{icon}</div>
+                <h1>{title}</h1>
+                <p class="subtitle">{subtitle}</p>
             </div>
             <div class="content">
                 <div class="greeting">
@@ -378,7 +459,7 @@ def get_html_for_client(data: dict) -> str:
                     </div>
                     <div class="info-row">
                         <span class="emoji">🪑</span>
-                        <span class="label">Стол №:</span>
+                        <span class="label">Столы:</span>
                         <span class="value">{table_ids}</span>
                     </div>
                     {f'''<div class="info-row">
@@ -387,9 +468,9 @@ def get_html_for_client(data: dict) -> str:
                         <span class="value">{note}</span>
                     </div>''' if note else ''}
                 </div>
+                {extra_info}
                 <div class="reminder-text">
-                    Будем рады видеть вас!<br>
-                    Мы подготовили для вас лучший стол.
+                    {footer_text}
                 </div>
             </div>
             <div class="footer">
