@@ -1,7 +1,7 @@
 """CRUD операции для бронирования."""
 
 from datetime import date, datetime
-from typing import Optional
+from typing import Any, Optional
 
 from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +21,6 @@ from app.models import (
     Table,
 )
 from app.schemas.booking import BookingStatus
-from app.schemas.dish import PreOrderItemCreate
 
 logger = get_logger()
 
@@ -62,7 +61,7 @@ class BookingCRUD(CRUDBase):
     async def add_pre_order_items(
         self,
         booking_id: int,
-        items: list[PreOrderItemCreate],
+        items: list[dict[str, Any]],
         dishes_map: dict[int, Dish],
         session: AsyncSession,
     ) -> None:
@@ -70,9 +69,9 @@ class BookingCRUD(CRUDBase):
         booking_dishes = [
             BookingDish(
                 booking_id=booking_id,
-                dish_id=item.dish_id,
-                quantity=item.quantity,
-                price_at_order=dishes_map[item.dish_id].price,
+                dish_id=item['dish_id'],
+                quantity=item['quantity'],
+                price_at_order=dishes_map[item['dish_id']].price,
             )
             for item in items
         ]
@@ -141,6 +140,30 @@ class BookingCRUD(CRUDBase):
             ),
         )
 
+    async def refresh_booking(
+        self,
+        session: AsyncSession,
+        booking_id: int,
+    ) -> Booking:
+        """Обновляет состояние бронирования."""
+        await session.flush()
+        # session.expunge_all()
+        stmt = select(Booking).where(Booking.id == booking_id).options(
+            selectinload(Booking.tables_slots)
+                .joinedload(BookingTableSlot.slot),
+            selectinload(Booking.tables_slots)
+                .joinedload(BookingTableSlot.table),
+            selectinload(Booking.pre_order_items)
+                .selectinload(BookingDish.dish),
+            selectinload(Booking.user),
+            selectinload(Booking.cafe),
+        )
+        result = await session.execute(stmt)
+        booking = result.scalar_one_or_none()
+        if not booking:
+            raise ValueError(Constants.BOOKING_NOT_FOUND)
+        return booking
+
 
 class BookingTableSlotCRUD(CRUDBase):
     """CRUD операции для слотов бронирования."""
@@ -165,6 +188,7 @@ class BookingTableSlotCRUD(CRUDBase):
                                 (BookingStatus.BOOKING, BookingStatus.ACTIVE),
                             ),
                             Booking.booking_date == date,
+                            Booking.is_active,
                         ),
                     ),
                 ),
