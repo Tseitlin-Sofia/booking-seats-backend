@@ -54,11 +54,6 @@ async def load_photo_to_server(
     jpeg_bytes = transform_to_jpeg(image_bytes)
     async with aiofiles.open(file_path, 'wb') as f:
         await f.write(jpeg_bytes)
-    # notify_admin.delay()
-    # notify_client.apply_async(
-    #     args=[],
-    #     eta=datetime.now() + timedelta(minutes=1),
-    # )
 
     return {'media_id': media_id}
 
@@ -79,4 +74,5 @@ async def get_photo(media_id: str) -> FileResponse:
         path=file_path,
         media_type='image/jpeg',
         filename=filename,
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
     )
