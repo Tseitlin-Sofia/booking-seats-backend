@@ -74,5 +74,5 @@ async def get_photo(media_id: str) -> FileResponse:
         path=file_path,
         media_type='image/jpeg',
         filename=filename,
-        headers={"Content-Disposition": f"inline; filename={filename}"}
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
     )
