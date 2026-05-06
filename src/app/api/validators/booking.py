@@ -134,7 +134,7 @@ async def validate_table_slots_exists(
     ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=Constants.LIST_SLOTS_ERROR,
+            detail=Constants.SLOTS_IS_NULL,
         )
     booking_data = booking.model_dump()
     tables_slots = booking_data.get('tables_slots')

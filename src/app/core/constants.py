@@ -33,6 +33,7 @@ class BookingConstants:
     SLOTS_OR_TABLES_NOT_IN_CAFE = (
         'Выбранные слоты или столы не принадлежат выбранному кафе.'
     )
+    SLOTS_IS_NULL = 'Список слотов не может быть null.'
 
 
 class MediaConstants:
