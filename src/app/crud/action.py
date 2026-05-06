@@ -21,17 +21,21 @@ class CRUDAction(CRUDBase):
         cafes: List[Cafe],
     ) -> Self:
         """Создает новую акцию в базе данных."""
-        db_action = self.model(**new_action.model_dump(
-            exclude={"cafes_id"}, exclude_unset=True, exclude_none=True,
-        ))
+        db_action = self.model(
+            **new_action.model_dump(
+                exclude={'cafes_id'},
+                exclude_unset=True,
+                exclude_none=True,
+            ),
+        )
         db_action.cafes = cafes
         session.add(db_action)
         await session.commit()
         await session.refresh(db_action)
-        logger.info((
-            'Акция успешно создана! |'
-            f'action_id: {db_action.id} | количество кафе: {len(cafes)}'
-        ))
+        logger.info(
+            f'Акция успешно создана! action_id={db_action.id},'
+            + f' cafes_count={len(cafes)}',
+        )
         return db_action
 
     async def update_db_action(
@@ -50,8 +54,8 @@ class CRUDAction(CRUDBase):
             setattr(db_action, key, new_data[key])
         session.add(db_action)
         logger.info(
-            'Акция успешно обновлена!',
-            f' | updated_fields: {list(new_data.keys())}',
+            f'Акция успешно обновлена! action_id={db_action.id},'
+            + f' updated_fields={list(new_data.keys())}',
         )
         await session.commit()
         await session.refresh(db_action)

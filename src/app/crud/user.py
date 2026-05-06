@@ -1,7 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging import get_logger
 from app.crud.base import CRUDBase
 from app.models.user import User
+
+logger = get_logger()
 
 
 class CRUDUser(CRUDBase):
@@ -17,7 +20,10 @@ class CRUDUser(CRUDBase):
         session.add(user)
         await session.commit()
         await session.refresh(user)
-        # TODO лог о создании пользователя
+        logger.info(
+            f'Создан пользователь! user_id={user.id},'
+            + f'username={user.username}, role={user.role}',
+        )
         return user
 
     async def update(
@@ -34,7 +40,11 @@ class CRUDUser(CRUDBase):
         session.add(db_user)
         await session.commit()
         await session.refresh(db_user)
-        # TODO лог о удачном обновлении пользователя
+        logger.info(
+            f'Обновлён пользователь! user_id={db_user.id},'
+            + f' username={db_user.username},'
+            + f' updated_fields={list(user_update_data.keys())}',
+        )
         return db_user
 
 

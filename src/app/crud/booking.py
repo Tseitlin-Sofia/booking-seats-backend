@@ -34,8 +34,9 @@ class BookingCRUD(CRUDBase):
             selectinload(Booking.user),
             selectinload(Booking.cafe),
             selectinload(Booking.tables_slots),
-            selectinload(Booking.pre_order_items)
-                .selectinload(BookingDish.dish),
+            selectinload(Booking.pre_order_items).selectinload(
+                BookingDish.dish,
+            ),
         ]
 
     async def get_bookings(
@@ -56,7 +57,13 @@ class BookingCRUD(CRUDBase):
         if user_id is not None:
             stmt = stmt.where(Booking.user_id == user_id)
         result = await session.execute(stmt)
-        return list(result.scalars().all())
+        bookings = list(result.scalars().all())
+        logger.debug(
+            f'Получен список бронирований. count={len(bookings)}'
+            + f', show_active={show_active},'
+            + f' cafe_id={cafe_id}, user_id={user_id}',
+        )
+        return bookings
 
     async def add_pre_order_items(
         self,
@@ -102,8 +109,7 @@ class BookingCRUD(CRUDBase):
         booking_time = min(
             [
                 table_slot.slot.start_time
-                for table_slot
-                in table_slots.scalars().all()
+                for table_slot in table_slots.scalars().all()
             ],
         )
         return datetime.combine(booking_date, booking_time)
@@ -121,10 +127,7 @@ class BookingCRUD(CRUDBase):
             sequence_id=slots_ids,
         )
         booking_time = min(
-            [
-                slot.start_time
-                for slot in slots
-            ],
+            [slot.start_time for slot in slots],
         )
         return datetime.combine(booking_date, booking_time)
 
@@ -134,11 +137,15 @@ class BookingCRUD(CRUDBase):
         objs: list[BookingDish],
     ) -> None:
         """Удаляет несколько объектов."""
+        if not objs:
+            logger.debug('Нет объектов BookingDish для удаления')
+            return
         await session.execute(
             delete(BookingDish).where(
                 BookingDish.id.in_(obj.id for obj in objs),
             ),
         )
+        logger.info('Удалено {} записей BookingDish', len(objs))
 
     async def refresh_booking(
         self,
@@ -224,11 +231,15 @@ class BookingTableSlotCRUD(CRUDBase):
         objs: list[BookingTableSlot],
     ) -> None:
         """Удаляет несколько объектов."""
+        if not objs:
+            logger.debug('Нет объектов BookingTableSlot для удаления')
+            return
         await session.execute(
             delete(BookingTableSlot).where(
                 BookingTableSlot.id.in_(obj.id for obj in objs),
             ),
         )
+        logger.info('Удалено {} связей BookingTableSlot', len(objs))
 
     async def get_capacity(
         self,
@@ -238,6 +249,8 @@ class BookingTableSlotCRUD(CRUDBase):
         """Получает вместимость бронирования."""
         tables_ids = [slot['table_id'] for slot in tables_slots]
         tables = await table_crud.get_by_list_of_id(session, tables_ids)
+        capacity = sum(table.seat_number for table in tables)
+        logger.debug('Рассчитана вместимость бронирования: {}', capacity)
         return sum(table.seat_number for table in tables)
 
 
