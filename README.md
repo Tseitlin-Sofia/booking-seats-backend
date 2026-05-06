@@ -254,3 +254,5 @@ htpasswd ./.htpasswd admin
 [Тимур Бикмаев](https://github.com/TimurBikmaev) email: [<bikma2004@gmail.com>](mailto:bikma2004@gmail.com)
 
 [Буланов Евгений>](https://github.com/bulanische) email: [<hipstot@yandex.ru>](mailto:bulanische9@gmail.com)
+
+[Новицкий Александр](https://github.com/A1ex82) email: [<navitski82@gmail.com>](mailto:navitski82@gmail.com)
