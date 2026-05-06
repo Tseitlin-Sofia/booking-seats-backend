@@ -1,20 +1,33 @@
 """Сервисные функции для работы с задачами в Celery."""
-
 import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from app.core.logging import get_logger
+from app.models.booking import BookingStatus
 
 logger = get_logger()
 
-ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
-SMTP_HOST = os.getenv('SMTP_HOST')
-SMTP_PORT = os.getenv('SMTP_PORT')
-SMTP_USER = os.getenv('SMTP_USER')
-SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
-CLIENT_EMAIL = os.getenv('CLIENT_EMAIL', 'test@mail.com')
+ADMIN_EMAIL:str = os.getenv('ADMIN_EMAIL', 'admin@mail.com')
+SMTP_HOST: str = os.getenv('SMTP_HOST', 'smtp_host@host.ru')
+SMTP_PORT: int = int(os.getenv('SMTP_PORT', '465'))
+SMTP_USER: str = os.getenv('SMTP_USER', 'user')
+SMTP_PASSWORD:str = os.getenv('SMTP_PASSWORD', 'password')
+CLIENT_EMAIL: str = os.getenv('CLIENT_EMAIL', 'test@mail.com')
+
+
+def is_canceled(data: dict) -> bool:
+    """Проверяет, отменена ли бронь."""
+    status: str = data.get('status', '')
+    is_active: bool = data.get('is_active', True)
+    return status == BookingStatus.CANCELED or not is_active
+
+
+def is_completed(data: dict) -> bool:
+    """Проверяет, завершена ли бронь."""
+    status: str = data.get('status', '')
+    return status == BookingStatus.COMPLETED
 
 
 def send_email(
@@ -42,21 +55,44 @@ def send_email(
         logger.info('Письмо отправлено на {}', to)
 
 
+def _get_table_ids(data: dict) -> str:
+    """Извлекает ID столов из данных бронирования."""
+    tables_slots = data.get('tables_slots', [])
+    if not tables_slots:
+        return '—'
+    table_ids = []
+    for slot in tables_slots:
+        table = slot.get('table', {})
+        table_id = table.get('id', '?')
+        table_ids.append(str(table_id))
+    return ', '.join(table_ids)
+
+
 def build_admin_notification(data: dict, method: str) -> tuple[str, str]:
     """Формирует тему и тело письма для админа."""
-    user = data.get('user', {})
     booking_id = data.get('id')
+    user = data.get('user', {})
+    table_ids = _get_table_ids(data)
+
+    if is_canceled(data):
+        subject = "❌ Бронь отменена"
+        body = f"Бронь №{booking_id} отменена"
+        return subject, body
+
     basic_body = f"""
         👤 Клиент: {user.get('username', 'Неизвестно')}
-        📞 Телефон: {data.get('phone', 'Не указан')}
+        📞 Телефон: {user.get('phone', 'Не указан')}
         📧 Email клиента: {user.get('email', 'Неизвестно')}
         📅 Дата и время: {data.get('booking_date', 'Неизвестно')}
+        🪑 Стол(-ы): {table_ids}
+        👥 Количество гостей: {data.get('guest_number', 'Не указано')}
+        📝 Заметка: {data.get('note', 'Нет')}
     """
     if method == 'POST':
-        subject = f'🚨 НОВАЯ БРОНЬ №{booking_id}! Стол №{data["table_id"]}'
+        subject = f'🚨 НОВАЯ БРОНЬ №{booking_id}!'
         body = f'Поступила новая бронь №{booking_id}:\n' + basic_body
     elif method == 'PATCH':
-        subject = f'🚨 ИЗМЕНЕНИЕ БРОНИ №{data.get("id")}!'
+        subject = f'🚨 ИЗМЕНЕНИЕ БРОНИ №{booking_id}!'
         body = f'Бронь № {booking_id} изменена:\n' + basic_body
     return subject, body
 
@@ -65,35 +101,69 @@ def build_client_reminder(data: dict) -> tuple[str, str]:
     """Формирует тему и тело письма для клиента."""
     user = data.get('user', {})
     name = user.get('username', 'Неизвестно').capitalize()
-    subject = '⏰ Напоминание о брони стола в ресторане'
-    body = f"""
-    {name}, здравствуйте!
+    booking_date = data.get('booking_date', 'Неизвестно')
+    table_ids = _get_table_ids(data)
 
-    Напоминаем, что вы забронировали стол на \
-    {data.get('booking_date', 'Неизвестно')}.
+    if is_canceled(data):
+        subject = '❌ Бронь отменена'
+        body = f"""
+        {name}, здравствуйте!
 
-    Будем рады вас видеть!
+        Ваша бронь на {booking_date} (столы: {table_ids}) была отменена.
 
-    С уважением,
-    Ресторан "Каффетерий"
-    """
+        Если вы передумаете, будем рады видеть вас снова!
+
+        С уважением,
+        Ресторан "Каффетерий"
+        """
+    elif is_completed(data):
+        subject = '⭐ Оцените ваш визит'
+        body = f"""
+        {name}, здравствуйте!
+
+        Спасибо, что посетили нас {booking_date}!
+
+        Пожалуйста, оставьте обратную связь о сервисе:
+        http://наше_кафе/обратная_связь.ru
+
+        Мы ценим Ваше мнение!
+
+        С уважением,
+        Ресторан "Каффетерий"
+        """
+    else:
+        subject = '⏰ Напоминание о брони стола в ресторане'
+        body = f"""
+        {name}, здравствуйте!
+
+        Напоминаем, что вы забронировали стол на \
+        {booking_date}.
+
+        Будем рады вас видеть!
+
+        С уважением,
+        Ресторан "Каффетерий"
+        """
+
     return subject, body
 
 
-def get_reminder_id(booking_id: int) -> str:
+def generate_task_id(booking_id: int) -> str:
     """Генерирует уникальный ID задачи на основе ID брони."""
-    return f'reminder-booking-{booking_id}'
+    return f"reminder-booking-{booking_id}"
 
 
 def get_html_for_admin(data: dict, method: str) -> str:
     """Генерирует HTML для уведомления администратора."""
     user = data.get('user', {})
     booking_id = data.get('id')
-    table_id = data.get('table_id', '—')
+    table_ids = _get_table_ids(data)
     client_name = user.get('username', 'Неизвестно')
-    client_phone = data.get('phone', 'Не указан')
+    client_phone = user.get('phone', 'Не указан')
     client_email = user.get('email', 'Неизвестно')
     booking_date = data.get('booking_date', 'Неизвестно')
+    guest_number = data.get('guest_number', 'Не указано')
+    note = data.get('note', 'Нет')
 
     if method == 'POST':
         title = f'🚨 Новая бронь №{booking_id}'
@@ -207,8 +277,18 @@ def get_html_for_admin(data: dict, method: str) -> str:
                     </div>
                     <div class="info-row">
                         <span class="emoji">🪑</span>
-                        <span class="label">Стол №:</span>
-                        <span class="value">{table_id}</span>
+                        <span class="label">Стол(-ы):</span>
+                        <span class="value">{table_ids}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="emoji">👥</span>
+                        <span class="label">Гостей:</span>
+                        <span class="value">{guest_number}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="emoji">📝</span>
+                        <span class="label">Заметка:</span>
+                        <span class="value">{note}</span>
                     </div>
                 </div>
             </div>
@@ -227,8 +307,43 @@ def get_html_for_client(data: dict) -> str:
     user = data.get('user', {})
     client_name = user.get('username', 'Гость').capitalize()
     booking_date = data.get('booking_date', 'Неизвестно')
-    table_id = data.get('table_id', '—')
-    comment = data.get('comment', '')
+    table_ids = _get_table_ids(data)
+    note = data.get('note', '')
+
+    if is_canceled(data):
+        title = 'Бронь отменена'
+        subtitle = 'Но мы все равно будем рады вас видеть'
+        icon = '❌'
+        extra_info = ''
+        footer_text = 'Если вы передумаете, будем рады видеть вас снова!'
+    elif is_completed(data):
+        title = 'Спасибо за визит!'
+        subtitle = 'Пожалуйста, оцените наш сервис'
+        icon = '⭐'
+        extra_info = f"""
+        <div class="feedback-section">
+            <p style="text-align: center; font-size: 16px; color: #3d3226;
+                      margin: 20px 0;">
+                Оставьте обратную связь о вашем визите:
+            </p>
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="{data.get('feedback_link', '#')}"
+                   style="background: #c9a96e; color: #fff;
+                          padding: 12px 30px;
+                          text-decoration: none; border-radius: 8px;
+                          font-weight: 600;">
+                    Оставить отзыв
+                </a>
+            </div>
+        </div>
+        """
+        footer_text = 'Ваше мнение очень важно для нас!'
+    else:
+        title = 'Ждём вас!'
+        subtitle = 'Напоминание о бронировании'
+        icon = '⏰'
+        extra_info = ''
+        footer_text = 'Мы подготовили для вас лучший стол.'
 
     return f"""
     <html>
@@ -334,9 +449,9 @@ def get_html_for_client(data: dict) -> str:
     <body>
         <div class="container">
             <div class="header">
-                <div class="icon">⏰</div>
-                <h1>Ждём вас!</h1>
-                <p class="subtitle">Напоминание о бронировании</p>
+                <div class="icon">{icon}</div>
+                <h1>{title}</h1>
+                <p class="subtitle">{subtitle}</p>
             </div>
             <div class="content">
                 <div class="greeting">
@@ -350,22 +465,18 @@ def get_html_for_client(data: dict) -> str:
                     </div>
                     <div class="info-row">
                         <span class="emoji">🪑</span>
-                        <span class="label">Стол №:</span>
-                        <span class="value">{table_id}</span>
+                        <span class="label">Столы:</span>
+                        <span class="value">{table_ids}</span>
                     </div>
-                    {
-        f'''<div class="info-row">
+                    {f'''<div class="info-row">
                         <span class="emoji">💬</span>
-                        <span class="label">Комментарий:</span>
-                        <span class="value">{comment}</span>
-                    </div>'''
-        if comment
-        else ''
-    }
+                        <span class="label">Заметка:</span>
+                        <span class="value">{note}</span>
+                    </div>''' if note else ''}
                 </div>
+                {extra_info}
                 <div class="reminder-text">
-                    Будем рады видеть вас!<br>
-                    Мы подготовили для вас лучший стол.
+                    {footer_text}
                 </div>
             </div>
             <div class="footer">
