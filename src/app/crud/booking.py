@@ -5,7 +5,7 @@ from typing import Any, Optional
 
 from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import selectinload
 
 from app.core.constants import BookingConstants as Constants
 from app.core.logging import get_logger
@@ -21,7 +21,6 @@ from app.models import (
     Table,
 )
 from app.schemas.booking import BookingStatus
-from app.schemas.dish import PreOrderItemCreate
 
 logger = get_logger()
 
