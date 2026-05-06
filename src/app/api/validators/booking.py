@@ -1,7 +1,7 @@
 """Валидаторы для эндпоинтов бронирования."""
 
 from datetime import date, datetime
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -17,7 +17,6 @@ from app.schemas.booking import (
     BookingCreate,
     BookingUpdate,
 )
-from app.schemas.dish import PreOrderItemCreate
 
 logger = get_logger()
 
@@ -130,13 +129,7 @@ async def validate_table_slots_exists(
 ) -> None:
     """Проверка передачи списка слотов."""
     booking_data = booking.model_dump()
-    if (
-        booking_data.get('tables_slots') is None
-        or len(
-            booking_data['tables_slots'],
-        )
-        == 0
-    ):
+    if len(booking_data['tables_slots']) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=Constants.LIST_SLOTS_ERROR,
@@ -179,12 +172,12 @@ async def validate_guest_number(
 
 
 async def validate_pre_order_items(
-    items: list[PreOrderItemCreate],
+    items: list[dict[str, Any]],
     cafe_id: int,
     session: AsyncSession,
 ) -> dict[int, Dish]:
     """Проверяет доступность блюд и их принадлежность к кафе."""
-    dish_ids = [item.dish_id for item in items]
+    dish_ids = [item['dish_id'] for item in items]
     result = await session.execute(select(Dish).where(Dish.id.in_(dish_ids)))
     dishes = {d.id: d for d in result.scalars().all()}
 

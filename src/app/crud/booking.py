@@ -1,11 +1,11 @@
 """CRUD операции для бронирования."""
 
 from datetime import date, datetime
-from typing import Optional
+from typing import Any, Optional
 
 from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.core.constants import BookingConstants as Constants
 from app.core.logging import get_logger
@@ -62,7 +62,7 @@ class BookingCRUD(CRUDBase):
     async def add_pre_order_items(
         self,
         booking_id: int,
-        items: list[PreOrderItemCreate],
+        items: list[dict[str, Any]],
         dishes_map: dict[int, Dish],
         session: AsyncSession,
     ) -> None:
@@ -70,9 +70,9 @@ class BookingCRUD(CRUDBase):
         booking_dishes = [
             BookingDish(
                 booking_id=booking_id,
-                dish_id=item.dish_id,
-                quantity=item.quantity,
-                price_at_order=dishes_map[item.dish_id].price,
+                dish_id=item['dish_id'],
+                quantity=item['quantity'],
+                price_at_order=dishes_map[item['dish_id']].price,
             )
             for item in items
         ]
@@ -140,6 +140,40 @@ class BookingCRUD(CRUDBase):
                 BookingDish.id.in_(obj.id for obj in objs),
             ),
         )
+
+    async def refresh_booking(
+        self,
+        session: AsyncSession,
+        booking_id: int,
+    ) -> Booking:
+        """Обновляет состояние бронирования."""
+        await session.flush()
+        session.expunge_all()
+        if (booking := await self.get(booking_id, session)):
+            return booking
+        raise ValueError(Constants.BOOKING_NOT_FOUND)
+
+    async def load_related_fields(
+        self,
+        session: AsyncSession,
+        booking_id: int,
+    ) -> Booking:
+        """Загружает связанные поля бронирования."""
+        await session.commit()
+
+        stmt = (
+            select(Booking)
+            .where(Booking.id == booking_id)
+            .options(
+                joinedload(Booking.tables_slots).joinedload(BookingTableSlot.slot),
+                joinedload(Booking.tables_slots).joinedload(BookingTableSlot.table),
+                joinedload(Booking.pre_order_items).joinedload(BookingDish.dish),
+                joinedload(Booking.user),
+                joinedload(Booking.cafe),
+            )
+        )
+        result = await session.execute(stmt)
+        return result.unique().scalar_one()
 
 
 class BookingTableSlotCRUD(CRUDBase):

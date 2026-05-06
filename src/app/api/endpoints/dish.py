@@ -65,7 +65,7 @@ async def create_dish(
     user: ManagerDep,
 ) -> DishInfo:
     """Создаёт блюдо в указанном кафе."""
-    await get_cafe_or_404(session, cafe_id, True)
+    await get_cafe_or_404(session, cafe_id, is_exist=True)
     if user.is_manager:
         await is_manager_from_cafe(cafe_id, user)
     await check_dish_name_unique_in_cafe(cafe_id, dish_in.name, session)
@@ -88,7 +88,7 @@ async def get_dish(
     user: UserDep,
 ) -> DishInfo:
     """Возвращает информацию о конкретном блюде в кафе."""
-    await get_cafe_or_404(session, cafe_id, True)
+    await get_cafe_or_404(session, cafe_id, is_exist=True)
     dish = await check_dish_exists_in_cafe(cafe_id, dish_id, session)
     if not (user.is_admin or user.is_manager) and (
         not dish.is_active or not dish.is_available
@@ -114,7 +114,7 @@ async def update_dish(
     user: ManagerDep,
 ) -> DishInfo:
     """Обновляет данные блюда в указанном кафе."""
-    await get_cafe_or_404(session, cafe_id, True)
+    await get_cafe_or_404(session, cafe_id, is_exist=True)
     if user.is_manager:
         await is_manager_from_cafe(cafe_id, user)
     dish = await check_dish_exists_in_cafe(cafe_id, dish_id, session)
