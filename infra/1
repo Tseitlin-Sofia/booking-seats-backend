@@ -1,0 +1,764 @@
+celery-worker-1  | 2026-05-06 21:25:56 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Инициализация Celery приложения
+celery-worker-1  | 2026-05-06 21:25:56 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Celery приложение успешно инициализировано
+celery-worker-1  | /usr/local/lib/python3.11/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+celery-worker-1  | absolutely not recommended!
+celery-worker-1  | 
+celery-worker-1  | Please specify a different user using the --uid option.
+celery-worker-1  | 
+celery-worker-1  | User information: uid=0 euid=0 gid=0 egid=0
+celery-worker-1  | 
+celery-worker-1  |   warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+celery-worker-1  | 2026-05-06 21:25:56 | ERROR    | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Signal handler <function setup_celery_logger at 0xffffa5b81ee0> raised: TypeError("setup_celery_logger() missing 1 required positional argument: 'logger_instance'")
+celery-worker-1  | [33m[1mTraceback (most recent call last):[0m
+celery-worker-1  | 
+celery-worker-1  |   File "/usr/local/bin/celery", line 8, in <module>
+celery-worker-1  |     sys.exit(main())
+celery-worker-1  |     │   │    └ <function main at 0xffffa8c445e0>
+celery-worker-1  |     │   └ <built-in function exit>
+celery-worker-1  |     └ <module 'sys' (built-in)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/__main__.py", line 15, in main
+celery-worker-1  |     sys.exit(_main())
+celery-worker-1  |     │   │    └ <function main at 0xffffa5b0bc40>
+celery-worker-1  |     │   └ <built-in function exit>
+celery-worker-1  |     └ <module 'sys' (built-in)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/celery.py", line 227, in main
+celery-worker-1  |     return celery(auto_envvar_prefix="CELERY")
+celery-worker-1  |            └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1514, in __call__
+celery-worker-1  |     return self.main(*args, **kwargs)
+celery-worker-1  |            │    │     │       └ {'auto_envvar_prefix': 'CELERY'}
+celery-worker-1  |            │    │     └ ()
+celery-worker-1  |            │    └ <function Command.main at 0xffffa822c720>
+celery-worker-1  |            └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1435, in main
+celery-worker-1  |     rv = self.invoke(ctx)
+celery-worker-1  |          │    │      └ <click.core.Context object at 0xffffa8c42c10>
+celery-worker-1  |          │    └ <function Group.invoke at 0xffffa822d620>
+celery-worker-1  |          └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1902, in invoke
+celery-worker-1  |     return _process_result(sub_ctx.command.invoke(sub_ctx))
+celery-worker-1  |            │               │       │       │      └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            │               │       │       └ <function Command.invoke at 0xffffa822c400>
+celery-worker-1  |            │               │       └ <CeleryDaemonCommand worker>
+celery-worker-1  |            │               └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            └ <function Group.invoke.<locals>._process_result at 0xffffa8c5e160>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1298, in invoke
+celery-worker-1  |     return ctx.invoke(self.callback, **ctx.params)
+celery-worker-1  |            │   │      │    │           │   └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │   │      │    │           └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            │   │      │    └ <function worker at 0xffffa6574220>
+celery-worker-1  |            │   │      └ <CeleryDaemonCommand worker>
+celery-worker-1  |            │   └ <function Context.invoke at 0xffffa8223600>
+celery-worker-1  |            └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 853, in invoke
+celery-worker-1  |     return callback(*args, **kwargs)
+celery-worker-1  |            │         │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │         └ ()
+celery-worker-1  |            └ <function worker at 0xffffa6574220>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/decorators.py", line 34, in new_func
+celery-worker-1  |     return f(get_current_context(), *args, **kwargs)
+celery-worker-1  |            │ │                       │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │ │                       └ ()
+celery-worker-1  |            │ └ <function get_current_context at 0xffffa8499c60>
+celery-worker-1  |            └ <function worker at 0xffffa6574180>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/base.py", line 158, in caller
+celery-worker-1  |     return f(ctx, *args, **kwargs)
+celery-worker-1  |            │ │     │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │ │     └ ()
+celery-worker-1  |            │ └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            └ <function worker at 0xffffa65740e0>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/worker.py", line 359, in worker
+celery-worker-1  |     worker = app.Worker(
+celery-worker-1  |              │   └ <kombu.utils.objects.cached_property object at 0xffffa6f3a050>
+celery-worker-1  |              └ <Celery fastapi_celery at 0xffffa5b27a50>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/worker.py", line 99, in __init__
+celery-worker-1  |     self.setup_instance(**self.prepare_args(**kwargs))
+celery-worker-1  |     │    │                │    │              └ {'pool_cls': None, 'loglevel': 20, 'logfile': None, 'pidfile': None, 'statedb': None, 'no_color': False, 'quiet': False, 'det...
+celery-worker-1  |     │    │                │    └ <function WorkController.prepare_args at 0xffffa6649f80>
+celery-worker-1  |     │    │                └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |     │    └ <function WorkController.setup_instance at 0xffffa6649940>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/worker.py", line 132, in setup_instance
+celery-worker-1  |     self.on_init_blueprint()
+celery-worker-1  |     │    └ <function Worker.on_init_blueprint at 0xffffa5a1c540>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/apps/worker.py", line 123, in on_init_blueprint
+celery-worker-1  |     self._custom_logging = self.setup_logging()
+celery-worker-1  |     │                      │    └ <function Worker.setup_logging at 0xffffa5a1c7c0>
+celery-worker-1  |     │                      └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/apps/worker.py", line 187, in setup_logging
+celery-worker-1  |     return self.app.log.setup(
+celery-worker-1  |            │    │   └ <kombu.utils.objects.cached_property object at 0xffffa6f3a690>
+celery-worker-1  |            │    └ <Celery fastapi_celery at 0xffffa5b27a50>
+celery-worker-1  |            └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/log.py", line 64, in setup
+celery-worker-1  |     handled = self.setup_logging_subsystem(
+celery-worker-1  |               │    └ <function Logging.setup_logging_subsystem at 0xffffa5a425c0>
+celery-worker-1  |               └ <celery.app.log.Logging object at 0xffffa5a93790>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/log.py", line 124, in setup_logging_subsystem
+celery-worker-1  |     signals.after_setup_logger.send(
+celery-worker-1  |     │       │                  └ <function Signal.send at 0xffffa6eee160>
+celery-worker-1  |     │       └ <Signal: after_setup_logger providing_args={'format', 'logfile', 'logger', 'colorize', 'loglevel'}>
+celery-worker-1  |     └ <module 'celery.signals' from '/usr/local/lib/python3.11/site-packages/celery/signals.py'>
+celery-worker-1  | > File "/usr/local/lib/python3.11/site-packages/celery/utils/dispatch/signal.py", line 280, in send
+celery-worker-1  |     response = receiver(signal=self, sender=sender, **named)
+celery-worker-1  |                │               │            │         └ {'logger': <RootLogger root (INFO)>, 'loglevel': 20, 'logfile': None, 'format': '[%(asctime)s: %(levelname)s/%(processName)s]...
+celery-worker-1  |                │               │            └ None
+celery-worker-1  |                │               └ <Signal: after_setup_logger providing_args={'format', 'logfile', 'logger', 'colorize', 'loglevel'}>
+celery-worker-1  |                └ <function setup_celery_logger at 0xffffa5b81ee0>
+celery-worker-1  | 
+celery-worker-1  | [31m[1mTypeError[0m:[1m setup_celery_logger() missing 1 required positional argument: 'logger_instance'[0m
+celery-worker-1  | 2026-05-06 21:25:56 | ERROR    | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Signal handler <function on_celery_logger_setup at 0xffffa5ce2700> raised: TypeError("on_celery_logger_setup() missing 1 required positional argument: 'logger_instance'")
+celery-worker-1  | [33m[1mTraceback (most recent call last):[0m
+celery-worker-1  | 
+celery-worker-1  |   File "/usr/local/bin/celery", line 8, in <module>
+celery-worker-1  |     sys.exit(main())
+celery-worker-1  |     │   │    └ <function main at 0xffffa8c445e0>
+celery-worker-1  |     │   └ <built-in function exit>
+celery-worker-1  |     └ <module 'sys' (built-in)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/__main__.py", line 15, in main
+celery-worker-1  |     sys.exit(_main())
+celery-worker-1  |     │   │    └ <function main at 0xffffa5b0bc40>
+celery-worker-1  |     │   └ <built-in function exit>
+celery-worker-1  |     └ <module 'sys' (built-in)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/celery.py", line 227, in main
+celery-worker-1  |     return celery(auto_envvar_prefix="CELERY")
+celery-worker-1  |            └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1514, in __call__
+celery-worker-1  |     return self.main(*args, **kwargs)
+celery-worker-1  |            │    │     │       └ {'auto_envvar_prefix': 'CELERY'}
+celery-worker-1  |            │    │     └ ()
+celery-worker-1  |            │    └ <function Command.main at 0xffffa822c720>
+celery-worker-1  |            └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1435, in main
+celery-worker-1  |     rv = self.invoke(ctx)
+celery-worker-1  |          │    │      └ <click.core.Context object at 0xffffa8c42c10>
+celery-worker-1  |          │    └ <function Group.invoke at 0xffffa822d620>
+celery-worker-1  |          └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1902, in invoke
+celery-worker-1  |     return _process_result(sub_ctx.command.invoke(sub_ctx))
+celery-worker-1  |            │               │       │       │      └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            │               │       │       └ <function Command.invoke at 0xffffa822c400>
+celery-worker-1  |            │               │       └ <CeleryDaemonCommand worker>
+celery-worker-1  |            │               └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            └ <function Group.invoke.<locals>._process_result at 0xffffa8c5e160>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1298, in invoke
+celery-worker-1  |     return ctx.invoke(self.callback, **ctx.params)
+celery-worker-1  |            │   │      │    │           │   └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │   │      │    │           └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            │   │      │    └ <function worker at 0xffffa6574220>
+celery-worker-1  |            │   │      └ <CeleryDaemonCommand worker>
+celery-worker-1  |            │   └ <function Context.invoke at 0xffffa8223600>
+celery-worker-1  |            └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 853, in invoke
+celery-worker-1  |     return callback(*args, **kwargs)
+celery-worker-1  |            │         │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │         └ ()
+celery-worker-1  |            └ <function worker at 0xffffa6574220>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/decorators.py", line 34, in new_func
+celery-worker-1  |     return f(get_current_context(), *args, **kwargs)
+celery-worker-1  |            │ │                       │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │ │                       └ ()
+celery-worker-1  |            │ └ <function get_current_context at 0xffffa8499c60>
+celery-worker-1  |            └ <function worker at 0xffffa6574180>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/base.py", line 158, in caller
+celery-worker-1  |     return f(ctx, *args, **kwargs)
+celery-worker-1  |            │ │     │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │ │     └ ()
+celery-worker-1  |            │ └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            └ <function worker at 0xffffa65740e0>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/worker.py", line 359, in worker
+celery-worker-1  |     worker = app.Worker(
+celery-worker-1  |              │   └ <kombu.utils.objects.cached_property object at 0xffffa6f3a050>
+celery-worker-1  |              └ <Celery fastapi_celery at 0xffffa5b27a50>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/worker.py", line 99, in __init__
+celery-worker-1  |     self.setup_instance(**self.prepare_args(**kwargs))
+celery-worker-1  |     │    │                │    │              └ {'pool_cls': None, 'loglevel': 20, 'logfile': None, 'pidfile': None, 'statedb': None, 'no_color': False, 'quiet': False, 'det...
+celery-worker-1  |     │    │                │    └ <function WorkController.prepare_args at 0xffffa6649f80>
+celery-worker-1  |     │    │                └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |     │    └ <function WorkController.setup_instance at 0xffffa6649940>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/worker.py", line 132, in setup_instance
+celery-worker-1  |     self.on_init_blueprint()
+celery-worker-1  |     │    └ <function Worker.on_init_blueprint at 0xffffa5a1c540>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/apps/worker.py", line 123, in on_init_blueprint
+celery-worker-1  |     self._custom_logging = self.setup_logging()
+celery-worker-1  |     │                      │    └ <function Worker.setup_logging at 0xffffa5a1c7c0>
+celery-worker-1  |     │                      └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/apps/worker.py", line 187, in setup_logging
+celery-worker-1  |     return self.app.log.setup(
+celery-worker-1  |            │    │   └ <kombu.utils.objects.cached_property object at 0xffffa6f3a690>
+celery-worker-1  |            │    └ <Celery fastapi_celery at 0xffffa5b27a50>
+celery-worker-1  |            └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/log.py", line 64, in setup
+celery-worker-1  |     handled = self.setup_logging_subsystem(
+celery-worker-1  |               │    └ <function Logging.setup_logging_subsystem at 0xffffa5a425c0>
+celery-worker-1  |               └ <celery.app.log.Logging object at 0xffffa5a93790>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/log.py", line 124, in setup_logging_subsystem
+celery-worker-1  |     signals.after_setup_logger.send(
+celery-worker-1  |     │       │                  └ <function Signal.send at 0xffffa6eee160>
+celery-worker-1  |     │       └ <Signal: after_setup_logger providing_args={'format', 'logfile', 'logger', 'colorize', 'loglevel'}>
+celery-worker-1  |     └ <module 'celery.signals' from '/usr/local/lib/python3.11/site-packages/celery/signals.py'>
+celery-worker-1  | > File "/usr/local/lib/python3.11/site-packages/celery/utils/dispatch/signal.py", line 280, in send
+celery-worker-1  |     response = receiver(signal=self, sender=sender, **named)
+celery-worker-1  |                │               │            │         └ {'logger': <RootLogger root (INFO)>, 'loglevel': 20, 'logfile': None, 'format': '[%(asctime)s: %(levelname)s/%(processName)s]...
+celery-worker-1  |                │               │            └ None
+celery-worker-1  |                │               └ <Signal: after_setup_logger providing_args={'format', 'logfile', 'logger', 'colorize', 'loglevel'}>
+celery-worker-1  |                └ <function on_celery_logger_setup at 0xffffa5ce2700>
+celery-worker-1  | 
+celery-worker-1  | [31m[1mTypeError[0m:[1m on_celery_logger_setup() missing 1 required positional argument: 'logger_instance'[0m
+celery-worker-1  | 2026-05-06 21:25:56 | ERROR    | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Signal handler <function setup_task_logger at 0xffffa5b81f80> raised: TypeError("setup_task_logger() missing 1 required positional argument: 'logger_instance'")
+celery-worker-1  | [33m[1mTraceback (most recent call last):[0m
+celery-worker-1  | 
+celery-worker-1  |   File "/usr/local/bin/celery", line 8, in <module>
+celery-worker-1  |     sys.exit(main())
+celery-worker-1  |     │   │    └ <function main at 0xffffa8c445e0>
+celery-worker-1  |     │   └ <built-in function exit>
+celery-worker-1  |     └ <module 'sys' (built-in)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/__main__.py", line 15, in main
+celery-worker-1  |     sys.exit(_main())
+celery-worker-1  |     │   │    └ <function main at 0xffffa5b0bc40>
+celery-worker-1  |     │   └ <built-in function exit>
+celery-worker-1  |     └ <module 'sys' (built-in)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/celery.py", line 227, in main
+celery-worker-1  |     return celery(auto_envvar_prefix="CELERY")
+celery-worker-1  |            └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1514, in __call__
+celery-worker-1  |     return self.main(*args, **kwargs)
+celery-worker-1  |            │    │     │       └ {'auto_envvar_prefix': 'CELERY'}
+celery-worker-1  |            │    │     └ ()
+celery-worker-1  |            │    └ <function Command.main at 0xffffa822c720>
+celery-worker-1  |            └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1435, in main
+celery-worker-1  |     rv = self.invoke(ctx)
+celery-worker-1  |          │    │      └ <click.core.Context object at 0xffffa8c42c10>
+celery-worker-1  |          │    └ <function Group.invoke at 0xffffa822d620>
+celery-worker-1  |          └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1902, in invoke
+celery-worker-1  |     return _process_result(sub_ctx.command.invoke(sub_ctx))
+celery-worker-1  |            │               │       │       │      └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            │               │       │       └ <function Command.invoke at 0xffffa822c400>
+celery-worker-1  |            │               │       └ <CeleryDaemonCommand worker>
+celery-worker-1  |            │               └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            └ <function Group.invoke.<locals>._process_result at 0xffffa8c5e160>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1298, in invoke
+celery-worker-1  |     return ctx.invoke(self.callback, **ctx.params)
+celery-worker-1  |            │   │      │    │           │   └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │   │      │    │           └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            │   │      │    └ <function worker at 0xffffa6574220>
+celery-worker-1  |            │   │      └ <CeleryDaemonCommand worker>
+celery-worker-1  |            │   └ <function Context.invoke at 0xffffa8223600>
+celery-worker-1  |            └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 853, in invoke
+celery-worker-1  |     return callback(*args, **kwargs)
+celery-worker-1  |            │         │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │         └ ()
+celery-worker-1  |            └ <function worker at 0xffffa6574220>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/decorators.py", line 34, in new_func
+celery-worker-1  |     return f(get_current_context(), *args, **kwargs)
+celery-worker-1  |            │ │                       │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │ │                       └ ()
+celery-worker-1  |            │ └ <function get_current_context at 0xffffa8499c60>
+celery-worker-1  |            └ <function worker at 0xffffa6574180>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/base.py", line 158, in caller
+celery-worker-1  |     return f(ctx, *args, **kwargs)
+celery-worker-1  |            │ │     │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │ │     └ ()
+celery-worker-1  |            │ └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            └ <function worker at 0xffffa65740e0>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/worker.py", line 359, in worker
+celery-worker-1  |     worker = app.Worker(
+celery-worker-1  |              │   └ <kombu.utils.objects.cached_property object at 0xffffa6f3a050>
+celery-worker-1  |              └ <Celery fastapi_celery at 0xffffa5b27a50>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/worker.py", line 99, in __init__
+celery-worker-1  |     self.setup_instance(**self.prepare_args(**kwargs))
+celery-worker-1  |     │    │                │    │              └ {'pool_cls': None, 'loglevel': 20, 'logfile': None, 'pidfile': None, 'statedb': None, 'no_color': False, 'quiet': False, 'det...
+celery-worker-1  |     │    │                │    └ <function WorkController.prepare_args at 0xffffa6649f80>
+celery-worker-1  |     │    │                └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |     │    └ <function WorkController.setup_instance at 0xffffa6649940>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/worker.py", line 132, in setup_instance
+celery-worker-1  |     self.on_init_blueprint()
+celery-worker-1  |     │    └ <function Worker.on_init_blueprint at 0xffffa5a1c540>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/apps/worker.py", line 123, in on_init_blueprint
+celery-worker-1  |     self._custom_logging = self.setup_logging()
+celery-worker-1  |     │                      │    └ <function Worker.setup_logging at 0xffffa5a1c7c0>
+celery-worker-1  |     │                      └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/apps/worker.py", line 187, in setup_logging
+celery-worker-1  |     return self.app.log.setup(
+celery-worker-1  |            │    │   └ <kombu.utils.objects.cached_property object at 0xffffa6f3a690>
+celery-worker-1  |            │    └ <Celery fastapi_celery at 0xffffa5b27a50>
+celery-worker-1  |            └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/log.py", line 64, in setup
+celery-worker-1  |     handled = self.setup_logging_subsystem(
+celery-worker-1  |               │    └ <function Logging.setup_logging_subsystem at 0xffffa5a425c0>
+celery-worker-1  |               └ <celery.app.log.Logging object at 0xffffa5a93790>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/log.py", line 131, in setup_logging_subsystem
+celery-worker-1  |     self.setup_task_loggers(loglevel, logfile, colorize=colorize)
+celery-worker-1  |     │    │                  │         │                 └ False
+celery-worker-1  |     │    │                  │         └ None
+celery-worker-1  |     │    │                  └ 20
+celery-worker-1  |     │    └ <function Logging.setup_task_loggers at 0xffffa5a42700>
+celery-worker-1  |     └ <celery.app.log.Logging object at 0xffffa5a93790>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/log.py", line 176, in setup_task_loggers
+celery-worker-1  |     signals.after_setup_task_logger.send(
+celery-worker-1  |     │       │                       └ <function Signal.send at 0xffffa6eee160>
+celery-worker-1  |     │       └ <Signal: after_setup_task_logger providing_args={'format', 'logfile', 'logger', 'colorize', 'loglevel'}>
+celery-worker-1  |     └ <module 'celery.signals' from '/usr/local/lib/python3.11/site-packages/celery/signals.py'>
+celery-worker-1  | > File "/usr/local/lib/python3.11/site-packages/celery/utils/dispatch/signal.py", line 280, in send
+celery-worker-1  |     response = receiver(signal=self, sender=sender, **named)
+celery-worker-1  |                │               │            │         └ {'logger': <Logger celery.task (INFO)>, 'loglevel': 20, 'logfile': None, 'format': '[%(asctime)s: %(levelname)s/%(processName...
+celery-worker-1  |                │               │            └ None
+celery-worker-1  |                │               └ <Signal: after_setup_task_logger providing_args={'format', 'logfile', 'logger', 'colorize', 'loglevel'}>
+celery-worker-1  |                └ <function setup_task_logger at 0xffffa5b81f80>
+celery-worker-1  | 
+celery-worker-1  | [31m[1mTypeError[0m:[1m setup_task_logger() missing 1 required positional argument: 'logger_instance'[0m
+celery-worker-1  | 2026-05-06 21:25:56 | ERROR    | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Signal handler <function on_task_logger_setup at 0xffffa5b9e340> raised: TypeError("on_task_logger_setup() missing 1 required positional argument: 'logger_instance'")
+celery-worker-1  | [33m[1mTraceback (most recent call last):[0m
+celery-worker-1  | 
+celery-worker-1  |   File "/usr/local/bin/celery", line 8, in <module>
+celery-worker-1  |     sys.exit(main())
+celery-worker-1  |     │   │    └ <function main at 0xffffa8c445e0>
+celery-worker-1  |     │   └ <built-in function exit>
+celery-worker-1  |     └ <module 'sys' (built-in)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/__main__.py", line 15, in main
+celery-worker-1  |     sys.exit(_main())
+celery-worker-1  |     │   │    └ <function main at 0xffffa5b0bc40>
+celery-worker-1  |     │   └ <built-in function exit>
+celery-worker-1  |     └ <module 'sys' (built-in)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/celery.py", line 227, in main
+celery-worker-1  |     return celery(auto_envvar_prefix="CELERY")
+celery-worker-1  |            └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1514, in __call__
+celery-worker-1  |     return self.main(*args, **kwargs)
+celery-worker-1  |            │    │     │       └ {'auto_envvar_prefix': 'CELERY'}
+celery-worker-1  |            │    │     └ ()
+celery-worker-1  |            │    └ <function Command.main at 0xffffa822c720>
+celery-worker-1  |            └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1435, in main
+celery-worker-1  |     rv = self.invoke(ctx)
+celery-worker-1  |          │    │      └ <click.core.Context object at 0xffffa8c42c10>
+celery-worker-1  |          │    └ <function Group.invoke at 0xffffa822d620>
+celery-worker-1  |          └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1902, in invoke
+celery-worker-1  |     return _process_result(sub_ctx.command.invoke(sub_ctx))
+celery-worker-1  |            │               │       │       │      └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            │               │       │       └ <function Command.invoke at 0xffffa822c400>
+celery-worker-1  |            │               │       └ <CeleryDaemonCommand worker>
+celery-worker-1  |            │               └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            └ <function Group.invoke.<locals>._process_result at 0xffffa8c5e160>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1298, in invoke
+celery-worker-1  |     return ctx.invoke(self.callback, **ctx.params)
+celery-worker-1  |            │   │      │    │           │   └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │   │      │    │           └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            │   │      │    └ <function worker at 0xffffa6574220>
+celery-worker-1  |            │   │      └ <CeleryDaemonCommand worker>
+celery-worker-1  |            │   └ <function Context.invoke at 0xffffa8223600>
+celery-worker-1  |            └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 853, in invoke
+celery-worker-1  |     return callback(*args, **kwargs)
+celery-worker-1  |            │         │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │         └ ()
+celery-worker-1  |            └ <function worker at 0xffffa6574220>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/decorators.py", line 34, in new_func
+celery-worker-1  |     return f(get_current_context(), *args, **kwargs)
+celery-worker-1  |            │ │                       │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │ │                       └ ()
+celery-worker-1  |            │ └ <function get_current_context at 0xffffa8499c60>
+celery-worker-1  |            └ <function worker at 0xffffa6574180>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/base.py", line 158, in caller
+celery-worker-1  |     return f(ctx, *args, **kwargs)
+celery-worker-1  |            │ │     │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │ │     └ ()
+celery-worker-1  |            │ └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            └ <function worker at 0xffffa65740e0>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/worker.py", line 359, in worker
+celery-worker-1  |     worker = app.Worker(
+celery-worker-1  |              │   └ <kombu.utils.objects.cached_property object at 0xffffa6f3a050>
+celery-worker-1  |              └ <Celery fastapi_celery at 0xffffa5b27a50>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/worker.py", line 99, in __init__
+celery-worker-1  |     self.setup_instance(**self.prepare_args(**kwargs))
+celery-worker-1  |     │    │                │    │              └ {'pool_cls': None, 'loglevel': 20, 'logfile': None, 'pidfile': None, 'statedb': None, 'no_color': False, 'quiet': False, 'det...
+celery-worker-1  |     │    │                │    └ <function WorkController.prepare_args at 0xffffa6649f80>
+celery-worker-1  |     │    │                └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |     │    └ <function WorkController.setup_instance at 0xffffa6649940>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/worker.py", line 132, in setup_instance
+celery-worker-1  |     self.on_init_blueprint()
+celery-worker-1  |     │    └ <function Worker.on_init_blueprint at 0xffffa5a1c540>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/apps/worker.py", line 123, in on_init_blueprint
+celery-worker-1  |     self._custom_logging = self.setup_logging()
+celery-worker-1  |     │                      │    └ <function Worker.setup_logging at 0xffffa5a1c7c0>
+celery-worker-1  |     │                      └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/apps/worker.py", line 187, in setup_logging
+celery-worker-1  |     return self.app.log.setup(
+celery-worker-1  |            │    │   └ <kombu.utils.objects.cached_property object at 0xffffa6f3a690>
+celery-worker-1  |            │    └ <Celery fastapi_celery at 0xffffa5b27a50>
+celery-worker-1  |            └ <Worker: celery@2ce9c8caddfd (INIT)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/log.py", line 64, in setup
+celery-worker-1  |     handled = self.setup_logging_subsystem(
+celery-worker-1  |               │    └ <function Logging.setup_logging_subsystem at 0xffffa5a425c0>
+celery-worker-1  |               └ <celery.app.log.Logging object at 0xffffa5a93790>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/log.py", line 131, in setup_logging_subsystem
+celery-worker-1  |     self.setup_task_loggers(loglevel, logfile, colorize=colorize)
+celery-worker-1  |     │    │                  │         │                 └ False
+celery-worker-1  |     │    │                  │         └ None
+celery-worker-1  |     │    │                  └ 20
+celery-worker-1  |     │    └ <function Logging.setup_task_loggers at 0xffffa5a42700>
+celery-worker-1  |     └ <celery.app.log.Logging object at 0xffffa5a93790>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/log.py", line 176, in setup_task_loggers
+celery-worker-1  |     signals.after_setup_task_logger.send(
+celery-worker-1  |     │       │                       └ <function Signal.send at 0xffffa6eee160>
+celery-worker-1  |     │       └ <Signal: after_setup_task_logger providing_args={'format', 'logfile', 'logger', 'colorize', 'loglevel'}>
+celery-worker-1  |     └ <module 'celery.signals' from '/usr/local/lib/python3.11/site-packages/celery/signals.py'>
+celery-worker-1  | > File "/usr/local/lib/python3.11/site-packages/celery/utils/dispatch/signal.py", line 280, in send
+celery-worker-1  |     response = receiver(signal=self, sender=sender, **named)
+celery-worker-1  |                │               │            │         └ {'logger': <Logger celery.task (INFO)>, 'loglevel': 20, 'logfile': None, 'format': '[%(asctime)s: %(levelname)s/%(processName...
+celery-worker-1  |                │               │            └ None
+celery-worker-1  |                │               └ <Signal: after_setup_task_logger providing_args={'format', 'logfile', 'logger', 'colorize', 'loglevel'}>
+celery-worker-1  |                └ <function on_task_logger_setup at 0xffffa5b9e340>
+celery-worker-1  | 
+celery-worker-1  | [31m[1mTypeError[0m:[1m on_task_logger_setup() missing 1 required positional argument: 'logger_instance'[0m
+celery-worker-1  |  
+celery-worker-1  |  -------------- celery@2ce9c8caddfd v5.6.3 (recovery)
+celery-worker-1  | --- ***** ----- 
+celery-worker-1  | -- ******* ---- Linux-6.12.76-linuxkit-aarch64-with-glibc2.41 2026-05-06 21:25:56
+celery-worker-1  | - *** --- * --- 
+celery-worker-1  | - ** ---------- [config]
+celery-worker-1  | - ** ---------- .> app:         fastapi_celery:0xffffa5b27a50
+celery-worker-1  | - ** ---------- .> transport:   redis://:**@redis:6379/0
+celery-worker-1  | - ** ---------- .> results:     redis://:**@redis:6379/0
+celery-worker-1  | - *** --- * --- .> concurrency: 10 (prefork)
+celery-worker-1  | -- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+celery-worker-1  | --- ***** ----- 
+celery-worker-1  |  -------------- [queues]
+celery-worker-1  |                 .> default          exchange=default(direct) key=default
+celery-worker-1  |                 
+celery-worker-1  | 
+celery-worker-1  | [tasks]
+celery-worker-1  |   . tasks.notify_admin
+celery-worker-1  |   . tasks.notify_client
+celery-worker-1  | 
+celery-worker-1  | 2026-05-06 21:25:56 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Connected to redis://:**@redis:6379/0
+celery-worker-1  | 2026-05-06 21:25:56 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | mingle: searching for neighbors
+celery-worker-1  | 2026-05-06 21:25:57 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | mingle: all alone
+celery-worker-1  | 2026-05-06 21:25:57 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | celery@2ce9c8caddfd ready.
+celery-worker-1  | 2026-05-06 21:26:01 | ERROR    | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | pidbox command error: KeyError('task')
+celery-worker-1  | [33m[1mTraceback (most recent call last):[0m
+celery-worker-1  | 
+celery-worker-1  |   File "/usr/local/bin/celery", line 8, in <module>
+celery-worker-1  |     sys.exit(main())
+celery-worker-1  |     │   │    └ <function main at 0xffffa8c445e0>
+celery-worker-1  |     │   └ <built-in function exit>
+celery-worker-1  |     └ <module 'sys' (built-in)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/__main__.py", line 15, in main
+celery-worker-1  |     sys.exit(_main())
+celery-worker-1  |     │   │    └ <function main at 0xffffa5b0bc40>
+celery-worker-1  |     │   └ <built-in function exit>
+celery-worker-1  |     └ <module 'sys' (built-in)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/celery.py", line 227, in main
+celery-worker-1  |     return celery(auto_envvar_prefix="CELERY")
+celery-worker-1  |            └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1514, in __call__
+celery-worker-1  |     return self.main(*args, **kwargs)
+celery-worker-1  |            │    │     │       └ {'auto_envvar_prefix': 'CELERY'}
+celery-worker-1  |            │    │     └ ()
+celery-worker-1  |            │    └ <function Command.main at 0xffffa822c720>
+celery-worker-1  |            └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1435, in main
+celery-worker-1  |     rv = self.invoke(ctx)
+celery-worker-1  |          │    │      └ <click.core.Context object at 0xffffa8c42c10>
+celery-worker-1  |          │    └ <function Group.invoke at 0xffffa822d620>
+celery-worker-1  |          └ <DYMGroup celery>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1902, in invoke
+celery-worker-1  |     return _process_result(sub_ctx.command.invoke(sub_ctx))
+celery-worker-1  |            │               │       │       │      └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            │               │       │       └ <function Command.invoke at 0xffffa822c400>
+celery-worker-1  |            │               │       └ <CeleryDaemonCommand worker>
+celery-worker-1  |            │               └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            └ <function Group.invoke.<locals>._process_result at 0xffffa8c5e160>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1298, in invoke
+celery-worker-1  |     return ctx.invoke(self.callback, **ctx.params)
+celery-worker-1  |            │   │      │    │           │   └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │   │      │    │           └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            │   │      │    └ <function worker at 0xffffa6574220>
+celery-worker-1  |            │   │      └ <CeleryDaemonCommand worker>
+celery-worker-1  |            │   └ <function Context.invoke at 0xffffa8223600>
+celery-worker-1  |            └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/core.py", line 853, in invoke
+celery-worker-1  |     return callback(*args, **kwargs)
+celery-worker-1  |            │         │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │         └ ()
+celery-worker-1  |            └ <function worker at 0xffffa6574220>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/click/decorators.py", line 34, in new_func
+celery-worker-1  |     return f(get_current_context(), *args, **kwargs)
+celery-worker-1  |            │ │                       │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │ │                       └ ()
+celery-worker-1  |            │ └ <function get_current_context at 0xffffa8499c60>
+celery-worker-1  |            └ <function worker at 0xffffa6574180>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/base.py", line 158, in caller
+celery-worker-1  |     return f(ctx, *args, **kwargs)
+celery-worker-1  |            │ │     │       └ {'loglevel': 20, 'hostname': 'celery@2ce9c8caddfd', 'detach': False, 'statedb': None, 'optimization': 'default', 'prefetch_mu...
+celery-worker-1  |            │ │     └ ()
+celery-worker-1  |            │ └ <click.core.Context object at 0xffffa6bced10>
+celery-worker-1  |            └ <function worker at 0xffffa65740e0>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bin/worker.py", line 367, in worker
+celery-worker-1  |     worker.start()
+celery-worker-1  |     │      └ <function WorkController.start at 0xffffa664a0c0>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (running)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/worker.py", line 203, in start
+celery-worker-1  |     self.blueprint.start(self)
+celery-worker-1  |     │    │         │     └ <Worker: celery@2ce9c8caddfd (running)>
+celery-worker-1  |     │    │         └ <function Blueprint.start at 0xffffa6639e40>
+celery-worker-1  |     │    └ <celery.worker.worker.WorkController.Blueprint object at 0xffffa5b732d0>
+celery-worker-1  |     └ <Worker: celery@2ce9c8caddfd (running)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bootsteps.py", line 116, in start
+celery-worker-1  |     step.start(parent)
+celery-worker-1  |     │    │     └ <Worker: celery@2ce9c8caddfd (running)>
+celery-worker-1  |     │    └ <function StartStopStep.start at 0xffffa663b100>
+celery-worker-1  |     └ <step: Consumer>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bootsteps.py", line 365, in start
+celery-worker-1  |     return self.obj.start()
+celery-worker-1  |            │    │   └ <function Consumer.start at 0xffffa47ca0c0>
+celery-worker-1  |            │    └ <Consumer: celery@2ce9c8caddfd (running)>
+celery-worker-1  |            └ <step: Consumer>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/consumer/consumer.py", line 346, in start
+celery-worker-1  |     blueprint.start(self)
+celery-worker-1  |     │         │     └ <Consumer: celery@2ce9c8caddfd (running)>
+celery-worker-1  |     │         └ <function Blueprint.start at 0xffffa6639e40>
+celery-worker-1  |     └ <celery.worker.consumer.consumer.Consumer.Blueprint object at 0xffffa47e7a10>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/bootsteps.py", line 116, in start
+celery-worker-1  |     step.start(parent)
+celery-worker-1  |     │    │     └ <Consumer: celery@2ce9c8caddfd (running)>
+celery-worker-1  |     │    └ <function Evloop.start at 0xffffa47cb420>
+celery-worker-1  |     └ <step: event loop>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/consumer/consumer.py", line 788, in start
+celery-worker-1  |     c.loop(*c.loop_args())
+celery-worker-1  |     │ │     │ └ <function Consumer.loop_args at 0xffffa47ca5c0>
+celery-worker-1  |     │ │     └ <Consumer: celery@2ce9c8caddfd (running)>
+celery-worker-1  |     │ └ <function asynloop at 0xffffa47c9800>
+celery-worker-1  |     └ <Consumer: celery@2ce9c8caddfd (running)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/loops.py", line 97, in asynloop
+celery-worker-1  |     next(loop)
+celery-worker-1  |          └ <generator object Hub.create_loop at 0xffffa48de7a0>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/asynchronous/hub.py", line 377, in create_loop
+celery-worker-1  |     cb(*cbargs)
+celery-worker-1  |     │   └ (74,)
+celery-worker-1  |     └ <bound method Transport.on_readable of <kombu.transport.redis.Transport object at 0xffffa5bc5390>>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/transport/redis.py", line 1394, in on_readable
+celery-worker-1  |     self.cycle.on_readable(fileno)
+celery-worker-1  |     │    │     │           └ 74
+celery-worker-1  |     │    │     └ <function MultiChannelPoller.on_readable at 0xffffa48faa20>
+celery-worker-1  |     │    └ <kombu.transport.redis.MultiChannelPoller object at 0xffffa5bc4d90>
+celery-worker-1  |     └ <kombu.transport.redis.Transport object at 0xffffa5bc5390>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/transport/redis.py", line 579, in on_readable
+celery-worker-1  |     chan.handlers[type]()
+celery-worker-1  |     │    │        └ 'LISTEN'
+celery-worker-1  |     │    └ {'BRPOP': <bound method Channel._brpop_read of <kombu.transport.redis.Channel object at 0xffffa46a9bd0>>, 'LISTEN': <bound me...
+celery-worker-1  |     └ <kombu.transport.redis.Channel object at 0xffffa46a9bd0>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/transport/redis.py", line 931, in _receive
+celery-worker-1  |     ret.append(self._receive_one(c))
+celery-worker-1  |     │   │      │    │            └ <redis.client.PubSub object at 0xffffa469cd50>
+celery-worker-1  |     │   │      │    └ <function Channel._receive_one at 0xffffa48fb6a0>
+celery-worker-1  |     │   │      └ <kombu.transport.redis.Channel object at 0xffffa46a9bd0>
+celery-worker-1  |     │   └ <method 'append' of 'list' objects>
+celery-worker-1  |     └ []
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/transport/redis.py", line 959, in _receive_one
+celery-worker-1  |     self.connection._deliver(
+celery-worker-1  |     │    │          └ <function Transport._deliver at 0xffffa48f84a0>
+celery-worker-1  |     │    └ <kombu.transport.redis.Transport object at 0xffffa5bc5390>
+celery-worker-1  |     └ <kombu.transport.redis.Channel object at 0xffffa46a9bd0>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/transport/virtual/base.py", line 1017, in _deliver
+celery-worker-1  |     callback(message)
+celery-worker-1  |     │        └ {'body': 'eyJtZXRob2QiOiAiZW5hYmxlX2V2ZW50cyIsICJhcmd1bWVudHMiOiB7fSwgImRlc3RpbmF0aW9uIjogbnVsbCwgInBhdHRlcm4iOiBudWxsLCAibWF...
+celery-worker-1  |     └ <function Channel.basic_consume.<locals>._callback at 0xffffa4870e00>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/transport/virtual/base.py", line 639, in _callback
+celery-worker-1  |     return callback(message)
+celery-worker-1  |            │        └ <Message object at 0xffffa46a0560 with details {'state': 'RECEIVED', 'content_type': 'application/json', 'delivery_tag': 'f5f...
+celery-worker-1  |            └ <bound method Consumer._receive_callback of <Consumer: [<Queue celery@2ce9c8caddfd.celery.pidbox -> <Exchange celery.pidbox(f...
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/messaging.py", line 668, in _receive_callback
+celery-worker-1  |     return on_m(message) if on_m else self.receive(decoded, message)
+celery-worker-1  |            │    │           │         │    │       │        └ <Message object at 0xffffa46a0560 with details {'state': 'RECEIVED', 'content_type': 'application/json', 'delivery_tag': 'f5f...
+celery-worker-1  |            │    │           │         │    │       └ {'method': 'enable_events', 'arguments': {}, 'destination': None, 'pattern': None, 'matcher': None}
+celery-worker-1  |            │    │           │         │    └ <function Consumer.receive at 0xffffa70674c0>
+celery-worker-1  |            │    │           │         └ <Consumer: [<Queue celery@2ce9c8caddfd.celery.pidbox -> <Exchange celery.pidbox(fanout) bound to chan:3> ->  bound to chan:3>]>
+celery-worker-1  |            │    │           └ None
+celery-worker-1  |            │    └ <Message object at 0xffffa46a0560 with details {'state': 'RECEIVED', 'content_type': 'application/json', 'delivery_tag': 'f5f...
+celery-worker-1  |            └ None
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/messaging.py", line 634, in receive
+celery-worker-1  |     [callback(body, message) for callback in callbacks]
+celery-worker-1  |               │     │                        └ [<bound method Pidbox.on_message of <celery.worker.pidbox.Pidbox object at 0xffffa47e6250>>]
+celery-worker-1  |               │     └ <Message object at 0xffffa46a0560 with details {'state': 'RECEIVED', 'content_type': 'application/json', 'delivery_tag': 'f5f...
+celery-worker-1  |               └ {'method': 'enable_events', 'arguments': {}, 'destination': None, 'pattern': None, 'matcher': None}
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/messaging.py", line 634, in <listcomp>
+celery-worker-1  |     [callback(body, message) for callback in callbacks]
+celery-worker-1  |      │        │     │            └ <bound method Pidbox.on_message of <celery.worker.pidbox.Pidbox object at 0xffffa47e6250>>
+celery-worker-1  |      │        │     └ <Message object at 0xffffa46a0560 with details {'state': 'RECEIVED', 'content_type': 'application/json', 'delivery_tag': 'f5f...
+celery-worker-1  |      │        └ {'method': 'enable_events', 'arguments': {}, 'destination': None, 'pattern': None, 'matcher': None}
+celery-worker-1  |      └ <bound method Pidbox.on_message of <celery.worker.pidbox.Pidbox object at 0xffffa47e6250>>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/pidbox.py", line 44, in on_message
+celery-worker-1  |     self.node.handle_message(body, message)
+celery-worker-1  |     │    │    │              │     └ <Message object at 0xffffa46a0560 with details {'state': 'RECEIVED', 'content_type': 'application/json', 'delivery_tag': 'f5f...
+celery-worker-1  |     │    │    │              └ {'method': 'enable_events', 'arguments': {}, 'destination': None, 'pattern': None, 'matcher': None}
+celery-worker-1  |     │    │    └ <function Node.handle_message at 0xffffa483c680>
+celery-worker-1  |     │    └ <kombu.pidbox.Node object at 0xffffa5bd96d0>
+celery-worker-1  |     └ <celery.worker.pidbox.Pidbox object at 0xffffa47e6250>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/pidbox.py", line 143, in handle_message
+celery-worker-1  |     return self.dispatch(**body)
+celery-worker-1  |            │    │          └ {'method': 'enable_events', 'arguments': {}, 'destination': None, 'pattern': None, 'matcher': None}
+celery-worker-1  |            │    └ <function Node.dispatch at 0xffffa483c400>
+celery-worker-1  |            └ <kombu.pidbox.Node object at 0xffffa5bd96d0>
+celery-worker-1  | > File "/usr/local/lib/python3.11/site-packages/kombu/pidbox.py", line 102, in dispatch
+celery-worker-1  |     reply = handle(method, arguments)
+celery-worker-1  |             │      │       └ {}
+celery-worker-1  |             │      └ 'enable_events'
+celery-worker-1  |             └ <bound method Node.handle_cast of <kombu.pidbox.Node object at 0xffffa5bd96d0>>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/pidbox.py", line 124, in handle_cast
+celery-worker-1  |     return self.handle(method, arguments)
+celery-worker-1  |            │    │      │       └ {}
+celery-worker-1  |            │    │      └ 'enable_events'
+celery-worker-1  |            │    └ <function Node.handle at 0xffffa483c4a0>
+celery-worker-1  |            └ <kombu.pidbox.Node object at 0xffffa5bd96d0>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/kombu/pidbox.py", line 118, in handle
+celery-worker-1  |     return self.handlers[method](self.state, **arguments)
+celery-worker-1  |            │    │        │       │    │        └ {}
+celery-worker-1  |            │    │        │       │    └ {'app': <Celery fastapi_celery at 0xffffa5b27a50>, 'hostname': 'celery@2ce9c8caddfd', 'consumer': <Consumer: celery@2ce9c8cad...
+celery-worker-1  |            │    │        │       └ <kombu.pidbox.Node object at 0xffffa5bd96d0>
+celery-worker-1  |            │    │        └ 'enable_events'
+celery-worker-1  |            │    └ {'report': <function report at 0xffffa6519300>, 'conf': <function conf at 0xffffa65193a0>, 'dump_conf': <function conf at 0xf...
+celery-worker-1  |            └ <kombu.pidbox.Node object at 0xffffa5bd96d0>
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/worker/control.py", line 350, in enable_events
+celery-worker-1  |     logger.info('Events of group {task} enabled by remote.')
+celery-worker-1  |     │      └ <function Logger.info at 0xffffa82dd8a0>
+celery-worker-1  |     └ <Logger celery.worker.control (INFO)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/logging/__init__.py", line 1489, in info
+celery-worker-1  |     self._log(INFO, msg, args, **kwargs)
+celery-worker-1  |     │    │    │     │    │       └ {}
+celery-worker-1  |     │    │    │     │    └ ()
+celery-worker-1  |     │    │    │     └ 'Events of group {task} enabled by remote.'
+celery-worker-1  |     │    │    └ 20
+celery-worker-1  |     │    └ <function Logger._log at 0xffffa82ddee0>
+celery-worker-1  |     └ <Logger celery.worker.control (INFO)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/logging/__init__.py", line 1634, in _log
+celery-worker-1  |     self.handle(record)
+celery-worker-1  |     │    │      └ <LogRecord: celery.worker.control, 20, /usr/local/lib/python3.11/site-packages/celery/worker/control.py, 350, "Events of grou...
+celery-worker-1  |     │    └ <function Logger.handle at 0xffffa82ddf80>
+celery-worker-1  |     └ <Logger celery.worker.control (INFO)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/logging/__init__.py", line 1644, in handle
+celery-worker-1  |     self.callHandlers(record)
+celery-worker-1  |     │    │            └ <LogRecord: celery.worker.control, 20, /usr/local/lib/python3.11/site-packages/celery/worker/control.py, 350, "Events of grou...
+celery-worker-1  |     │    └ <function Logger.callHandlers at 0xffffa82de200>
+celery-worker-1  |     └ <Logger celery.worker.control (INFO)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/logging/__init__.py", line 1706, in callHandlers
+celery-worker-1  |     hdlr.handle(record)
+celery-worker-1  |     │    │      └ <LogRecord: celery.worker.control, 20, /usr/local/lib/python3.11/site-packages/celery/worker/control.py, 350, "Events of grou...
+celery-worker-1  |     │    └ <function Handler.handle at 0xffffa82dc0e0>
+celery-worker-1  |     └ <InterceptHandler (NOTSET)>
+celery-worker-1  |   File "/usr/local/lib/python3.11/logging/__init__.py", line 978, in handle
+celery-worker-1  |     self.emit(record)
+celery-worker-1  |     │    │    └ <LogRecord: celery.worker.control, 20, /usr/local/lib/python3.11/site-packages/celery/worker/control.py, 350, "Events of grou...
+celery-worker-1  |     │    └ <function InterceptHandler.emit at 0xffffa5b81c60>
+celery-worker-1  |     └ <InterceptHandler (NOTSET)>
+celery-worker-1  | 
+celery-worker-1  |   File "[32m/app/app/core/[0m[32m[1mlogging.py[0m", line [33m87[0m, in [35memit[0m
+celery-worker-1  |     [1mlogger[0m[35m[1m.[0m[1mopt[0m[1m([0m[1mdepth[0m[35m[1m=[0m[1mdepth[0m[1m,[0m [1mexception[0m[35m[1m=[0m[1mrecord[0m[35m[1m.[0m[1mexc_info[0m[1m)[0m[35m[1m.[0m[1mlog[0m[1m([0m
+celery-worker-1  |     [36m│      │         │                │      └ [0m[36m[1mNone[0m
+celery-worker-1  |     [36m│      │         │                └ [0m[36m[1m<LogRecord: celery.worker.control, 20, /usr/local/lib/python3.11/site-packages/celery/worker/control.py, 350, "Events of grou...[0m
+celery-worker-1  |     [36m│      │         └ [0m[36m[1m6[0m
+celery-worker-1  |     [36m│      └ [0m[36m[1m<function Logger.opt at 0xffffa5b805e0>[0m
+celery-worker-1  |     [36m└ [0m[36m[1m<loguru.logger handlers=[(id=1, level=20, sink=<stderr>), (id=2, level=20, sink='logs/app.log')]>[0m
+celery-worker-1  | 
+celery-worker-1  | [31m[1mKeyError[0m:[1m 'task'[0m
+celery-worker-1  | 2026-05-06 21:26:35 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Task tasks.notify_admin[8c5aadc0-06c5-4ea0-90a9-cade83d9c868] received
+celery-worker-1  | 2026-05-06 21:26:35 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Task tasks.notify_client[reminder-booking-64] received
+celery-worker-1  | 2026-05-06 21:26:35 | ERROR    | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Задача tasks.notify_admin[8c5aadc0-06c5-4ea0-90a9-cade83d9c868] завершилась с ошибкой: notify_admin() got an unexpected keyword argument 'changed_by_role'
+celery-worker-1  | 2026-05-06 21:26:35 | ERROR    | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Task tasks.notify_admin[8c5aadc0-06c5-4ea0-90a9-cade83d9c868] raised unexpected: TypeError("notify_admin() got an unexpected keyword argument 'changed_by_role'")
+celery-worker-1  | [33m[1mTraceback (most recent call last):[0m
+celery-worker-1  | 
+celery-worker-1  | > File "/usr/local/lib/python3.11/site-packages/celery/app/trace.py", line 585, in trace_task
+celery-worker-1  |     R = retval = fun(*args, **kwargs)
+celery-worker-1  | 
+celery-worker-1  |   File "[32m/app/app/celery/[0m[32m[1mbase_task.py[0m", line [33m65[0m, in [35m__call__[0m
+celery-worker-1  |     [35m[1mreturn[0m [1msuper[0m[1m([0m[1m)[0m[35m[1m.[0m[1m__call__[0m[1m([0m[35m[1m*[0m[1margs[0m[1m,[0m [35m[1m**[0m[1mkwargs[0m[1m)[0m
+celery-worker-1  | 
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/trace.py", line 858, in __protected_call__
+celery-worker-1  |     return self.run(*args, **kwargs)
+celery-worker-1  | 
+celery-worker-1  | [31m[1mTypeError[0m:[1m notify_admin() got an unexpected keyword argument 'changed_by_role'[0m
+celery-worker-1  | 2026-05-06 21:26:47 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Task tasks.notify_admin[f0ece23c-dfd2-4ec0-8f9b-f545220282de] received
+celery-worker-1  | 2026-05-06 21:26:47 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Task tasks.notify_client[reminder-booking-62] received
+celery-worker-1  | 2026-05-06 21:26:47 | ERROR    | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Задача tasks.notify_admin[f0ece23c-dfd2-4ec0-8f9b-f545220282de] завершилась с ошибкой: notify_admin() got an unexpected keyword argument 'changed_by_role'
+celery-worker-1  | 2026-05-06 21:26:47 | ERROR    | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Task tasks.notify_admin[f0ece23c-dfd2-4ec0-8f9b-f545220282de] raised unexpected: TypeError("notify_admin() got an unexpected keyword argument 'changed_by_role'")
+celery-worker-1  | [33m[1mTraceback (most recent call last):[0m
+celery-worker-1  | 
+celery-worker-1  | > File "/usr/local/lib/python3.11/site-packages/celery/app/trace.py", line 585, in trace_task
+celery-worker-1  |     R = retval = fun(*args, **kwargs)
+celery-worker-1  | 
+celery-worker-1  |   File "[32m/app/app/celery/[0m[32m[1mbase_task.py[0m", line [33m65[0m, in [35m__call__[0m
+celery-worker-1  |     [35m[1mreturn[0m [1msuper[0m[1m([0m[1m)[0m[35m[1m.[0m[1m__call__[0m[1m([0m[35m[1m*[0m[1margs[0m[1m,[0m [35m[1m**[0m[1mkwargs[0m[1m)[0m
+celery-worker-1  | 
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/trace.py", line 858, in __protected_call__
+celery-worker-1  |     return self.run(*args, **kwargs)
+celery-worker-1  | 
+celery-worker-1  | [31m[1mTypeError[0m:[1m notify_admin() got an unexpected keyword argument 'changed_by_role'[0m
+celery-worker-1  | 2026-05-06 21:26:55 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Task tasks.notify_admin[d73c3d65-bba9-4f28-816a-020d8083c3e8] received
+celery-worker-1  | 2026-05-06 21:26:55 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Task tasks.notify_client[reminder-booking-62] received
+celery-worker-1  | 2026-05-06 21:26:55 | ERROR    | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Задача tasks.notify_admin[d73c3d65-bba9-4f28-816a-020d8083c3e8] завершилась с ошибкой: notify_admin() got an unexpected keyword argument 'changed_by_role'
+celery-worker-1  | 2026-05-06 21:26:55 | ERROR    | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Task tasks.notify_admin[d73c3d65-bba9-4f28-816a-020d8083c3e8] raised unexpected: TypeError("notify_admin() got an unexpected keyword argument 'changed_by_role'")
+celery-worker-1  | [33m[1mTraceback (most recent call last):[0m
+celery-worker-1  | 
+celery-worker-1  | > File "/usr/local/lib/python3.11/site-packages/celery/app/trace.py", line 585, in trace_task
+celery-worker-1  |     R = retval = fun(*args, **kwargs)
+celery-worker-1  | 
+celery-worker-1  |   File "[32m/app/app/celery/[0m[32m[1mbase_task.py[0m", line [33m65[0m, in [35m__call__[0m
+celery-worker-1  |     [35m[1mreturn[0m [1msuper[0m[1m([0m[1m)[0m[35m[1m.[0m[1m__call__[0m[1m([0m[35m[1m*[0m[1margs[0m[1m,[0m [35m[1m**[0m[1mkwargs[0m[1m)[0m
+celery-worker-1  | 
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/celery/app/trace.py", line 858, in __protected_call__
+celery-worker-1  |     return self.run(*args, **kwargs)
+celery-worker-1  | 
+celery-worker-1  | [31m[1mTypeError[0m:[1m notify_admin() got an unexpected keyword argument 'changed_by_role'[0m
+celery-worker-1  | --- Logging error in Loguru Handler #2 ---
+celery-worker-1  | Record was: {'elapsed': datetime.timedelta(seconds=59, microseconds=101498), 'exception': None, 'extra': {'user_id': 'SYSTEM', 'username': 'SYSTEM', 'trace_id': 'SYSTEM', 'exc_info': <ExceptionInfo: TypeError("notify_admin() got an unexpected keyword argument 'changed_by_role'")>}, 'file': (name='base_task.py', path='/app/app/celery/base_task.py'), 'function': 'on_failure', 'level': (name='ERROR', no=40, icon='❌'), 'line': 90, 'message': "Задача tasks.notify_admin[d73c3d65-bba9-4f28-816a-020d8083c3e8] завершилась с ошибкой: notify_admin() got an unexpected keyword argument 'changed_by_role'", 'module': 'base_task', 'name': 'app.celery.base_task', 'process': (id=15, name='ForkPoolWorker-6'), 'thread': (id=281473523664064, name='MainThread'), 'time': datetime(2026, 5, 6, 21, 26, 55, 556446, tzinfo=datetime.timezone(datetime.timedelta(0), 'UTC'))}
+celery-worker-1  | Traceback (most recent call last):
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/loguru/_ctime_functions.py", line 36, in get_ctime_linux
+celery-worker-1  |     return float(os.getxattr(filepath, b"user.loguru_crtime"))
+celery-worker-1  |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+celery-worker-1  | FileNotFoundError: [Errno 2] No such file or directory: '/app/logs/app.log'
+celery-worker-1  | 
+celery-worker-1  | During handling of the above exception, another exception occurred:
+celery-worker-1  | 
+celery-worker-1  | Traceback (most recent call last):
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/loguru/_handler.py", line 315, in _queued_writer
+celery-worker-1  |     self._sink.write(message)
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/loguru/_file_sink.py", line 204, in write
+celery-worker-1  |     self._terminate_file(is_rotating=True)
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/loguru/_file_sink.py", line 273, in _terminate_file
+celery-worker-1  |     creation_time = get_ctime(old_path)
+celery-worker-1  |                     ^^^^^^^^^^^^^^^^^^^
+celery-worker-1  |   File "/usr/local/lib/python3.11/site-packages/loguru/_ctime_functions.py", line 38, in get_ctime_linux
+celery-worker-1  |     return os.stat(filepath).st_mtime
+celery-worker-1  |            ^^^^^^^^^^^^^^^^^
+celery-worker-1  | FileNotFoundError: [Errno 2] No such file or directory: '/app/logs/app.log'
+celery-worker-1  | --- End of logging error ---
+celery-worker-1  | 2026-05-06 21:27:05 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Отправляю напоминание клиенту string2
+celery-worker-1  | 2026-05-06 21:27:05 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Подключено к smtp.mail.ru:465
+celery-worker-1  | 2026-05-06 21:27:05 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Письмо отправлено на user2@yandex.ru
+celery-worker-1  | 2026-05-06 21:27:05 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Задача tasks.notify_client[reminder-booking-64] успешно выполнена
+celery-worker-1  | 2026-05-06 21:27:05 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Task tasks.notify_client[reminder-booking-64] succeeded in 0.6877408340005786s: None
+celery-worker-1  | 2026-05-06 21:27:17 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Отправляю напоминание клиенту string2
+celery-worker-1  | 2026-05-06 21:27:17 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Подключено к smtp.mail.ru:465
+celery-worker-1  | 2026-05-06 21:27:17 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Письмо отправлено на user2@yandex.ru
+celery-worker-1  | 2026-05-06 21:27:18 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Задача tasks.notify_client[reminder-booking-62] успешно выполнена
+celery-worker-1  | 2026-05-06 21:27:18 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Task tasks.notify_client[reminder-booking-62] succeeded in 0.751029249997373s: None
+celery-worker-1  | 2026-05-06 21:27:25 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Отправляю напоминание клиенту string2
+celery-worker-1  | 2026-05-06 21:27:25 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Подключено к smtp.mail.ru:465
+celery-worker-1  | 2026-05-06 21:27:26 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Письмо отправлено на user2@yandex.ru
+celery-worker-1  | 2026-05-06 21:27:26 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Задача tasks.notify_client[reminder-booking-62] успешно выполнена
+celery-worker-1  | 2026-05-06 21:27:26 | INFO     | trace_id=SYSTEM | user_id=SYSTEM username=SYSTEM | Task tasks.notify_client[reminder-booking-62] succeeded in 0.7486443749985483s: None

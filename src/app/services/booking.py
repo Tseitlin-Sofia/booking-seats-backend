@@ -31,7 +31,9 @@ class BookingService:
         booking_dict['booking_date'] = booking_datetime.strftime(self.FORMAT)
         # prod_reminder_time = booking_datetime - timedelta(hours=2)
         demo_reminder_time = datetime.now() + timedelta(seconds=30)
-        notify_admin.delay(method, booking_dict, changed_by_role)
+        notify_admin.delay(
+            method, booking_dict, changed_by_role=changed_by_role,
+        )
         notify_client.apply_async(
             args=[booking_dict],
             eta=demo_reminder_time,
