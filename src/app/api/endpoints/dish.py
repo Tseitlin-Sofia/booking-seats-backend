@@ -33,7 +33,7 @@ async def get_dishes(
     show_active: bool = None,
 ) -> list[DishInfo]:
     """Возвращает все блюда заданного кафе."""
-    await get_cafe_or_404(session, cafe_id, True)
+    await get_cafe_or_404(session, cafe_id, is_exist=True)
     if not (user.is_admin or user.is_manager):
         return await dish_crud.get_dishes_by_cafe(
             cafe_id=cafe_id,
