@@ -188,7 +188,10 @@ async def create_booking(
         new_booking, from_attributes=True,
     )
     await booking_service.make_notification_tasks_for_celery(
-        booking_response, method='POST', session=session,
+        booking_response,
+        method='POST',
+        session=session,
+        changed_by_role=current_user.role
     )
     return booking_response
 
@@ -347,8 +350,10 @@ async def update_booking(
         objs=booking_table_slots_db,
     )
     await session.flush()
-    for obj in booking_table_slots_db:
-        session.expunge(obj)
+    session.expunge_all()
+
+    # Заново загружаем booking_db
+    booking_db = await validate_booking_exists(booking_id, session)
 
     tables_slots = booking_data.pop('tables_slots')
     await validate_booking_slots(
@@ -380,8 +385,8 @@ async def update_booking(
             objs=pre_order_items_db,
         )
         await session.flush()
-        for obj in pre_order_items_db:
-            session.expunge(obj)
+        session.expunge_all()
+        booking_db = await validate_booking_exists(booking_id, session)
 
     # Обновляем основные поля бронирования
     booking_upd = await booking_crud.update(
@@ -419,8 +424,6 @@ async def update_booking(
     # Коммитим все изменения
     await session.commit()
 
-    # Загружаем свежие данные со всеми связями
-
     stmt = (
         select(Booking)
         .where(Booking.id == booking_id)
@@ -433,13 +436,16 @@ async def update_booking(
         )
     )
     result = await session.execute(stmt)
-    booking_upd = result.scalar_one()
+    booking_upd = result.unique().scalar_one()
 
     # Формируем ответ и задачи Celery
     booking_response = BookingInfo.model_validate(
         booking_upd, from_attributes=True,
     )
     await booking_service.make_notification_tasks_for_celery(
-        booking_response, method='PATCH', session=session,
+        booking_response,
+        method='PATCH',
+        session=session,
+        changed_by_role=current_user.role
     )
     return booking_response

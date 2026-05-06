@@ -9,6 +9,7 @@ from app.services.task import (
     get_html_for_client,
     is_canceled,
     send_email,
+    is_completed
 )
 
 
@@ -22,12 +23,20 @@ def notify_admin(
     self: LoguruTask,
     method: str,
     data: dict | None = None,
+    changed_by_role: str = 'user',
 ) -> None:
     """Мгновенное уведомление админу о новой брони."""
     if data:
-        if is_canceled(data):
-            self.log.info('Бронь отменена, уведомление админу не придёт')
+        if is_canceled(data) or is_completed(data):
+            self.log.info(
+                'Бронь отменена/выполнена, уведомление админу не придёт'
+            )
             return
+
+        if method == 'PATCH' and changed_by_role in ('admin', 'manager'):
+            self.log.info('Изменение внёс админ/менеджер, уведомление не нужно')
+            return
+
         self.log.info(
             'Отправляю уведомление админу о столе {}',
             data.get('table_id'),

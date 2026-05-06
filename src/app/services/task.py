@@ -24,7 +24,7 @@ def is_canceled(data: dict) -> bool:
     return status == BookingStatus.CANCELED or not is_active
 
 
-def _is_completed(data: dict) -> bool:
+def is_completed(data: dict) -> bool:
     """Проверяет, завершена ли бронь."""
     status: str = data.get('status', '')
     return status == BookingStatus.COMPLETED
@@ -70,9 +70,15 @@ def _get_table_ids(data: dict) -> str:
 
 def build_admin_notification(data: dict, method: str) -> tuple[str, str]:
     """Формирует тему и тело письма для админа."""
-    user = data.get('user', {})
     booking_id = data.get('id')
+    user = data.get('user', {})
     table_ids = _get_table_ids(data)
+
+    if is_canceled(data):
+        subject = "❌ Бронь отменена"
+        body = f"Бронь №{booking_id} отменена"
+        return subject, body
+
     basic_body = f"""
         👤 Клиент: {user.get('username', 'Неизвестно')}
         📞 Телефон: {user.get('phone', 'Не указан')}
@@ -110,7 +116,7 @@ def build_client_reminder(data: dict) -> tuple[str, str]:
         С уважением,
         Ресторан "Каффетерий"
         """
-    elif _is_completed(data):
+    elif is_completed(data):
         subject = '⭐ Оцените ваш визит'
         body = f"""
         {name}, здравствуйте!
@@ -306,11 +312,11 @@ def get_html_for_client(data: dict) -> str:
 
     if is_canceled(data):
         title = 'Бронь отменена'
-        subtitle = 'Мы будем ждать вас снова'
+        subtitle = 'Но мы все равно будем рады вас видеть'
         icon = '❌'
         extra_info = ''
         footer_text = 'Если вы передумаете, будем рады видеть вас снова!'
-    elif _is_completed(data):
+    elif is_completed(data):
         title = 'Спасибо за визит!'
         subtitle = 'Пожалуйста, оцените наш сервис'
         icon = '⭐'
