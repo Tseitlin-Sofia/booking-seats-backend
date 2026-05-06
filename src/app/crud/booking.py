@@ -99,12 +99,12 @@ class BookingCRUD(CRUDBase):
             BookingTableSlot.booking_id == booking_id,
             BookingTableSlot.is_active,
         )
-        slots = await session.execute(stmt)
+        table_slots = await session.execute(stmt)
         booking_time = min(
             [
-                slot.start_time
-                for slot
-                in slots.scalars().all()
+                table_slot.slot.start_time
+                for table_slot
+                in table_slots.scalars().all()
             ],
         )
         return datetime.combine(booking_date, booking_time)

@@ -45,7 +45,9 @@ async def _make_notification_tasks_for_celery(
     session: SessionDep,
     method: str,
 ) -> None:
-    booking_for_celery = BookingInfo.model_validate(booking_obj).model_dump()
+    booking_for_celery = BookingInfo.model_validate(
+        booking_obj, from_attributes=True
+    ).model_dump()
     booking_id = booking_for_celery.get('id')
     booking_datetime = await booking_crud.get_start_datetime_by_booking_id(
         booking_id=booking_id, session=session,

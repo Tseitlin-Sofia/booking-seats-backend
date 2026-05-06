@@ -67,6 +67,9 @@ class BookingInfo(BookingCommon):
     """Полная информация о бронировании."""
 
     id: int = Field(..., title='Id')
+    tables_slots: list[BookingTableSlotShortInfo] = Field(
+        ..., title='Table-Slot pairs',
+    )
     user: UserShortInfo
     cafe: CafeShortInfo
     pre_order_items: Optional[List[PreOrderItemInfo]] = Field(

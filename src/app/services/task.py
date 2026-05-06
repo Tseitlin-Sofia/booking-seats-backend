@@ -45,9 +45,13 @@ def _get_table_ids(data: dict) -> str:
     """Извлекает ID столов из данных бронирования."""
     tables_slots = data.get('tables_slots', [])
     if not tables_slots:
-        return data.get('table_id', '—')
-    table_ids = [slot.get('table_id', '?') for slot in tables_slots]
-    return ', '.join(str(t) for t in table_ids)
+        return '—'
+    table_ids = []
+    for slot in tables_slots:
+        table = slot.get('table', {})
+        table_id = table.get('id', '?')
+        table_ids.append(str(table_id))
+    return ', '.join(table_ids)
 
 
 def build_admin_notification(data: dict, method: str) -> tuple[str, str]:
@@ -251,8 +255,8 @@ def get_html_for_client(data: dict) -> str:
     user = data.get('user', {})
     client_name = user.get('username', 'Гость').capitalize()
     booking_date = data.get('booking_date', 'Неизвестно')
-    table_id = data.get('table_id', '—')
-    comment = data.get('comment', '')
+    table_ids = _get_table_ids(data)
+    note = data.get('note', '')
 
     return f"""
     <html>
@@ -375,13 +379,13 @@ def get_html_for_client(data: dict) -> str:
                     <div class="info-row">
                         <span class="emoji">🪑</span>
                         <span class="label">Стол №:</span>
-                        <span class="value">{table_id}</span>
+                        <span class="value">{table_ids}</span>
                     </div>
                     {f'''<div class="info-row">
                         <span class="emoji">💬</span>
-                        <span class="label">Комментарий:</span>
-                        <span class="value">{comment}</span>
-                    </div>''' if comment else ''}
+                        <span class="label">Заметка:</span>
+                        <span class="value">{note}</span>
+                    </div>''' if note else ''}
                 </div>
                 <div class="reminder-text">
                     Будем рады видеть вас!<br>

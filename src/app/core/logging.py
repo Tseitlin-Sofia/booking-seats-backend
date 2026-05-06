@@ -209,32 +209,32 @@ def setup_logging(env: str = 'dev', log_level: str = 'INFO') -> None:
     logging.getLogger('uvicorn.access').propagate = False
 
 
-@after_setup_logger.connect
-def setup_celery_logger(
-    logger_instance: logging.Logger,
-    *args: Any,
-    **kwargs: Any,
-) -> None:
-    """Настраивает логгер Celery для использования loguru.
+# docker compose restart celery-worker@after_setup_logger.connect
+# def setup_celery_logger(
+#     logger_instance: logging.Logger,
+#     *args: Any,
+#     **kwargs: Any,
+# ) -> None:
+#     """Настраивает логгер Celery для использования loguru.
 
-    Вызывается при запуске Celery воркера.
-    """
-    logger_instance.handlers = []
+#     Вызывается при запуске Celery воркера.
+#     """
+#     logger_instance.handlers = []
 
-    handler = CeleryLogInterceptor()
-    logger_instance.addHandler(handler)
+#     handler = CeleryLogInterceptor()
+#     logger_instance.addHandler(handler)
 
-    logger_instance.propagate = False
+#     logger_instance.propagate = False
 
 
-@after_setup_task_logger.connect
-def setup_task_logger(
-    logger_instance: logging.Logger,
-    *args: Any,
-    **kwargs: Any,
-) -> None:
-    """Настраивает логгер задач Celery для использования loguru."""
-    setup_celery_logger(logger_instance, *args, **kwargs)
+# @after_setup_task_logger.connect
+# def setup_task_logger(
+#     logger_instance: logging.Logger,
+#     *args: Any,
+#     **kwargs: Any,
+# ) -> None:
+#     """Настраивает логгер задач Celery для использования loguru."""
+#     setup_celery_logger(logger_instance, *args, **kwargs)
 
 
 def get_logger() -> Logger:
