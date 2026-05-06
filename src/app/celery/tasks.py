@@ -8,8 +8,8 @@ from app.services.task import (
     get_html_for_admin,
     get_html_for_client,
     is_canceled,
+    is_completed,
     send_email,
-    is_completed
 )
 
 
@@ -29,12 +29,12 @@ def notify_admin(
     if data:
         if is_canceled(data) or is_completed(data):
             self.log.info(
-                'Бронь отменена/выполнена, уведомление админу не придёт'
+                'Бронь отменена/выполнена, уведомление админу не придёт',
             )
             return
 
         if method == 'PATCH' and changed_by_role in ('admin', 'manager'):
-            self.log.info('Изменение внёс админ/менеджер, уведомление не нужно')
+            self.log.info('Бронь изменил админ/менеджер, уведомление не нужно')
             return
 
         self.log.info(

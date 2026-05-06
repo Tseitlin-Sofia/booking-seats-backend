@@ -191,7 +191,7 @@ async def create_booking(
         booking_response,
         method='POST',
         session=session,
-        changed_by_role=current_user.role
+        changed_by_role=current_user.role,
     )
     return booking_response
 
@@ -446,6 +446,6 @@ async def update_booking(
         booking_response,
         method='PATCH',
         session=session,
-        changed_by_role=current_user.role
+        changed_by_role=current_user.role,
     )
     return booking_response
