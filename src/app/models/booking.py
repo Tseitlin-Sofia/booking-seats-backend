@@ -47,6 +47,8 @@ class BookingTableSlot(Base, CommonMixin):
         ),
     )
     booking = relationship('Booking', back_populates='tables_slots')
+    slot = relationship('Slot', lazy='joined')
+    table = relationship('Table', lazy='joined')
 
 
 class Booking(Base, CommonMixin):
@@ -121,9 +123,6 @@ class Booking(Base, CommonMixin):
             self.status,
             self.user_id,
         )
-
-    # TODO: возможно стоит добавить property для статусов (
-    # in_active, in_booked, in_canceled, in_completed)
 
 
 class BookingDish(CommonMixin, Base):

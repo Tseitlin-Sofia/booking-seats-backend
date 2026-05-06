@@ -7,6 +7,8 @@ from app.services.task import (
     build_client_reminder,
     get_html_for_admin,
     get_html_for_client,
+    is_canceled,
+    is_completed,
     send_email,
 )
 
@@ -21,15 +23,27 @@ def notify_admin(
     self: LoguruTask,
     method: str,
     data: dict | None = None,
+    changed_by_role: str = 'user',
 ) -> None:
     """Мгновенное уведомление админу о новой брони."""
     if data:
+        if is_canceled(data) or is_completed(data):
+            self.log.info(
+                'Бронь отменена/выполнена, уведомление админу не придёт',
+            )
+            return
+
+        if method == 'PATCH' and changed_by_role in ('admin', 'manager'):
+            self.log.info('Бронь изменил админ/менеджер, уведомление не нужно')
+            return
+
         self.log.info(
             'Отправляю уведомление админу о столе {}',
             data.get('table_id'),
         )
         subject, text_body = build_admin_notification(data, method)
         html_body = get_html_for_admin(data, method)
+
     else:
         subject = 'Тестовое сообщение'
         text_body = 'Фото сформировано'

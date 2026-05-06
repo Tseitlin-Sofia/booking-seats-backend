@@ -100,9 +100,13 @@ class BookingCRUD(CRUDBase):
             BookingTableSlot.booking_id == booking_id,
             BookingTableSlot.is_active,
         )
-        slots = await session.execute(stmt)
+        table_slots = await session.execute(stmt)
         booking_time = min(
-            [slot.start_time for slot in slots.scalars().all()],
+            [
+                table_slot.slot.start_time
+                for table_slot
+                in table_slots.scalars().all()
+            ],
         )
         return datetime.combine(booking_date, booking_time)
 
@@ -122,6 +126,18 @@ class BookingCRUD(CRUDBase):
             [slot.start_time for slot in slots],
         )
         return datetime.combine(booking_date, booking_time)
+
+    async def delete_multi(
+        self,
+        session: AsyncSession,
+        objs: list[BookingDish],
+    ) -> None:
+        """Удаляет несколько объектов."""
+        await session.execute(
+            delete(BookingDish).where(
+                BookingDish.id.in_(obj.id for obj in objs),
+            ),
+        )
 
 
 class BookingTableSlotCRUD(CRUDBase):

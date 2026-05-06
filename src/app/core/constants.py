@@ -14,13 +14,10 @@ class BookingConstants:
 
     DATE_ERROR = 'Дата бронирования не может быть в прошлом.'
     GUEST_NUMBER_ERROR = 'Количество гостей должно быть между {} и {}'
-    SLOT_ALREADY_BOOKED = (
-        'Попытка забронировать уже забронированный слот {} на стол {}.'
-    )
-    USER_DOES_NOT_EXIST = 'Пользователь c id {} не существует.'
-    CAFE_DOES_NOT_EXIST = 'Кафе c id {} не существует.'
+    USER_DOES_NOT_EXIST = 'Такого пользователя не существует.'
+    CAFE_DOES_NOT_EXIST = 'Такого кафе не существует.'
     USER_RIGHTS_ERROR = 'У вас нет прав для просмотра чужих бронирований.'
-    BOOKING_NOT_FOUND = 'Бронирование c id {} не найдено.'
+    BOOKING_NOT_FOUND = 'Бронирование не найдено.'
     USER_NOT_AUTHENTICATED = 'Пользователь не авторизован'
     SLOTS_UNAVAILABLE = 'Выбранные временные слоты уже забронированы'
     LIST_SLOTS_ERROR = 'Список временных слотов не может быть пустым.'
@@ -59,7 +56,7 @@ class CafeConstants:
     MIN_LENGTH_ADDRESS = 10
     MIN_LENGTH_DESCRIPTION = 10
     MIN_LENGTH_MANAGERS_LIST = 1
-    MIN_LENGTH_NAME = 10
+    MIN_LENGTH_NAME = 2
     PHONE_FORMAT = r'^\+7\d{10}$'
 
 
@@ -146,3 +143,4 @@ class NotificationConstants:
     """Класс констант для уведомлений и напоминаний о бронировании."""
 
     ADMIN_EMAIL = 'test@mail.ru'
+    DATETIME_FORMAT = '%Y-%m-%d %H:%M'

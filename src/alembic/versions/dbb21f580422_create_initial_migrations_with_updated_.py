@@ -1,8 +1,8 @@
-"""create initial migrations
+"""create initial migrations with updated slots
 
-Revision ID: ccbcb6ead64e
+Revision ID: dbb21f580422
 Revises: 
-Create Date: 2026-05-01 02:11:01.196383
+Create Date: 2026-05-05 23:39:28.352870
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'ccbcb6ead64e'
+revision: str = 'dbb21f580422'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -68,6 +68,7 @@ def upgrade() -> None:
     sa.Column('start_time', sa.Time(), nullable=False),
     sa.Column('end_time', sa.Time(), nullable=False),
     sa.Column('cafe_id', sa.Integer(), nullable=False),
+    sa.Column('description', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),

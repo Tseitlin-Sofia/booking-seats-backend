@@ -67,7 +67,7 @@ class UserCreate(UserBase):
         if not self.email and not self.phone:
             raise UserValidationError(
                 'Хотя бы одно из следующих полей '
-                'должно быть заполнено: email, phone',
+                'должно быть заполнено: email, телефон',
             )
         return self
 

@@ -40,6 +40,7 @@ http://localhost:10000/
 ```
 http://localhost:10000/redoc
 http://localhost:10000/docs
+http://localhost:10000/flower
 ```
 
 ## Структура проекта
@@ -218,6 +219,22 @@ pytest
 http://localhost:10000/debug/sql-profiler
 ```
 
+## Flower — Мониторинг Celery
+
+### Доступ
+http://localhost:10000/flower/
+
+### Авторизация
+Доступ защищён Basic Auth. Логин и пароль хранятся в файле `.htpasswd` (папка `infra`).  
+Запросите учётные данные у администратора проекта.
+
+### Управление паролями
+Смена пароля для Flower выполняется через WSL:
+```bash
+cd infra
+htpasswd ./.htpasswd admin
+```
+
 ## Требования к фронтенду.
 
 При PATCH-запросе на эндпойнт `{server}/booking/{booking_id}` требуется ВСЕГДА передавать новый список BookingTableSlots.
@@ -235,3 +252,5 @@ http://localhost:10000/debug/sql-profiler
 [Софья Цейтлин](https://github.com/Tseitlin-Sofia) email: [<sofia.zeitlin@gmail.com>](mailto:sofia.zeitlin@gmail.com)
 
 [Тимур Бикмаев](https://github.com/TimurBikmaev) email: [<bikma2004@gmail.com>](mailto:bikma2004@gmail.com)
+
+[Буланов Евгений>](https://github.com/bulanische) email: [<hipstot@yandex.ru>](mailto:bulanische9@gmail.com)

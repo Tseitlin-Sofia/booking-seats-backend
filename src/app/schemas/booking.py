@@ -49,7 +49,6 @@ class BookingTableSlotShortInfo(BaseModel):
 class BookingCommon(BaseModel):
     """Общие поля для бронирований."""
 
-    tables_slots: list[BookingTableSlot] = Field(..., title='Table-Slot pairs')
     guest_number: int = Field(..., gt=0, title='Guest Number')
     note: Optional[str] = Field(None, title='Note')
     booking_date: date = Field(..., title='Booking Date')
@@ -58,6 +57,7 @@ class BookingCommon(BaseModel):
 class BookingCreate(BookingTableSlotsValidatorMixin, BookingCommon):
     """Схема для создания бронирования."""
 
+    tables_slots: list[BookingTableSlot] = Field(..., title='Table-Slot pairs')
     cafe_id: int = Field(..., title='Cafe Id')
     pre_order_items: Optional[List[PreOrderItemCreate]] = None
     model_config = ConfigDict(extra='forbid')
@@ -67,6 +67,9 @@ class BookingInfo(BookingCommon):
     """Полная информация о бронировании."""
 
     id: int = Field(..., title='Id')
+    tables_slots: list[BookingTableSlotShortInfo] = Field(
+        ..., title='Table-Slot pairs',
+    )
     user: UserShortInfo
     cafe: CafeShortInfo
     pre_order_items: Optional[List[PreOrderItemInfo]] = Field(
@@ -100,4 +103,7 @@ class BookingUpdate(
     """Схема для обновления бронирования."""
 
     tables_slots: list[BookingTableSlot]
-    pre_order_items: Optional[List[PreOrderItemCreate]] = None
+    pre_order_items: Optional[List[PreOrderItemCreate]] = Field(
+        default=None,
+        title='Pre-order items',
+    )

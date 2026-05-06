@@ -34,7 +34,7 @@ async def get_tables(
     show_active: bool = None,
 ) -> list[TableInfo]:
     """Возвращает все столы заданного кафе."""
-    await get_cafe_or_404(session, cafe_id, True)
+    await get_cafe_or_404(session, cafe_id, is_exist=True)
     if not (user.is_admin or user.is_manager):
         return await table_crud.get_tables_by_cafe(cafe_id, session, True)
     return await table_crud.get_tables_by_cafe(cafe_id, session, show_active)
@@ -53,7 +53,7 @@ async def create_table(
     user: ManagerDep,
 ) -> TableInfo:
     """Создаёт новый стол в указанном кафе."""
-    await get_cafe_or_404(session, cafe_id, True)
+    await get_cafe_or_404(session, cafe_id, is_exist=True)
     if user.is_manager:
         await is_manager_from_cafe(cafe_id, user)
     return await table_crud.create_for_cafe(
@@ -75,7 +75,7 @@ async def get_table(
     user: UserDep,
 ) -> TableInfo:
     """Возвращает информацию о конкретном столе в кафе."""
-    await get_cafe_or_404(session, cafe_id, True)
+    await get_cafe_or_404(session, cafe_id, is_exist=True)
     await check_table_exists_in_cafe(
         cafe_id,
         table_id,
@@ -100,7 +100,7 @@ async def update_table(
     user: ManagerDep,
 ) -> TableInfo:
     """Обновляет данные стола в указанном кафе."""
-    await get_cafe_or_404(session, cafe_id, True)
+    await get_cafe_or_404(session, cafe_id, is_exist=True)
     if user.is_manager:
         await is_manager_from_cafe(cafe_id, user)
     table = await check_table_exists_in_cafe(

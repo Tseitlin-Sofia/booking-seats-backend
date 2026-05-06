@@ -13,7 +13,7 @@ import logging
 import sys
 from typing import Any
 
-from celery.signals import after_setup_logger, after_setup_task_logger
+from celery.signals import after_setup_task_logger
 from loguru import logger
 from loguru._logger import Logger
 
@@ -209,7 +209,7 @@ def setup_logging(env: str = 'dev', log_level: str = 'INFO') -> None:
     logging.getLogger('uvicorn.access').propagate = False
 
 
-@after_setup_logger.connect
+# docker compose restart celery-worker@after_setup_logger.connect
 def setup_celery_logger(
     logger_instance: logging.Logger,
     *args: Any,
