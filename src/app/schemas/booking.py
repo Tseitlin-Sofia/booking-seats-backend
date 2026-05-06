@@ -33,7 +33,7 @@ class BookingTableSlot(BaseModel):
 class BookingTableSlotCreate(BookingTableSlot):
     """Пара ID стола и ID временного слота для создания бронирования."""
 
-    booking_id: int = Field(..., title="Booking Id")
+    booking_id: int = Field(..., title='Booking Id')
     is_active: bool = Field(..., title='Is Active')
 
 
@@ -100,3 +100,4 @@ class BookingUpdate(
     """Схема для обновления бронирования."""
 
     tables_slots: list[BookingTableSlot]
+    pre_order_items: Optional[List[PreOrderItemCreate]] = None

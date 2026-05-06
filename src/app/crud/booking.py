@@ -35,8 +35,9 @@ class BookingCRUD(CRUDBase):
             selectinload(Booking.user),
             selectinload(Booking.cafe),
             selectinload(Booking.tables_slots),
-            selectinload(Booking.pre_order_items)
-                .selectinload(BookingDish.dish),
+            selectinload(Booking.pre_order_items).selectinload(
+                BookingDish.dish,
+            ),
         ]
 
     async def get_bookings(
@@ -101,11 +102,7 @@ class BookingCRUD(CRUDBase):
         )
         slots = await session.execute(stmt)
         booking_time = min(
-            [
-                slot.start_time
-                for slot
-                in slots.scalars().all()
-            ],
+            [slot.start_time for slot in slots.scalars().all()],
         )
         return datetime.combine(booking_date, booking_time)
 
@@ -122,10 +119,7 @@ class BookingCRUD(CRUDBase):
             sequence_id=slots_ids,
         )
         booking_time = min(
-            [
-                slot.start_time
-                for slot in slots
-            ],
+            [slot.start_time for slot in slots],
         )
         return datetime.combine(booking_date, booking_time)
 

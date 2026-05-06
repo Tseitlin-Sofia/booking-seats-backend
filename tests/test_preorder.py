@@ -15,6 +15,7 @@ from app.core.user import AuthService
 from app.models.cafe import Cafe
 from app.models.dish import Dish
 from app.models.user import User
+from app.schemas.dish import PreOrderItemCreate
 from tests.conftest import LOG_WRITE_DELAY_SEC
 
 logger = get_logger()
@@ -795,3 +796,542 @@ async def test_create_booking_without_auth_header(
     )
 
     assert response.status_code == 403
+
+
+class TestPreOrderUpdate:
+    """Тесты для обновления предзаказа при изменении бронирования."""
+
+    def _get_tables_slots(self, test_slots) -> list[dict]:
+        """Возвращает список словарей.
+
+        С table_id и slot_id из фикстуры test_slots.
+        """
+        return [
+            {
+                'table_id': test_slots[0]['table_id'],
+                'slot_id': test_slots[0]['slot_id'],
+            },
+        ]
+
+    @pytest.mark.asyncio
+    async def test_update_booking_add_pre_order_items(
+        self,
+        async_client,
+        test_cafe,
+        test_dish_500,
+        test_dish_350,
+        test_slots,
+        auth_headers,
+        build_preorder_payload,
+    ) -> None:
+        """Проверяет добавление предзаказа к существующему бронированию.
+
+        Создаёт бронирование без предзаказа,
+        затем обновляет его, добавляя два блюда.
+        Ожидается: статус 200, в ответе присутствуют
+        добавленные блюда с корректными количествами.
+        """
+        payload = build_preorder_payload(
+            cafe_id=test_cafe.id,
+            table_id=test_slots[0]['table_id'],
+            slot_id=test_slots[0]['slot_id'],
+            booking_date='2026-05-20',
+        )
+        create_resp = await async_client.post(
+            '/bookings/',
+            json=payload,
+            headers=auth_headers,
+        )
+        assert create_resp.status_code == 201
+        booking_id = create_resp.json()['id']
+
+        tables_slots = self._get_tables_slots(test_slots)
+
+        update_payload = {
+            'tables_slots': tables_slots,
+            'pre_order_items': [
+                {'dish_id': test_dish_500.id, 'quantity': 2},
+                {'dish_id': test_dish_350.id, 'quantity': 1},
+            ],
+        }
+        update_resp = await async_client.patch(
+            f'/bookings/{booking_id}',
+            json=update_payload,
+            headers=auth_headers,
+        )
+        assert update_resp.status_code == 200
+
+        get_resp = await async_client.get(
+            f'/bookings/{booking_id}',
+            headers=auth_headers,
+        )
+        data = get_resp.json()
+        assert data['pre_order_items'] is not None
+        assert len(data['pre_order_items']) == 2
+        assert data['pre_order_items'][0]['quantity'] == 2
+        assert data['pre_order_items'][1]['quantity'] == 1
+
+    @pytest.mark.asyncio
+    async def test_update_booking_replace_pre_order_items(
+        self,
+        async_client,
+        test_cafe,
+        test_dish_500,
+        test_dish_350,
+        test_slots,
+        auth_headers,
+        build_preorder_payload,
+    ) -> None:
+        """Проверяет замену существующего предзаказа на новый.
+
+        Создаёт бронирование с предзаказом из одного блюда, затем обновляет,
+        заменяя на другое блюдо.
+        Ожидается: старый предзаказ удалён, новый добавлен.
+        """
+        items = [PreOrderItemCreate(dish_id=test_dish_500.id, quantity=1)]
+        payload = build_preorder_payload(
+            cafe_id=test_cafe.id,
+            table_id=test_slots[0]['table_id'],
+            slot_id=test_slots[0]['slot_id'],
+            booking_date='2026-05-20',
+            items=items,
+        )
+        create_resp = await async_client.post(
+            '/bookings/',
+            json=payload,
+            headers=auth_headers,
+        )
+        assert create_resp.status_code == 201
+        booking_id = create_resp.json()['id']
+
+        tables_slots = self._get_tables_slots(test_slots)
+
+        update_payload = {
+            'tables_slots': tables_slots,
+            'pre_order_items': [
+                {'dish_id': test_dish_350.id, 'quantity': 3},
+            ],
+        }
+        update_resp = await async_client.patch(
+            f'/bookings/{booking_id}',
+            json=update_payload,
+            headers=auth_headers,
+        )
+        assert update_resp.status_code == 200
+
+        get_resp = await async_client.get(
+            f'/bookings/{booking_id}',
+            headers=auth_headers,
+        )
+        data = get_resp.json()
+        assert len(data['pre_order_items']) == 1
+        assert data['pre_order_items'][0]['dish']['id'] == test_dish_350.id
+        assert data['pre_order_items'][0]['quantity'] == 3
+
+    @pytest.mark.asyncio
+    async def test_update_booking_remove_pre_order_items(
+        self,
+        async_client,
+        test_cafe,
+        test_dish_500,
+        test_slots,
+        auth_headers,
+        build_preorder_payload,
+    ) -> None:
+        """Проверяет удаление предзаказа из бронирования.
+
+        Создаёт бронирование с предзаказом,
+        затем обновляет его с пустым списком pre_order_items.
+        Ожидается: предзаказ удалён,
+        в ответе pre_order_items отсутствует или пуст.
+        """
+        items = [PreOrderItemCreate(dish_id=test_dish_500.id, quantity=1)]
+        payload = build_preorder_payload(
+            cafe_id=test_cafe.id,
+            table_id=test_slots[0]['table_id'],
+            slot_id=test_slots[0]['slot_id'],
+            booking_date='2026-05-20',
+            items=items,
+        )
+        create_resp = await async_client.post(
+            '/bookings/',
+            json=payload,
+            headers=auth_headers,
+        )
+        assert create_resp.status_code == 201
+        booking_id = create_resp.json()['id']
+
+        tables_slots = self._get_tables_slots(test_slots)
+
+        update_payload = {
+            'tables_slots': tables_slots,
+            'pre_order_items': [],
+        }
+        update_resp = await async_client.patch(
+            f'/bookings/{booking_id}',
+            json=update_payload,
+            headers=auth_headers,
+        )
+        assert update_resp.status_code == 200
+
+        get_resp = await async_client.get(
+            f'/bookings/{booking_id}',
+            headers=auth_headers,
+        )
+        data = get_resp.json()
+        assert data['pre_order_items'] is None or data['pre_order_items'] == []
+
+    @pytest.mark.asyncio
+    async def test_update_booking_pre_order_nonexistent_dish(
+        self,
+        async_client,
+        test_cafe,
+        test_slots,
+        auth_headers,
+        build_preorder_payload,
+    ) -> None:
+        """Проверяет ошибку 422 при попытке добавить несуществующее блюдо.
+
+        Создаёт бронирование, затем обновляет его с pre_order_items,
+        содержащим несуществующий dish_id.
+        Ожидается: 422, бронирование не изменяется, предзаказ отсутствует.
+        """
+        payload = build_preorder_payload(
+            cafe_id=test_cafe.id,
+            table_id=test_slots[0]['table_id'],
+            slot_id=test_slots[0]['slot_id'],
+            booking_date='2026-05-20',
+        )
+        create_resp = await async_client.post(
+            '/bookings/',
+            json=payload,
+            headers=auth_headers,
+        )
+        assert create_resp.status_code == 201
+        booking_id = create_resp.json()['id']
+
+        tables_slots = self._get_tables_slots(test_slots)
+
+        update_payload = {
+            'tables_slots': tables_slots,
+            'pre_order_items': [
+                {'dish_id': 99999, 'quantity': 1},
+            ],
+        }
+        update_resp = await async_client.patch(
+            f'/bookings/{booking_id}',
+            json=update_payload,
+            headers=auth_headers,
+        )
+        assert update_resp.status_code == 422
+        assert 'не найдены' in update_resp.json()['message'].lower()
+
+        get_resp = await async_client.get(
+            f'/bookings/{booking_id}',
+            headers=auth_headers,
+        )
+        assert (
+            get_resp.json()['pre_order_items'] is None
+            or get_resp.json()['pre_order_items'] == []
+        )
+
+    @pytest.mark.asyncio
+    async def test_update_booking_pre_order_unavailable_dish(
+        self,
+        async_client,
+        test_cafe,
+        test_slots,
+        auth_headers,
+        session,
+        build_preorder_payload,
+    ) -> None:
+        """Проверяет ошибку 422 при попытке добавить недоступное блюдо.
+
+        Создаёт недоступное блюдо, затем пытается добавить его в предзаказ.
+        Ожидается: 422, бронирование не изменяется, предзаказ отсутствует.
+        """
+        unavailable_dish = Dish(
+            cafe_id=test_cafe.id,
+            name='Недоступное блюдо',
+            price=100.0,
+            is_available=False,
+            is_active=True,
+        )
+        session.add(unavailable_dish)
+        await session.flush()
+
+        payload = build_preorder_payload(
+            cafe_id=test_cafe.id,
+            table_id=test_slots[0]['table_id'],
+            slot_id=test_slots[0]['slot_id'],
+            booking_date='2026-05-20',
+        )
+        create_resp = await async_client.post(
+            '/bookings/',
+            json=payload,
+            headers=auth_headers,
+        )
+        assert create_resp.status_code == 201
+        booking_id = create_resp.json()['id']
+
+        tables_slots = self._get_tables_slots(test_slots)
+
+        update_payload = {
+            'tables_slots': tables_slots,
+            'pre_order_items': [
+                {'dish_id': unavailable_dish.id, 'quantity': 1},
+            ],
+        }
+        update_resp = await async_client.patch(
+            f'/bookings/{booking_id}',
+            json=update_payload,
+            headers=auth_headers,
+        )
+        assert update_resp.status_code == 422
+        assert 'недоступны' in update_resp.json()['message'].lower()
+
+        get_resp = await async_client.get(
+            f'/bookings/{booking_id}',
+            headers=auth_headers,
+        )
+        assert (
+            get_resp.json()['pre_order_items'] is None
+            or get_resp.json()['pre_order_items'] == []
+        )
+
+    @pytest.mark.asyncio
+    async def test_update_booking_pre_order_dish_from_other_cafe(
+        self,
+        async_client,
+        test_cafe,
+        test_slots,
+        auth_headers,
+        session,
+        build_preorder_payload,
+    ) -> None:
+        """Проверяет ошибку 422 при попытке добавить блюдо из другого кафе.
+
+        Создаёт второе кафе и блюдо в нём,
+        затем пытается добавить это блюдо в предзаказ.
+        Ожидается: статус 422, бронирование не изменяется.
+        """
+        other_cafe = Cafe(
+            name='Другое кафе',
+            address='Другой адрес',
+            phone='+79990000000',
+            is_active=True,
+        )
+        session.add(other_cafe)
+        await session.flush()
+
+        other_dish = Dish(
+            cafe_id=other_cafe.id,
+            name='Чужое блюдо',
+            price=200.0,
+            is_available=True,
+        )
+        session.add(other_dish)
+        await session.flush()
+
+        payload = build_preorder_payload(
+            cafe_id=test_cafe.id,
+            table_id=test_slots[0]['table_id'],
+            slot_id=test_slots[0]['slot_id'],
+            booking_date='2026-05-20',
+        )
+        create_resp = await async_client.post(
+            '/bookings/',
+            json=payload,
+            headers=auth_headers,
+        )
+        assert create_resp.status_code == 201
+        booking_id = create_resp.json()['id']
+
+        tables_slots = self._get_tables_slots(test_slots)
+
+        update_payload = {
+            'tables_slots': tables_slots,
+            'pre_order_items': [
+                {'dish_id': other_dish.id, 'quantity': 1},
+            ],
+        }
+        update_resp = await async_client.patch(
+            f'/bookings/{booking_id}',
+            json=update_payload,
+            headers=auth_headers,
+        )
+        assert update_resp.status_code == 422
+        assert 'не принадлежат' in update_resp.json()['message'].lower()
+
+        get_resp = await async_client.get(
+            f'/bookings/{booking_id}',
+            headers=auth_headers,
+        )
+        assert (
+            get_resp.json()['pre_order_items'] is None
+            or get_resp.json()['pre_order_items'] == []
+        )
+
+    @pytest.mark.asyncio
+    async def test_update_booking_pre_order_invalid_quantity(
+        self,
+        async_client,
+        test_cafe,
+        test_dish_500,
+        test_slots,
+        auth_headers,
+        build_preorder_payload,
+    ) -> None:
+        """Проверяет попытку добавить блюдо с невалидным количеством.
+
+        Создаёт бронирование, затем обновляет его с pre_order_items,
+        содержащим quantity = 0.
+        Ожидается: статус 422, бронирование не изменяется.
+        """
+        payload = build_preorder_payload(
+            cafe_id=test_cafe.id,
+            table_id=test_slots[0]['table_id'],
+            slot_id=test_slots[0]['slot_id'],
+            booking_date='2026-05-20',
+        )
+        create_resp = await async_client.post(
+            '/bookings/',
+            json=payload,
+            headers=auth_headers,
+        )
+        assert create_resp.status_code == 201
+        booking_id = create_resp.json()['id']
+
+        tables_slots = self._get_tables_slots(test_slots)
+
+        update_payload = {
+            'tables_slots': tables_slots,
+            'pre_order_items': [
+                {'dish_id': test_dish_500.id, 'quantity': 0},
+            ],
+        }
+        update_resp = await async_client.patch(
+            f'/bookings/{booking_id}',
+            json=update_payload,
+            headers=auth_headers,
+        )
+        assert update_resp.status_code == 422
+
+        get_resp = await async_client.get(
+            f'/bookings/{booking_id}',
+            headers=auth_headers,
+        )
+        assert (
+            get_resp.json()['pre_order_items'] is None
+            or get_resp.json()['pre_order_items'] == []
+        )
+
+    @pytest.mark.asyncio
+    async def test_update_booking_without_pre_order_preserves_existing(
+        self,
+        async_client,
+        test_cafe,
+        test_dish_500,
+        test_slots,
+        auth_headers,
+        build_preorder_payload,
+    ) -> None:
+        """Проверяет, что обновление полей не удаляет существующий предзаказ.
+
+        Создаёт бронирование с предзаказом, обновляет только guest_number.
+        Ожидается: предзаказ остаётся неизменным.
+        """
+        items = [PreOrderItemCreate(dish_id=test_dish_500.id, quantity=1)]
+        payload = build_preorder_payload(
+            cafe_id=test_cafe.id,
+            table_id=test_slots[0]['table_id'],
+            slot_id=test_slots[0]['slot_id'],
+            booking_date='2026-05-20',
+            items=items,
+        )
+        create_resp = await async_client.post(
+            '/bookings/',
+            json=payload,
+            headers=auth_headers,
+        )
+        assert create_resp.status_code == 201
+        booking_id = create_resp.json()['id']
+
+        tables_slots = self._get_tables_slots(test_slots)
+
+        update_payload = {
+            'tables_slots': tables_slots,
+            'guest_number': 3,
+        }
+        update_resp = await async_client.patch(
+            f'/bookings/{booking_id}',
+            json=update_payload,
+            headers=auth_headers,
+        )
+        assert update_resp.status_code == 200
+
+        get_resp = await async_client.get(
+            f'/bookings/{booking_id}',
+            headers=auth_headers,
+        )
+        data = get_resp.json()
+        assert data['guest_number'] == 3
+        assert data['pre_order_items'] is not None
+        assert len(data['pre_order_items']) == 1
+        assert data['pre_order_items'][0]['dish']['id'] == test_dish_500.id
+
+    @pytest.mark.asyncio
+    async def test_concurrent_update_does_not_create_orphan_pre_orders(
+        self,
+        async_client,
+        test_cafe,
+        test_dish_500,
+        test_slots,
+        auth_headers,
+        build_preorder_payload,
+    ) -> None:
+        """Проверяет, что при ошибке валидации не остаётся сиротских записей.
+
+        Создаёт бронирование с предзаказом,
+        затем пытается обновить его с несуществующим блюдом.
+        Ожидается: старый предзаказ не удаляется, данные консистентны.
+        """
+        items = [PreOrderItemCreate(dish_id=test_dish_500.id, quantity=1)]
+        payload = build_preorder_payload(
+            cafe_id=test_cafe.id,
+            table_id=test_slots[0]['table_id'],
+            slot_id=test_slots[0]['slot_id'],
+            booking_date='2026-05-20',
+            items=items,
+        )
+        create_resp = await async_client.post(
+            '/bookings/',
+            json=payload,
+            headers=auth_headers,
+        )
+        assert create_resp.status_code == 201
+        booking_id = create_resp.json()['id']
+
+        tables_slots = self._get_tables_slots(test_slots)
+
+        update_payload = {
+            'tables_slots': tables_slots,
+            'pre_order_items': [
+                {'dish_id': 99999, 'quantity': 1},
+            ],
+        }
+        update_resp = await async_client.patch(
+            f'/bookings/{booking_id}',
+            json=update_payload,
+            headers=auth_headers,
+        )
+        assert update_resp.status_code == 422
+
+        get_resp = await async_client.get(
+            f'/bookings/{booking_id}',
+            headers=auth_headers,
+        )
+        data = get_resp.json()
+        assert data['pre_order_items'] is not None
+        assert len(data['pre_order_items']) == 1
+        assert data['pre_order_items'][0]['dish']['id'] == test_dish_500.id

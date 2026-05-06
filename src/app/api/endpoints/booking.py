@@ -6,6 +6,7 @@ from typing import Annotated, Optional
 from celery.result import AsyncResult
 from fastapi import APIRouter, status
 from fastapi.param_functions import Query
+from sqlalchemy import delete
 
 from app.api.dependencies import SessionDep, UserDep
 from app.api.validators.booking import (
@@ -23,6 +24,7 @@ from app.celery.tasks import notify_admin, notify_client
 from app.core.db import Base
 from app.core.logging import get_logger
 from app.crud.booking import booking_crud, booking_table_slot_crud
+from app.models.booking import BookingDish
 from app.schemas.booking import (
     BookingCreate,
     BookingInfo,
@@ -30,6 +32,7 @@ from app.schemas.booking import (
     BookingTableSlotCreate,
     BookingUpdate,
     BookingUpdateWithoutTablesSlots,
+    PreOrderItemCreate,
 )
 from app.services.task import get_reminder_id
 
@@ -187,11 +190,6 @@ async def create_booking(
         'user_id': current_user.id,
     })
 
-    new_booking = await booking_crud.create(
-        session=session,
-        obj_in=booking_data,
-    )
-
     dishes_map = None
     if booking.pre_order_items:
         dishes_map = await validate_pre_order_items(
@@ -199,6 +197,11 @@ async def create_booking(
             booking.cafe_id,
             session,
         )
+
+    new_booking = await booking_crud.create(
+        session=session,
+        obj_in=booking_data,
+    )
 
     # Код для создания задачи на отправку напоминания клиенту
     # и уведомления админа
@@ -214,7 +217,7 @@ async def create_booking(
             },
         )
 
-    if booking.pre_order_items:
+    if booking.pre_order_items and dishes_map:
         await booking_crud.add_pre_order_items(
             new_booking.id,
             booking.pre_order_items,
@@ -250,6 +253,20 @@ async def update_booking(
     booking_data = booking.model_dump(exclude_unset=True)
     booking_db = await validate_booking_exists(booking_id, session)
     await validate_user_rights(current_user, booking_db.user_id)
+
+    dishes_map = None
+    pre_order_items = booking_data.get('pre_order_items')
+
+    if pre_order_items:
+        pre_order_items = [
+            PreOrderItemCreate(**item) for item in pre_order_items
+        ]
+        dishes_map = await validate_pre_order_items(
+            pre_order_items,
+            booking_db.cafe_id,
+            session,
+        )
+
     booking_table_slots_db = (
         await booking_table_slot_crud.get_by_attribute_multi(
             session=session,
@@ -258,6 +275,7 @@ async def update_booking(
             is_active=None,
         )
     )
+    booking_data.pop('pre_order_items', None)
     await booking_table_slot_crud.delete_multi(
         session=session,
         objs=booking_table_slots_db,
@@ -296,6 +314,21 @@ async def update_booking(
                 'slot_id': table_slot['slot_id'],
                 'is_active': booking_data.get('is_active', True),
             }),
+        )
+
+    if pre_order_items is not None:
+        await session.execute(
+            delete(BookingDish).where(BookingDish.booking_id == booking_id),
+        )
+        await session.flush()
+        await session.refresh(booking_db)
+
+    if pre_order_items and dishes_map is not None:
+        await booking_crud.add_pre_order_items(
+            booking_id,
+            pre_order_items,
+            dishes_map,
+            session,
         )
     booking_upd = await booking_crud.update(
         session=session,
