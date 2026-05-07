@@ -219,6 +219,21 @@ async def update_booking(
     tables_slots = booking_data.pop('tables_slots', None)
     pre_order_items = booking_data.pop('pre_order_items', None)
     booking_db = await validate_booking_exists(booking_id, session)
+    if pre_order_items:
+        dishes_map = await validate_pre_order_items(
+            pre_order_items,
+            booking_db.cafe_id,
+            session,
+        )
+        pre_order_items_db = booking_db.pre_order_items
+        await booking_crud.delete_multi(
+            session=session,
+            objs=pre_order_items_db,
+        )
+        booking_db = await booking_crud.refresh_booking(
+            session=session,
+            booking_id=booking_id,
+        )
     booking_table_slots_db = (
         await booking_table_slot_crud.get_by_attribute_multi(
             session=session,
@@ -257,20 +272,6 @@ async def update_booking(
         db_objs=booking_table_slots_db,
     )
     if pre_order_items:
-        dishes_map = await validate_pre_order_items(
-            pre_order_items,
-            booking_db.cafe_id,
-            session,
-        )
-        pre_order_items_db = booking_db.pre_order_items
-        await booking_crud.delete_multi(
-            session=session,
-            objs=pre_order_items_db,
-        )
-        booking_db = await booking_crud.refresh_booking(
-            session=session,
-            booking_id=booking_id,
-        )
         await booking_crud.add_pre_order_items(
             booking_id=booking_id,
             items=pre_order_items,
