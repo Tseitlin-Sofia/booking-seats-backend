@@ -22,8 +22,9 @@ class CRUDCafe(CRUDBase):
     ) -> Sequence[Cafe]:
         """Возвращает список кафе по id акции."""
         result = await session.execute(
-            select(action_cafe.c.cafe_id)
-            .where(action_cafe.c.action_id == action_id),
+            select(action_cafe.c.cafe_id).where(
+                action_cafe.c.action_id == action_id,
+            ),
         )
         return result.scalars().all()
 
@@ -34,9 +35,13 @@ class CRUDCafe(CRUDBase):
         managers: List[User],
     ) -> Self:
         """Создает новое кафе в базе данных."""
-        db_cafe = self.model(**new_cafe.model_dump(
-            exclude={'managers_id'}, exclude_unset=True, exclude_none=True,
-        ))
+        db_cafe = self.model(
+            **new_cafe.model_dump(
+                exclude={'managers_id'},
+                exclude_unset=True,
+                exclude_none=True,
+            ),
+        )
         db_cafe.managers = managers
         session.add(db_cafe)
         await session.commit()
@@ -64,8 +69,8 @@ class CRUDCafe(CRUDBase):
             setattr(db_cafe, key, new_data[key])
         session.add(db_cafe)
         logger.info(
-            'Кафе успешно обновлено!',
-            f' | updated_fields: {list(new_data.keys())}',
+            f'Кафе успешно обновлено! cafe_id={db_cafe.id}, '
+            + f'updated_fields={list(new_data.keys())}',
         )
         await session.commit()
         await session.refresh(db_cafe)

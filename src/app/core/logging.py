@@ -157,7 +157,7 @@ def setup_logging(env: str = 'dev', log_level: str = 'INFO') -> None:
         logger.add(
             sys.stdout,
             format=LoggingConstants.LOGGING_FORMAT_STRING,
-            level=log_level,
+            level=LoggingConstants.PROD_MODE_LOGGING_LEVEL,
             colorize=LoggingConstants.PROD_MODE_COLORIZE_LOGS,
             enqueue=LoggingConstants.PROD_MODE_ENQUEUE_LOGS,
             backtrace=LoggingConstants.PROD_MODE_BACKTRACE_LOGS,
@@ -166,7 +166,7 @@ def setup_logging(env: str = 'dev', log_level: str = 'INFO') -> None:
         logger.add(
             LoggingConstants.LOG_FILES_PATH,
             format=LoggingConstants.LOGGING_FORMAT_STRING,
-            level=log_level,
+            level=LoggingConstants.PROD_MODE_LOGGING_LEVEL,
             rotation=LoggingConstants.ROTATION_FILE_SIZE,
             retention=LoggingConstants.RETENTION_FILES_COUNT,
             compression=LoggingConstants.LOG_FILES_COMPRESSION_TYPE,
@@ -178,7 +178,7 @@ def setup_logging(env: str = 'dev', log_level: str = 'INFO') -> None:
         logger.add(
             sys.stderr,
             format=LoggingConstants.LOGGING_FORMAT_STRING,
-            level=log_level,
+            level=LoggingConstants.DEV_MODE_LOGGING_LEVEL,
             colorize=LoggingConstants.DEV_MODE_COLORIZE_LOGS,
             enqueue=LoggingConstants.DEV_MODE_ENQUEUE_LOGS,
             backtrace=LoggingConstants.DEV_MODE_BACKTRACE_LOGS,
@@ -189,7 +189,7 @@ def setup_logging(env: str = 'dev', log_level: str = 'INFO') -> None:
         logger.add(
             LoggingConstants.LOG_FILES_PATH,
             format=LoggingConstants.LOGGING_FORMAT_STRING,
-            level=log_level,
+            level=LoggingConstants.DEV_MODE_LOGGING_LEVEL,
             rotation=LoggingConstants.ROTATION_FILE_SIZE,
             retention=LoggingConstants.RETENTION_FILES_COUNT,
             compression=LoggingConstants.LOG_FILES_COMPRESSION_TYPE,

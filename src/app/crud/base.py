@@ -7,9 +7,11 @@ from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import Base
+from app.core.logging import get_logger
 from app.models import User
 
-Model = TypeVar("Model", bound=Base)
+Model = TypeVar('Model', bound=Base)
+logger = get_logger()
 
 
 class CRUDBase:
@@ -70,6 +72,9 @@ class CRUDBase:
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
+        logger.debug(
+            f'Создан объект {self.model.__name__} с id={db_obj.id}',
+        )
         return db_obj
 
     async def update(
@@ -87,6 +92,10 @@ class CRUDBase:
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
+        logger.debug(
+            f'Обновлён объект {self.model.__name__}'
+            + f' с id={db_obj.id}. Изменены поля: {list(update_data.keys())}',
+        )
         return db_obj
 
     async def get_by_attribute(
@@ -143,6 +152,11 @@ class CRUDBase:
         db_obj.is_active = False
         await session.commit()
         await session.refresh(db_obj)
+        logger.info(
+            'Деактивирован объект %s с id=%d',
+            self.model.__name__,
+            db_obj.id,
+        )
         return db_obj
 
     async def deactivate_multi(
@@ -156,14 +170,17 @@ class CRUDBase:
         await session.commit()
         for db_obj in db_objs:
             await session.refresh(db_obj)
+        logger.info(
+            f'Деактивировано {len(db_objs)} объектов {self.model.__name__}',
+        )
         return db_objs
 
     async def is_obj_exist(
-            self,
-            session: AsyncSession,
-            obj_id: Optional[int] = None,
-            attr_name: Optional[str] = None,
-            attr_value: Optional[Any] = None,
+        self,
+        session: AsyncSession,
+        obj_id: Optional[int] = None,
+        attr_name: Optional[str] = None,
+        attr_value: Optional[Any] = None,
     ) -> bool:
         """Проверка наличия объекта в бд (также по атрибуту)."""
         stmt = exists().select_from(self.model)

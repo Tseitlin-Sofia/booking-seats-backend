@@ -123,12 +123,14 @@ class LoggingConstants:
     DEV_MODE_ENQUEUE_LOGS: bool = True
     DEV_MODE_BACKTRACE_LOGS: bool = True
     DEV_MODE_DIAGNOSE_LOGS: bool = True
+    DEV_MODE_LOGGING_LEVEL: str = 'DEBUG'
 
     # Настройки специфичные для prod среды
     PROD_MODE_COLORIZE_LOGS: bool = False
     PROD_MODE_ENQUEUE_LOGS: bool = True
     PROD_MODE_BACKTRACE_LOGS: bool = False
     PROD_MODE_DIAGNOSE_LOGS: bool = False
+    PROD_MODE_LOGGING_LEVEL: str = 'WARNING'
 
 
 class SlotConstants:
