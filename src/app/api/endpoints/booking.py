@@ -219,8 +219,8 @@ async def update_booking(
     tables_slots = booking_data.pop('tables_slots', None)
     pre_order_items = booking_data.pop('pre_order_items', None)
     booking_db = await validate_booking_exists(booking_id, session)
+    pre_order_items_db = booking_db.pre_order_items
     if pre_order_items == []:
-        pre_order_items_db = booking_db.pre_order_items
         await booking_crud.delete_multi(
             session=session,
             objs=pre_order_items_db,
@@ -228,7 +228,6 @@ async def update_booking(
         del booking_db.pre_order_items
         await session.commit()
     elif pre_order_items not in (None, []):
-        pre_order_items_db = booking_db.pre_order_items
         dishes_map = await validate_pre_order_items(
             pre_order_items,
             booking_db.cafe_id,
