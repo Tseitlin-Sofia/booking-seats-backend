@@ -163,10 +163,12 @@ class CRUDBase:
         self,
         session: AsyncSession,
         db_objs: list[Model],
+        *,
+        reverse: bool = False,
     ) -> list[Model]:
-        """Деактивирует несколько объектов."""
+        """Деактивирует несколько объектов. Может активировать их обратно."""
         for db_obj in db_objs:
-            db_obj.is_active = False
+            db_obj.is_active = reverse
         await session.commit()
         for db_obj in db_objs:
             await session.refresh(db_obj)

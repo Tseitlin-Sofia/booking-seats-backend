@@ -237,7 +237,7 @@ htpasswd ./.htpasswd admin
 
 ## Требования к фронтенду.
 
-При PATCH-запросе на эндпойнт `{server}/booking/{booking_id}` требуется ВСЕГДА передавать новый список BookingTableSlots.
+При PATCH-запросе на эндпойнт `{server}/booking/{booking_id}` список BookingTableSlots считается полным и актуальным.
 
 ## Авторы
 
