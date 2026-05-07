@@ -136,10 +136,9 @@ async def create_booking(
     )
     booking_data = booking.model_dump(
         exclude={'tables_slots'},
+        exclude_unset=True,
     )
-    pre_order_items = booking_data.get('pre_order_items')
-    if pre_order_items is not None:
-        booking_data.pop('pre_order_items')
+    pre_order_items = booking_data.pop('pre_order_items', None)
     await validate_start_time(
         session=session,
         tables_slots=tables_slots,
