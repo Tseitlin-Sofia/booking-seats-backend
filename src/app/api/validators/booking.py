@@ -77,9 +77,8 @@ async def validate_cafe_slot_table(
                 detail=Constants.DUBLICATE_SLOTS,
             )
         unique_set.add(slot_tuple)
-    if (
-        len(set(table_ids)) != len(tables_db)
-        or len(set(slot_ids)) != len(slots_db)
+    if len(set(table_ids)) != len(tables_db) or len(set(slot_ids)) != len(
+        slots_db,
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -149,11 +148,14 @@ async def validate_start_time(
     booking_date: date,
 ) -> None:
     """Проверка времени начала бронирования."""
-    if await booking_crud.get_start_datetime_by_slots_and_date(
-        tables_slots=tables_slots,
-        booking_date=booking_date,
-        session=session,
-    ) < datetime.now():
+    if (
+        await booking_crud.get_start_datetime_by_slots_and_date(
+            tables_slots=tables_slots,
+            booking_date=booking_date,
+            session=session,
+        )
+        < datetime.now()
+    ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=Constants.INVALID_START_TIME_ERROR,
@@ -167,13 +169,15 @@ async def validate_guest_number(
 ) -> None:
     """Проверяет количество гостей на основе вместимости столов."""
     max_guests = await booking_table_slot_crud.get_capacity(
-        tables_slots=tables_slots, session=session,
+        tables_slots=tables_slots,
+        session=session,
     )
     if guest_number > max_guests or guest_number < Constants.MIN_GUESTS:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=Constants.GUEST_NUMBER_ERROR.format(
-                Constants.MIN_GUESTS, max_guests,
+                Constants.MIN_GUESTS,
+                max_guests,
             ),
         )
 
