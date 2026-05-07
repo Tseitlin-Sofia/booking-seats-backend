@@ -219,7 +219,7 @@ async def update_booking(
     tables_slots = booking_data.pop('tables_slots', None)
     pre_order_items = booking_data.pop('pre_order_items', None)
     booking_db = await validate_booking_exists(booking_id, session)
-    if pre_order_items:
+    if pre_order_items is not None:
         dishes_map = await validate_pre_order_items(
             pre_order_items,
             booking_db.cafe_id,
@@ -271,7 +271,7 @@ async def update_booking(
         session=session,
         db_objs=booking_table_slots_db,
     )
-    if pre_order_items:
+    if pre_order_items is not None:
         await booking_crud.add_pre_order_items(
             booking_id=booking_id,
             items=pre_order_items,
@@ -335,14 +335,6 @@ async def update_booking(
             }),
         )
 
-    # Создаём новые pre_order_items
-    if pre_order_items:
-        await booking_crud.add_pre_order_items(
-            booking_id,
-            pre_order_items,
-            dishes_map,
-            session,
-        )
     booking_upd = await booking_crud.refresh_booking(session, booking_id)
     await session.commit()
     booking_upd = await booking_crud.refresh_booking(session, booking_id)
