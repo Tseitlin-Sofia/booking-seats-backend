@@ -226,7 +226,6 @@ async def update_booking(
             objs=pre_order_items_db,
         )
         del booking_db.pre_order_items
-        await session.commit()
     elif pre_order_items not in (None, []):
         dishes_map = await validate_pre_order_items(
             pre_order_items,
