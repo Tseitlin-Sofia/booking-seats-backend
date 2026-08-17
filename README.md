@@ -4,13 +4,13 @@
 
 *Team project. My role: **team lead** — I owned the time-slot subsystem and the entire deployment pipeline (Docker, Nginx, TLS, server operations). See [My role](#my-role) for details.*
 
-![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-async-009688?style=flat-square&logo=fastapi&logoColor=white)
+![Python 3.11](https://img.shields.io/badge/Python-3.11--slim-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.116-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![SQLAlchemy 2.0](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?style=flat-square)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![Celery](https://img.shields.io/badge/Celery-Redis-37814A?style=flat-square&logo=celery&logoColor=white)
+![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Celery](https://img.shields.io/badge/Celery-Redis_7-37814A?style=flat-square&logo=celery&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
-![Nginx](https://img.shields.io/badge/Nginx-TLS-009639?style=flat-square&logo=nginx&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-reverse_proxy-009639?style=flat-square&logo=nginx&logoColor=white)
 ![Ruff](https://img.shields.io/badge/lint-Ruff-D7FF64?style=flat-square&logo=ruff&logoColor=black)
 ![pytest](https://img.shields.io/badge/tests-pytest-0A9EDC?style=flat-square&logo=pytest&logoColor=white)
 
@@ -52,18 +52,16 @@ decisions in this repository:
 
 ## Architecture
 
-### Runtime topology
-
-Every box below is a container in the same Docker Compose stack. Nginx is the only service exposed to
-the outside world; the application, the database, the broker and the worker talk to each other over an
-internal network.
+Every box below is a container in the same Docker Compose stack. **Nginx is the only service published
+to the host** — the application, the database, the broker and the worker are reachable only on the
+internal bridge network, addressed by service name.
 
 ```mermaid
 flowchart LR
     Client["Web / mobile client"]
 
-    subgraph edge["Edge"]
-        NGX["Nginx<br/>TLS · reverse proxy · static"]
+    subgraph edge["Published to host"]
+        NGX["Nginx<br/>reverse proxy · static · media"]
     end
 
     subgraph app["FastAPI application"]
@@ -77,12 +75,12 @@ flowchart LR
 
     WRK["Celery worker<br/>notifications · reports"]
     FLW["Flower<br/>queue monitoring"]
-    RDS[("Redis<br/>broker + results")]
-    PG[("PostgreSQL")]
+    RDS[("Redis 7<br/>broker + results")]
+    PG[("PostgreSQL 17")]
     MEDIA[/"media volume"/]
     LOGS[/"logs volume"/]
 
-    Client -->|HTTPS| NGX
+    Client --> NGX
     NGX -->|"/api · /docs · /redoc"| API
     NGX -->|"/flower · Basic Auth"| FLW
     NGX -->|"/media served directly"| MEDIA
@@ -95,6 +93,12 @@ flowchart LR
     SVC -->|"store uploads"| MEDIA
     API -.->|"request_id log lines"| LOGS
 ```
+
+**Startup ordering is explicit.** The application and the Celery worker declare
+`depends_on: condition: service_healthy` against PostgreSQL and Redis, both of which define real
+healthchecks (`pg_isready`, `redis-cli ping`). Containers do not merely start in order — dependants wait
+until their dependencies actually accept connections, which removes the classic first-boot race where an
+app comes up faster than its database.
 
 A strict layer boundary keeps endpoints thin — parse, delegate, serialise — and makes the business rules
 unit-testable without an HTTP client.
@@ -118,47 +122,55 @@ unit-testable without an HTTP client.
 
 ### Authentication & access control
 
-- **Token-based authentication** with registration, login, logout and password reset flows.
+- **JWT authentication** implemented directly on PyJWT — registration, login, logout and password
+  reset flows, with no auth framework in between.
 - **Role-based permissions** — guest / staff / superuser, enforced through reusable FastAPI dependencies
   rather than repeated `if` checks inside handlers.
-- **Password hashing** and auth-specific Pydantic validators (email format, password strength) applied at
-  the schema boundary.
+- **Argon2 password hashing** via Passlib, with bcrypt kept configured for backward compatibility.
+- **Auth-specific Pydantic validators** — email format and password strength enforced at the schema
+  boundary, before a handler ever runs.
 
 ### Media handling
 
-- **Image upload and deletion** for venue photos, dishes and avatars, served directly by Nginx rather
-  than through the application process.
+- **Image upload and deletion** for venue photos, dishes and avatars, served directly by Nginx from a
+  shared volume rather than through the application process.
 - **Upload validation** — MIME type and size limits enforced in `media_validators` before a byte touches
   the filesystem.
 
 ### Asynchronous processing
 
-- **Celery worker** for notifications, reports and other long-running jobs.
-- **Redis** as broker and result backend.
-- **Flower dashboard**, mounted behind the same reverse proxy and protected with HTTP Basic Auth, so task
-  queues are observable in a running deployment instead of guessed at from logs.
+- **Celery worker** for notifications, reports and other long-running jobs, with configurable hard and
+  soft task time limits.
+- **Redis** as broker and result backend, password-protected.
+- **Flower dashboard**, mounted under the same reverse proxy at `/flower` and protected with HTTP Basic
+  Auth, so task queues are observable in a running deployment instead of guessed at from logs.
 
 ### Infrastructure & deployment
 
 - **Full containerisation** — app, Nginx, PostgreSQL, Redis, Celery worker and Flower orchestrated by a
   single Docker Compose stack; one command reproduces the entire environment from scratch.
-- **Nginx as the single entry point** — TLS termination, reverse proxy to the ASGI app, direct delivery of
-  static and media files, and path-based routing for the docs and the Flower dashboard.
-- **HTTPS on a live domain** — the service runs on a registered domain with valid TLS certificates and
-  automated renewal, not on a bare IP over plain HTTP.
-- **Persistent volumes** for the database, media uploads and logs, so redeploying the stack does not
-  discard state.
-- **Environment-driven configuration** — every secret and connection string is read from `.env`; nothing
-  environment-specific is committed to the repository.
+- **Minimal attack surface** — only Nginx is published to the host. Internal services communicate over a
+  dedicated bridge network by service name; the database port is bound to loopback for test access only.
+- **Health-gated startup** — dependants wait for `pg_isready` and `redis-cli ping` to pass, not merely
+  for containers to exist.
+- **Tuned PostgreSQL** — connection limits, shared buffers, cache size estimate, WAL buffers and
+  checkpoint pacing are set explicitly rather than left at image defaults.
+- **Nginx as the single entry point** — reverse proxy to the ASGI app, direct delivery of media files,
+  path-based routing for the docs and the Flower dashboard, and Basic Auth on monitoring endpoints.
+- **Persistent named volumes** for the database and Redis, plus bind mounts for media and logs, so
+  rebuilding containers never discards state.
+- **Environment-driven configuration** — every secret and connection string is read from `.env`;
+  `.env.example` documents the full set of variables, and nothing environment-specific is committed.
+- **Restart policies** on every service, so the stack survives a host reboot unattended.
 
 ### Observability & diagnostics
 
-- **Structured logging** with automatic rotation and compression of archived log files, mounted out of the
-  container so logs survive a redeploy.
+- **Structured logging** via Loguru with automatic rotation and compression of archived files, bind-
+  mounted out of the containers so logs survive a rebuild.
 - **Request correlation** — custom middleware attaches a `request_id` to every request and its log lines,
   which makes a single user complaint traceable end to end.
-- **Built-in SQL profiler** at `/debug/sql-profiler` — a dashboard of queries issued per endpoint, used to
-  catch N+1 patterns and missing indexes during development.
+- **SQL query profiler** integrated at `/debug/sql-profiler` — a per-endpoint dashboard of issued
+  queries, used to catch N+1 patterns and missing indexes during development.
 
 ### Engineering quality
 
@@ -178,16 +190,17 @@ unit-testable without an HTTP client.
 | Layer | Technology | Why it was chosen |
 | :--- | :--- | :--- |
 | **Language** | Python 3.11 | Native async, mature typing, `match` statements and better tracebacks. |
-| **Web framework** | FastAPI (ASGI) | Async request handling, dependency injection for auth/session wiring, and an OpenAPI schema generated from the same types that validate input. |
-| **Validation** | Pydantic v2 | One source of truth for request/response contracts; domain-specific validators keep parsing and rules at the boundary. |
-| **ORM** | SQLAlchemy 2.0 (async) | Explicit relationship control for the café → table → slot → booking graph, with eager-loading strategies that the SQL profiler can verify. |
-| **Database** | PostgreSQL | Transactional integrity for concurrent reservations, plus schema isolation used for the test suite. |
+| **Web framework** | FastAPI 0.116 (ASGI) | Async request handling, dependency injection for auth/session wiring, and an OpenAPI schema generated from the same types that validate input. |
+| **Validation** | Pydantic 2 + Pydantic Settings | One source of truth for request/response contracts; settings are typed and validated at startup, so a missing variable fails fast instead of at first use. |
+| **ORM** | SQLAlchemy 2.0 (async, asyncpg) | Explicit relationship control for the café → table → slot → booking graph, with eager-loading strategies the SQL profiler can verify. |
+| **Database** | PostgreSQL 17 | Transactional integrity for concurrent reservations, plus schema isolation used for the test suite. |
 | **Migrations** | Alembic | Versioned, reviewable, reversible schema changes generated from ORM models. |
-| **Background jobs** | Celery + Redis | Keeps emails, reports and media work off the request path; Redis doubles as broker and result backend. |
+| **Background jobs** | Celery 5 + Redis 7 | Keeps emails, reports and media work off the request path; Redis doubles as broker and result backend. |
 | **Task monitoring** | Flower | Live visibility into queues, failures and retries — behind Basic Auth in the reverse proxy. |
-| **Reverse proxy** | Nginx | TLS termination, static and media delivery, and a single entry point for the API, the docs and the Flower dashboard. |
-| **TLS** | Let's Encrypt / Certbot | Free, automatically renewed certificates — no manual expiry handling in production. |
+| **Auth** | PyJWT + Passlib (Argon2, bcrypt) | Hand-rolled rather than a framework: the token and permission logic stays small, explicit and reviewable, and Argon2 is the current recommendation for password storage. |
+| **Reverse proxy** | Nginx | Single published entry point; serves media directly and routes the API, the docs and the Flower dashboard. |
 | **Runtime** | Docker & Docker Compose | Identical stack locally and on the server; no "works on my machine" gap. |
+| **Logging** | Loguru | Rotation and compression out of the box, with a format that carries the request correlation id. |
 | **Testing** | pytest + pytest-asyncio | Async fixtures, schema-isolated integration tests, reusable auth and payload factories. |
 | **Code quality** | Ruff + pre-commit | Linting and formatting in a single fast tool, enforced at commit time rather than in review. |
 | **CI/CD** | GitHub Actions | Lint and test gates on every push to `develop` / `main`. |
@@ -204,7 +217,7 @@ publicly reachable service.
 
 ### Team lead
 
-- Coordinated a backend team of 6 developers over about 5 weeks, breaking the product requirements
+- Coordinated a backend team of {{N}} developers over {{duration}}, breaking the product requirements
   into scoped tasks and tracking them to completion.
 - Ran code review on incoming pull requests and set the branching model (`develop` / feature branches)
   and the pre-commit + CI gates the team worked under.
@@ -220,16 +233,19 @@ publicly reachable service.
 
 ### DevOps — sole ownership
 
-- **Containerisation.** Authored the Docker images and the Compose orchestration for the full stack —
-  application, Nginx, PostgreSQL, Redis, Celery worker and Flower — including volumes for database,
-  media and logs, service dependencies and startup ordering.
-- **Nginx configuration.** Reverse proxy to the ASGI application, direct serving of static and media
-  files, path-based routing for the docs and the Flower dashboard, and Basic Auth protection on
-  monitoring endpoints.
-- **Deployment.** Provisioned the server, deployed the stack to it and kept it running — the project is
-  reachable as a live service, not only as a repository.
-- **Domain and TLS.** Registered and configured the domain name, obtained TLS certificates and set up
-  automatic renewal, so the API is served over HTTPS.
+- **Containerisation.** Authored the Docker images and the Compose orchestration for the full six-service
+  stack, including named volumes, bind mounts for media and logs, restart policies, an isolated bridge
+  network and health-gated startup ordering.
+- **Network hardening.** Reduced the published surface to Nginx alone, keeping application, broker and
+  database reachable only from inside the Compose network.
+- **Database tuning.** Set PostgreSQL connection, memory and checkpoint parameters explicitly after
+  hitting connection exhaustion under test load.
+- **Nginx configuration.** Reverse proxy to the ASGI application, direct serving of media, path-based
+  routing for the docs and the Flower dashboard, and Basic Auth protection on monitoring endpoints.
+- **Deployment and operations.** Provisioned the server, deployed the stack and kept it running through
+  the project.
+- **Domain and HTTPS.** Registered and configured the domain name and set up TLS on the server, so the
+  API was served over HTTPS rather than on a bare IP.
 
 > Working across both sides of the boundary meant the code was written with its runtime in mind: the
 > configuration is environment-driven, the logs are mounted out of the containers, and the stack a
@@ -314,3 +330,25 @@ ruff check          # report style and lint violations
 ruff check --fix    # auto-fix everything that can be fixed
 pre-commit install  # run the checks automatically on every commit
 ```
+
+---
+
+## API documentation
+
+Every endpoint is documented and interactive through the auto-generated OpenAPI schema. Once the stack
+is running, the full Swagger UI is available at **http://localhost:10000/docs** and ReDoc at
+**/redoc**. The interface labels are in Russian — this was a Yandex Practicum team project — but the
+routes, methods and models read the same in any language.
+
+**Endpoint overview** — media, promotional actions and cafés:
+
+![Swagger UI overview](docs/screenshots/overview-media-sales-cafe.jpg)
+
+**Cafés, tables, time slots and dishes** — the venue-management surface, including the time-slot
+endpoints (`/cafes/{cafe_id}/timeslots/`) I owned:
+
+![Tables, slots and dishes endpoints](docs/screenshots/tables-slots-dishes.jpg)
+
+**Users, authentication and bookings** — registration, the current-user endpoint and the booking flow:
+
+![Users, auth and booking endpoints](docs/screenshots/users-authentication-booking.jpg)
