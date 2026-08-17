@@ -314,25 +314,3 @@ ruff check          # report style and lint violations
 ruff check --fix    # auto-fix everything that can be fixed
 pre-commit install  # run the checks automatically on every commit
 ```
-
-<!--
-  BEFORE PUBLISHING — check these:
-
-  BLOCKING — Quick start will not work without it:
-  1. Does `infra/.env.example` exist and is it committed? Step 2 of the
-     Quick start depends on it. If not, create one listing every variable
-     read by core/config.py, with safe dummy values. This is the single
-     most common reason a reviewer cannot start a project.
-  2. Does the app container run migrations on start? If it does, delete the
-     "on the very first run" step. If it does not, leave it.
-  3. Confirm the DB user/name in the psql command match your .env defaults.
-
-  CONTENT:
-  5. Confirm the BOOKING_TABLE_SLOT and PREORDER entities and their
-     cardinalities in the ER diagram against src/app/models/.
-  6. Confirm library names and versions against src/requirements.txt
-     (auth library, logging library, DB driver, Pydantic major version).
-  7. Confirm TLS was issued via Let's Encrypt / Certbot.
-  8. If the deployment is still live, add the URL near the top —
-     a working link is the single most persuasive item in this file.
--->
