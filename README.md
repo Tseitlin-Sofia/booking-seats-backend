@@ -1,8 +1,8 @@
 # Booking Seats API
 
-**An async backend for restaurant table reservations — slot-based availability, conflict-safe bookings, menu pre-orders and background processing.**
+**An async backend for restaurant table reservations — slot-based availability, menu pre-orders and background processing.**
 
-*Team project. My role: **team lead** — I owned the time-slot subsystem and the entire deployment pipeline (Docker, Nginx, TLS, server operations). See [My role](#my-role) for details.*
+*Team project. My role: **team lead** — I owned the time-slot subsystem and the deployment pipeline (Docker, Nginx, TLS, server operations). See [My role](#my-role) for details.*
 
 ![Python 3.11](https://img.shields.io/badge/Python-3.11--slim-3776AB?style=flat-square&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.116-009688?style=flat-square&logo=fastapi&logoColor=white)
@@ -14,7 +14,7 @@
 ![Ruff](https://img.shields.io/badge/lint-Ruff-D7FF64?style=flat-square&logo=ruff&logoColor=black)
 ![pytest](https://img.shields.io/badge/tests-pytest-0A9EDC?style=flat-square&logo=pytest&logoColor=white)
 
-[What it is](#what-it-is) · [Architecture](#architecture) · [Features](#features) · [Tech stack](#tech-stack) · [My role](#my-role) · [Quick start](#quick-start) · [API docs](#api-documentation)
+[What it is](#what-it-is) · [Architecture](#architecture) · [Features](#features) · [Tech stack](#tech-stack) · [My role](#my-role) · [Known limitations](#known-limitations--next-steps) · [Quick start](#quick-start) · [API docs](#api-documentation)
 
 ---
 
@@ -32,9 +32,8 @@ an HTTP request.
 
 ### Why this is not a CRUD app
 
-A booking is a **claim on a scarce, time-boxed resource**: a given table exists in a given slot exactly
-once, and two guests can ask for it in the same millisecond. That single fact drives most of the design
-decisions in this repository:
+A booking is a **claim on a scarce, time-boxed resource**: a given table exists in a given slot on a
+given date exactly once. That single fact drives most of the design decisions in this repository:
 
 - **Availability is computed, not stored.** A table is free for a slot only if no active booking
   intersects it — so the read path resolves `café → tables → slots → bookings` instead of reading a flag
@@ -47,6 +46,10 @@ decisions in this repository:
   making the client orchestrate a sequence of add/remove calls that can half-fail.
 - **Slow work is moved off the request path.** Notifications, media processing and scheduled jobs are
   Celery tasks, so a booking confirmation is never held hostage by an email server.
+
+Contention between two guests reaching for the same table is the sharpest version of this problem, and
+it is currently handled at the application layer only — see
+[Known limitations](#known-limitations--next-steps) for where that stands and what closes it.
 
 ---
 
@@ -110,11 +113,12 @@ unit-testable without an HTTP client.
 ### Reservations — the core domain
 
 - **Slot-based booking engine** — reserve one or several tables across one or several time slots in a
-  single atomic request.
+  single request.
 - **Time-slot management** — venues define their own bookable intervals; slots are validated against
   working hours and are the unit that availability, conflicts and pre-orders are all resolved against.
-- **Conflict prevention** — dedicated validators reject overlapping reservations, out-of-range slots and
-  over-capacity requests before anything is written.
+  Creating a slot that overlaps an existing one in the same venue is rejected.
+- **Booking validation** — reservations are checked against existing bookings, slot validity and table
+  capacity before anything is written.
 - **Reconciling updates** — `PATCH` on a booking accepts the full desired set of table-slot pairs and the
   server computes the delta, which keeps the client stateless and the DB consistent.
 - **Menu pre-orders** — dishes can be attached to a reservation so the venue can prepare in advance.
@@ -165,8 +169,8 @@ unit-testable without an HTTP client.
 
 ### Observability & diagnostics
 
-- **Structured logging** via Loguru with automatic rotation and compression of archived files, bind-
-  mounted out of the containers so logs survive a rebuild.
+- **Structured logging** via Loguru with automatic rotation and compression of archived files,
+  bind-mounted out of the containers so logs survive a rebuild.
 - **Request correlation** — custom middleware attaches a `request_id` to every request and its log lines,
   which makes a single user complaint traceable end to end.
 - **SQL query profiler** integrated at `/debug/sql-profiler` — a per-endpoint dashboard of issued
@@ -174,9 +178,10 @@ unit-testable without an HTTP client.
 
 ### Engineering quality
 
-- **Tests against real PostgreSQL, not SQLite.** The suite provisions a dedicated schema, runs against it
-  and tears it down, so tests exercise the same dialect, constraints and transaction semantics as
-  production.
+- **Tests run against real PostgreSQL, not SQLite.** The harness provisions a dedicated schema, runs
+  against it and tears it down, so tests exercise the same dialect, constraints and transaction
+  semantics as production. Current coverage is partial — see
+  [Known limitations](#known-limitations--next-steps).
 - **Reusable fixtures** for authenticated clients, DB sessions, log capture and request payloads.
 - **Ruff** for linting and formatting, enforced automatically through **pre-commit** hooks
   (plus YAML validation, large-file and merge-conflict guards).
@@ -217,12 +222,13 @@ publicly reachable service.
 
 ### Team lead
 
-- Coordinated a backend team of {{N}} developers over {{duration}}, breaking the product requirements
-  into scoped tasks and tracking them to completion.
+- Coordinated a backend team of six developers, breaking the product requirements into scoped tasks and
+  tracking them to completion.
 - Ran code review on incoming pull requests and set the branching model (`develop` / feature branches)
   and the pre-commit + CI gates the team worked under.
-- Owned the integration contract with the frontend team, including the decision to make
-  `PATCH /booking/{id}` take the complete table-slot set rather than incremental operations.
+- Defined the API contract the client side consumes, including the decision to make
+  `PATCH /booking/{id}` take the complete table-slot set rather than incremental operations, and
+  documented the expectations that follow from it.
 
 ### Time slots — feature ownership
 
@@ -231,17 +237,17 @@ publicly reachable service.
   slots against venue working hours, guarding against invalid or overlapping intervals, and exposing
   availability in a form the client could render directly.
 
-### DevOps — sole ownership
+### Deployment & infrastructure — sole ownership
 
-- **Containerisation.** Authored the Docker images and the Compose orchestration for the full six-service
-  stack, including named volumes, bind mounts for media and logs, restart policies, an isolated bridge
-  network and health-gated startup ordering.
-- **Network hardening.** Reduced the published surface to Nginx alone, keeping application, broker and
-  database reachable only from inside the Compose network.
+- **Containerisation.** Authored the Docker image and the Compose configuration for the application,
+  Nginx, PostgreSQL, and the shared volumes and network. The Celery worker, Redis and Flower services
+  were added by teammates.
+- **Network hardening.** Reduced the published surface to Nginx alone, keeping the application, broker
+  and database reachable only from inside the Compose network.
 - **Database tuning.** Set PostgreSQL connection, memory and checkpoint parameters explicitly after
   hitting connection exhaustion under test load.
 - **Nginx configuration.** Reverse proxy to the ASGI application, direct serving of media, path-based
-  routing for the docs and the Flower dashboard, and Basic Auth protection on monitoring endpoints.
+  routing for the docs and the monitoring dashboard, and Basic Auth protection on monitoring endpoints.
 - **Deployment and operations.** Provisioned the server, deployed the stack and kept it running through
   the project.
 - **Domain and HTTPS.** Registered and configured the domain name and set up TLS on the server, so the
@@ -250,6 +256,33 @@ publicly reachable service.
 > Working across both sides of the boundary meant the code was written with its runtime in mind: the
 > configuration is environment-driven, the logs are mounted out of the containers, and the stack a
 > reviewer starts locally is the same one that runs on the server.
+
+---
+
+## Known limitations & next steps
+
+Written down deliberately: these are the things I would fix first, and knowing where a system is thin
+matters as much as knowing what it does.
+
+**Booking conflicts are enforced in the application, not in the database.** Overlaps are rejected by
+validators before an insert, which covers the ordinary case but leaves a check-then-act window: two
+requests can both pass validation before either one writes. Closing it properly means denormalising the
+booking date and an active flag onto `BookingTableSlot` and adding a partial unique index over
+`(table_id, slot_id, booking_date) WHERE is_active`, so PostgreSQL rejects the second write atomically
+and the service turns the resulting `IntegrityError` into a `409`. The validator stays for the readable
+error message; the constraint is what makes it correct.
+
+**Test coverage is uneven.** The harness is solid — real PostgreSQL, isolated schema, reusable fixtures —
+but the suite currently covers logging, middleware and pre-orders. The booking and slot paths are the
+next ones to cover, starting with a concurrency test that asserts a `409` on the second of two competing
+reservations.
+
+**Model-level validation raises `ValueError`.** Guest-count and past-date checks live in SQLAlchemy
+`@validates` hooks, which surface as `500` rather than `422`. These belong in the Pydantic schemas, with
+the model layer reserved for database-level invariants.
+
+**Indexing on the hot path.** `BookingTableSlot.table_id` and `slot_id` drive every availability
+calculation and are not indexed yet; the SQL profiler is already in place to measure the difference.
 
 ---
 
