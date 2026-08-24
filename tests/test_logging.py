@@ -287,7 +287,7 @@ def test_dev_mode_creates_log_file(tmp_path, monkeypatch) -> None:
         'Лог-файл не был создан в режиме разработки!'
     )
 
-    content = fake_log_file.read_text()
+    content = fake_log_file.read_text(encoding='utf-8')
     assert 'Проверка создания файла' in content, (
         f'Сообщение лога не найдено в файле. Содержимое: {content}'
     )

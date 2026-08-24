@@ -29,6 +29,7 @@ async def test_create_booking_with_pre_order_success(
     test_dish_350,
     test_dish_500,
     test_slots,
+    test_date,
     auth_headers: dict,
 ) -> None:
     """Успешное создание бронирования с предзаказом автор. пользователем.
@@ -56,7 +57,7 @@ async def test_create_booking_with_pre_order_success(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [
             {'dish_id': test_dish_500.id, 'quantity': 2},
             {'dish_id': test_dish_350.id, 'quantity': 1},
@@ -87,6 +88,7 @@ async def test_unauthorized_user_cannot_create_booking(
     async_client: httpx.AsyncClient,
     test_cafe,
     test_slots,
+    test_date,
 ) -> None:
     """Попытка создать бронирование с предзаказом неавтор. пользователем.
 
@@ -101,7 +103,7 @@ async def test_unauthorized_user_cannot_create_booking(
             },
         ],
         'guest_number': 1,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [{'dish_id': 999, 'quantity': 1}],
     }
 
@@ -115,6 +117,7 @@ async def test_create_booking_with_single_pre_order_item(
     test_cafe,
     test_dish_500,
     test_slots,
+    test_date,
     auth_headers,
 ) -> None:
     """Успешное создание бронирования с одной позицией в предзаказе.
@@ -133,7 +136,7 @@ async def test_create_booking_with_single_pre_order_item(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [{'dish_id': test_dish_500.id, 'quantity': 1}],
     }
     response = await async_client.post(
@@ -154,6 +157,7 @@ async def test_create_booking_with_multiple_quantities(
     test_cafe,
     test_dish_350,
     test_slots,
+    test_date,
     auth_headers,
 ) -> None:
     """Успешное создание бронирования с количеством блюда больше одного.
@@ -169,7 +173,7 @@ async def test_create_booking_with_multiple_quantities(
             },
         ],
         'guest_number': 3,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [{'dish_id': test_dish_350.id, 'quantity': 5}],
     }
     response = await async_client.post(
@@ -187,6 +191,7 @@ async def test_create_booking_without_pre_order(
     async_client,
     test_cafe,
     test_slots,
+    test_date,
     auth_headers,
 ) -> None:
     """Успешное создание бронирования без позиций предзаказа.
@@ -203,7 +208,7 @@ async def test_create_booking_without_pre_order(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
     }
     response = await async_client.post(
         '/bookings/',
@@ -219,6 +224,7 @@ async def test_create_booking_without_pre_order(
 async def test_get_booking_returns_pre_order_items(
     async_client,
     test_cafe,
+    test_date,
     test_dish_500,
     test_slots,
     auth_headers,
@@ -236,7 +242,7 @@ async def test_get_booking_returns_pre_order_items(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [{'dish_id': test_dish_500.id, 'quantity': 1}],
     }
     create_resp = await async_client.post(
@@ -268,6 +274,7 @@ async def test_get_booking_returns_pre_order_items(
 async def test_pre_order_invalid_quantity(
     async_client,
     test_cafe,
+    test_date,
     test_dish_500,
     test_slots,
     auth_headers,
@@ -288,7 +295,7 @@ async def test_pre_order_invalid_quantity(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [
             {'dish_id': test_dish_500.id, 'quantity': quantity},
         ],
@@ -305,6 +312,7 @@ async def test_pre_order_invalid_quantity(
 async def test_pre_order_empty_items_list(
     async_client,
     test_cafe,
+    test_date,
     test_slots,
     auth_headers,
 ) -> None:
@@ -322,7 +330,7 @@ async def test_pre_order_empty_items_list(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [],
     }
     response = await async_client.post(
@@ -339,6 +347,7 @@ async def test_pre_order_duplicate_dishes(
     test_cafe,
     test_dish_500,
     test_slots,
+    test_date,
     auth_headers,
 ) -> None:
     """Проверка обработки дублирующихся идентификаторов блюд в предзаказе.
@@ -355,7 +364,7 @@ async def test_pre_order_duplicate_dishes(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [
             {'dish_id': test_dish_500.id, 'quantity': 1},
             {'dish_id': test_dish_500.id, 'quantity': 2},
@@ -373,6 +382,7 @@ async def test_pre_order_duplicate_dishes(
 async def test_pre_order_nonexistent_dish(
     async_client,
     test_cafe,
+    test_date,
     test_slots,
     auth_headers,
 ) -> None:
@@ -390,7 +400,7 @@ async def test_pre_order_nonexistent_dish(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [{'dish_id': 99999, 'quantity': 1}],
     }
     response = await async_client.post(
@@ -407,6 +417,7 @@ async def test_pre_order_nonexistent_dish(
 async def test_pre_order_unavailable_dish(
     async_client,
     test_cafe,
+    test_date,
     test_slots,
     session,
     auth_headers,
@@ -434,7 +445,7 @@ async def test_pre_order_unavailable_dish(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [{'dish_id': dish.id, 'quantity': 1}],
     }
     response = await async_client.post(
@@ -451,6 +462,7 @@ async def test_pre_order_unavailable_dish(
 async def test_pre_order_dish_from_other_cafe(
     async_client,
     test_cafe,
+    test_date,
     test_slots,
     session,
     auth_headers,
@@ -487,7 +499,7 @@ async def test_pre_order_dish_from_other_cafe(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [{'dish_id': other_dish.id, 'quantity': 1}],
     }
     response = await async_client.post(
@@ -508,6 +520,7 @@ async def test_regular_user_can_see_only_own_booking_pre_order(
     test_slots,
     auth_headers,
     session,
+    test_date,
 ) -> None:
     """Пользователь не может просматривать чужие бронирования с предзаказом.
 
@@ -523,7 +536,7 @@ async def test_regular_user_can_see_only_own_booking_pre_order(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [{'dish_id': test_dish_500.id, 'quantity': 1}],
     }
     resp = await async_client.post(
@@ -562,6 +575,7 @@ async def test_admin_can_see_any_booking_pre_order(
     test_slots,
     auth_headers,
     session,
+    test_date,
 ) -> None:
     """Администратор может просматривать любое бронирование с предзаказом.
 
@@ -577,7 +591,7 @@ async def test_admin_can_see_any_booking_pre_order(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [{'dish_id': test_dish_500.id, 'quantity': 1}],
     }
     resp = await async_client.post(
@@ -616,6 +630,7 @@ async def test_create_booking_with_pre_order_unauthorized(
     test_dish_350,
     test_dish_500,
     test_slots,
+    test_date,
 ) -> None:
     """Неавтор. пользователь не может создать бронирование с предзаказом.
 
@@ -631,7 +646,7 @@ async def test_create_booking_with_pre_order_unauthorized(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [
             {'dish_id': test_dish_500.id, 'quantity': 2},
             {'dish_id': test_dish_350.id, 'quantity': 1},
@@ -651,6 +666,7 @@ async def test_create_booking_unauthorized_without_pre_order(
     async_client: httpx.AsyncClient,
     test_cafe,
     test_slots,
+    test_date,
 ) -> None:
     """Неавтор. пользователь не может создать бронирование без предзаказа.
 
@@ -666,7 +682,7 @@ async def test_create_booking_unauthorized_without_pre_order(
             },
         ],
         'guest_number': 3,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
     }
 
     response = await async_client.post(
@@ -683,6 +699,7 @@ async def test_create_booking_with_invalid_token(
     test_cafe,
     test_dish_500,
     test_slots,
+    test_date,
 ) -> None:
     """Попытка создать бронирование с некорректным JWT-токеном.
 
@@ -698,7 +715,7 @@ async def test_create_booking_with_invalid_token(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [
             {'dish_id': test_dish_500.id, 'quantity': 1},
         ],
@@ -724,6 +741,7 @@ async def test_create_booking_with_expired_token(
     test_cafe,
     test_dish_350,
     test_slots,
+    test_date,
 ) -> None:
     """Попытка создать бронирование с истёкшим JWT-токеном.
 
@@ -750,7 +768,7 @@ async def test_create_booking_with_expired_token(
             },
         ],
         'guest_number': 2,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
         'pre_order_items': [
             {'dish_id': test_dish_350.id, 'quantity': 1},
         ],
@@ -772,6 +790,7 @@ async def test_create_booking_without_auth_header(
     async_client: httpx.AsyncClient,
     test_cafe,
     test_slots,
+    test_date,
 ) -> None:
     """Попытка создать бронирование при отсутствии заголовка Authorization.
 
@@ -787,7 +806,7 @@ async def test_create_booking_without_auth_header(
             },
         ],
         'guest_number': 1,
-        'booking_date': '2026-05-20',
+        'booking_date': test_date,
     }
 
     response = await async_client.post(
@@ -818,6 +837,7 @@ class TestPreOrderUpdate:
         self,
         async_client,
         test_cafe,
+        test_date,
         test_dish_500,
         test_dish_350,
         test_slots,
@@ -835,7 +855,7 @@ class TestPreOrderUpdate:
             cafe_id=test_cafe.id,
             table_id=test_slots[0]['table_id'],
             slot_id=test_slots[0]['slot_id'],
-            booking_date='2026-05-20',
+            booking_date=test_date,
         )
         create_resp = await async_client.post(
             '/bookings/',
@@ -881,6 +901,7 @@ class TestPreOrderUpdate:
         test_slots,
         auth_headers,
         build_preorder_payload,
+        test_date,
     ) -> None:
         """Проверяет замену существующего предзаказа на новый.
 
@@ -893,7 +914,7 @@ class TestPreOrderUpdate:
             cafe_id=test_cafe.id,
             table_id=test_slots[0]['table_id'],
             slot_id=test_slots[0]['slot_id'],
-            booking_date='2026-05-20',
+            booking_date=test_date,
             items=items,
         )
         create_resp = await async_client.post(
@@ -937,6 +958,7 @@ class TestPreOrderUpdate:
         test_slots,
         auth_headers,
         build_preorder_payload,
+        test_date,
     ) -> None:
         """Проверяет удаление предзаказа из бронирования.
 
@@ -950,7 +972,7 @@ class TestPreOrderUpdate:
             cafe_id=test_cafe.id,
             table_id=test_slots[0]['table_id'],
             slot_id=test_slots[0]['slot_id'],
-            booking_date='2026-05-20',
+            booking_date=test_date,
             items=items,
         )
         create_resp = await async_client.post(
@@ -989,6 +1011,7 @@ class TestPreOrderUpdate:
         test_slots,
         auth_headers,
         build_preorder_payload,
+        test_date,
     ) -> None:
         """Проверяет ошибку 422 при попытке добавить несуществующее блюдо.
 
@@ -1000,7 +1023,7 @@ class TestPreOrderUpdate:
             cafe_id=test_cafe.id,
             table_id=test_slots[0]['table_id'],
             slot_id=test_slots[0]['slot_id'],
-            booking_date='2026-05-20',
+            booking_date=test_date,
         )
         create_resp = await async_client.post(
             '/bookings/',
@@ -1044,6 +1067,7 @@ class TestPreOrderUpdate:
         auth_headers,
         session,
         build_preorder_payload,
+        test_date,
     ) -> None:
         """Проверяет ошибку 422 при попытке добавить недоступное блюдо.
 
@@ -1064,7 +1088,7 @@ class TestPreOrderUpdate:
             cafe_id=test_cafe.id,
             table_id=test_slots[0]['table_id'],
             slot_id=test_slots[0]['slot_id'],
-            booking_date='2026-05-20',
+            booking_date=test_date,
         )
         create_resp = await async_client.post(
             '/bookings/',
@@ -1108,6 +1132,7 @@ class TestPreOrderUpdate:
         auth_headers,
         session,
         build_preorder_payload,
+        test_date,
     ) -> None:
         """Проверяет ошибку 422 при попытке добавить блюдо из другого кафе.
 
@@ -1137,7 +1162,7 @@ class TestPreOrderUpdate:
             cafe_id=test_cafe.id,
             table_id=test_slots[0]['table_id'],
             slot_id=test_slots[0]['slot_id'],
-            booking_date='2026-05-20',
+            booking_date=test_date,
         )
         create_resp = await async_client.post(
             '/bookings/',
@@ -1181,6 +1206,7 @@ class TestPreOrderUpdate:
         test_slots,
         auth_headers,
         build_preorder_payload,
+        test_date,
     ) -> None:
         """Проверяет попытку добавить блюдо с невалидным количеством.
 
@@ -1192,7 +1218,7 @@ class TestPreOrderUpdate:
             cafe_id=test_cafe.id,
             table_id=test_slots[0]['table_id'],
             slot_id=test_slots[0]['slot_id'],
-            booking_date='2026-05-20',
+            booking_date=test_date,
         )
         create_resp = await async_client.post(
             '/bookings/',
@@ -1235,6 +1261,7 @@ class TestPreOrderUpdate:
         test_slots,
         auth_headers,
         build_preorder_payload,
+        test_date,
     ) -> None:
         """Проверяет, что обновление полей не удаляет существующий предзаказ.
 
@@ -1246,7 +1273,7 @@ class TestPreOrderUpdate:
             cafe_id=test_cafe.id,
             table_id=test_slots[0]['table_id'],
             slot_id=test_slots[0]['slot_id'],
-            booking_date='2026-05-20',
+            booking_date=test_date,
             items=items,
         )
         create_resp = await async_client.post(
@@ -1289,6 +1316,7 @@ class TestPreOrderUpdate:
         test_slots,
         auth_headers,
         build_preorder_payload,
+        test_date,
     ) -> None:
         """Проверяет, что при ошибке валидации не остаётся сиротских записей.
 
@@ -1301,7 +1329,7 @@ class TestPreOrderUpdate:
             cafe_id=test_cafe.id,
             table_id=test_slots[0]['table_id'],
             slot_id=test_slots[0]['slot_id'],
-            booking_date='2026-05-20',
+            booking_date=test_date,
             items=items,
         )
         create_resp = await async_client.post(

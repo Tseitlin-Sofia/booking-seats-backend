@@ -1,5 +1,5 @@
 import uuid
-from datetime import time as time_type
+from datetime import time as time_type, timedelta
 
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -78,3 +78,11 @@ async def test_slots(session: AsyncSession, test_cafe: Cafe) -> list[dict]:
 
     await session.flush()
     return [{'table_id': table.id, 'slot_id': slot.id}]
+
+
+@pytest_asyncio.fixture(scope='function')
+async def test_date(session: AsyncSession, test_slots: list[dict]) -> str:
+    """Возвращает дату в формате YYYY-MM-DD для тестов."""
+    # Здесь можно использовать текущую дату или любую другую фиксированную дату
+    from datetime import date
+    return (date.today() + timedelta(days=1)).isoformat()

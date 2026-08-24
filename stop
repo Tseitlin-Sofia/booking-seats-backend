@@ -1,0 +1,325 @@
+[1mdiff --git a/tests/fixtures/database.py b/tests/fixtures/database.py[m
+[1mindex c2b577c..4e9fcf7 100644[m
+[1m--- a/tests/fixtures/database.py[m
+[1m+++ b/tests/fixtures/database.py[m
+[36m@@ -78,3 +78,11 @@[m [masync def test_slots(session: AsyncSession, test_cafe: Cafe) -> list[dict]:[m
+ [m
+     await session.flush()[m
+     return [{'table_id': table.id, 'slot_id': slot.id}][m
+[32m+[m
+[32m+[m
+[32m+[m[32m@pytest_asyncio.fixture(scope='function')[m
+[32m+[m[32masync def test_date(session: AsyncSession, test_slots: list[dict]) -> str:[m
+[32m+[m[32m    """Возвращает дату в формате YYYY-MM-DD для тестов."""[m
+[32m+[m[32m    # Здесь можно использовать текущую дату или любую другую фиксированную дату[m
+[32m+[m[32m    from datetime import date[m
+[32m+[m[32m    return date.today().isoformat()[m
+[1mdiff --git a/tests/test_logging.py b/tests/test_logging.py[m
+[1mindex 11bc685..8bd2786 100644[m
+[1m--- a/tests/test_logging.py[m
+[1m+++ b/tests/test_logging.py[m
+[36m@@ -287,7 +287,7 @@[m [mdef test_dev_mode_creates_log_file(tmp_path, monkeypatch) -> None:[m
+         'Лог-файл не был создан в режиме разработки!'[m
+     )[m
+ [m
+[31m-    content = fake_log_file.read_text()[m
+[32m+[m[32m    content = fake_log_file.read_text(encoding='utf-8')[m
+     assert 'Проверка создания файла' in content, ([m
+         f'Сообщение лога не найдено в файле. Содержимое: {content}'[m
+     )[m
+[1mdiff --git a/tests/test_preorder.py b/tests/test_preorder.py[m
+[1mindex 9984857..03348f6 100644[m
+[1m--- a/tests/test_preorder.py[m
+[1m+++ b/tests/test_preorder.py[m
+[36m@@ -29,6 +29,7 @@[m [masync def test_create_booking_with_pre_order_success([m
+     test_dish_350,[m
+     test_dish_500,[m
+     test_slots,[m
+[32m+[m[32m    test_date,[m
+     auth_headers: dict,[m
+ ) -> None:[m
+     """Успешное создание бронирования с предзаказом автор. пользователем.[m
+[36m@@ -56,7 +57,7 @@[m [masync def test_create_booking_with_pre_order_success([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [[m
+             {'dish_id': test_dish_500.id, 'quantity': 2},[m
+             {'dish_id': test_dish_350.id, 'quantity': 1},[m
+[36m@@ -87,6 +88,7 @@[m [masync def test_unauthorized_user_cannot_create_booking([m
+     async_client: httpx.AsyncClient,[m
+     test_cafe,[m
+     test_slots,[m
+[32m+[m[32m    test_date,[m
+ ) -> None:[m
+     """Попытка создать бронирование с предзаказом неавтор. пользователем.[m
+ [m
+[36m@@ -101,7 +103,7 @@[m [masync def test_unauthorized_user_cannot_create_booking([m
+             },[m
+         ],[m
+         'guest_number': 1,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [{'dish_id': 999, 'quantity': 1}],[m
+     }[m
+ [m
+[36m@@ -115,6 +117,7 @@[m [masync def test_create_booking_with_single_pre_order_item([m
+     test_cafe,[m
+     test_dish_500,[m
+     test_slots,[m
+[32m+[m[32m    test_date,[m
+     auth_headers,[m
+ ) -> None:[m
+     """Успешное создание бронирования с одной позицией в предзаказе.[m
+[36m@@ -133,7 +136,7 @@[m [masync def test_create_booking_with_single_pre_order_item([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [{'dish_id': test_dish_500.id, 'quantity': 1}],[m
+     }[m
+     response = await async_client.post([m
+[36m@@ -154,6 +157,7 @@[m [masync def test_create_booking_with_multiple_quantities([m
+     test_cafe,[m
+     test_dish_350,[m
+     test_slots,[m
+[32m+[m[32m    test_date,[m
+     auth_headers,[m
+ ) -> None:[m
+     """Успешное создание бронирования с количеством блюда больше одного.[m
+[36m@@ -169,7 +173,7 @@[m [masync def test_create_booking_with_multiple_quantities([m
+             },[m
+         ],[m
+         'guest_number': 3,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [{'dish_id': test_dish_350.id, 'quantity': 5}],[m
+     }[m
+     response = await async_client.post([m
+[36m@@ -187,6 +191,7 @@[m [masync def test_create_booking_without_pre_order([m
+     async_client,[m
+     test_cafe,[m
+     test_slots,[m
+[32m+[m[32m    test_date,[m
+     auth_headers,[m
+ ) -> None:[m
+     """Успешное создание бронирования без позиций предзаказа.[m
+[36m@@ -203,7 +208,7 @@[m [masync def test_create_booking_without_pre_order([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+     }[m
+     response = await async_client.post([m
+         '/bookings/',[m
+[36m@@ -236,7 +241,7 @@[m [masync def test_get_booking_returns_pre_order_items([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [{'dish_id': test_dish_500.id, 'quantity': 1}],[m
+     }[m
+     create_resp = await async_client.post([m
+[36m@@ -288,7 +293,7 @@[m [masync def test_pre_order_invalid_quantity([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [[m
+             {'dish_id': test_dish_500.id, 'quantity': quantity},[m
+         ],[m
+[36m@@ -322,7 +327,7 @@[m [masync def test_pre_order_empty_items_list([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [],[m
+     }[m
+     response = await async_client.post([m
+[36m@@ -355,7 +360,7 @@[m [masync def test_pre_order_duplicate_dishes([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [[m
+             {'dish_id': test_dish_500.id, 'quantity': 1},[m
+             {'dish_id': test_dish_500.id, 'quantity': 2},[m
+[36m@@ -390,7 +395,7 @@[m [masync def test_pre_order_nonexistent_dish([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [{'dish_id': 99999, 'quantity': 1}],[m
+     }[m
+     response = await async_client.post([m
+[36m@@ -434,7 +439,7 @@[m [masync def test_pre_order_unavailable_dish([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [{'dish_id': dish.id, 'quantity': 1}],[m
+     }[m
+     response = await async_client.post([m
+[36m@@ -487,7 +492,7 @@[m [masync def test_pre_order_dish_from_other_cafe([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [{'dish_id': other_dish.id, 'quantity': 1}],[m
+     }[m
+     response = await async_client.post([m
+[36m@@ -523,7 +528,7 @@[m [masync def test_regular_user_can_see_only_own_booking_pre_order([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [{'dish_id': test_dish_500.id, 'quantity': 1}],[m
+     }[m
+     resp = await async_client.post([m
+[36m@@ -577,7 +582,7 @@[m [masync def test_admin_can_see_any_booking_pre_order([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [{'dish_id': test_dish_500.id, 'quantity': 1}],[m
+     }[m
+     resp = await async_client.post([m
+[36m@@ -631,7 +636,7 @@[m [masync def test_create_booking_with_pre_order_unauthorized([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [[m
+             {'dish_id': test_dish_500.id, 'quantity': 2},[m
+             {'dish_id': test_dish_350.id, 'quantity': 1},[m
+[36m@@ -666,7 +671,7 @@[m [masync def test_create_booking_unauthorized_without_pre_order([m
+             },[m
+         ],[m
+         'guest_number': 3,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+     }[m
+ [m
+     response = await async_client.post([m
+[36m@@ -698,7 +703,7 @@[m [masync def test_create_booking_with_invalid_token([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [[m
+             {'dish_id': test_dish_500.id, 'quantity': 1},[m
+         ],[m
+[36m@@ -750,7 +755,7 @@[m [masync def test_create_booking_with_expired_token([m
+             },[m
+         ],[m
+         'guest_number': 2,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+         'pre_order_items': [[m
+             {'dish_id': test_dish_350.id, 'quantity': 1},[m
+         ],[m
+[36m@@ -787,7 +792,7 @@[m [masync def test_create_booking_without_auth_header([m
+             },[m
+         ],[m
+         'guest_number': 1,[m
+[31m-        'booking_date': '2026-05-20',[m
+[32m+[m[32m        'booking_date': test_date,[m
+     }[m
+ [m
+     response = await async_client.post([m
+[36m@@ -835,7 +840,7 @@[m [mclass TestPreOrderUpdate:[m
+             cafe_id=test_cafe.id,[m
+             table_id=test_slots[0]['table_id'],[m
+             slot_id=test_slots[0]['slot_id'],[m
+[31m-            booking_date='2026-05-20',[m
+[32m+[m[32m            booking_date=test_date,[m
+         )[m
+         create_resp = await async_client.post([m
+             '/bookings/',[m
+[36m@@ -893,7 +898,7 @@[m [mclass TestPreOrderUpdate:[m
+             cafe_id=test_cafe.id,[m
+             table_id=test_slots[0]['table_id'],[m
+             slot_id=test_slots[0]['slot_id'],[m
+[31m-            booking_date='2026-05-20',[m
+[32m+[m[32m            booking_date=test_date,[m
+             items=items,[m
+         )[m
+         create_resp = await async_client.post([m
+[36m@@ -950,7 +955,7 @@[m [mclass TestPreOrderUpdate:[m
+             cafe_id=test_cafe.id,[m
+             table_id=test_slots[0]['table_id'],[m
+             slot_id=test_slots[0]['slot_id'],[m
+[31m-            booking_date='2026-05-20',[m
+[32m+[m[32m            booking_date=test_date,[m
+             items=items,[m
+         )[m
+         create_resp = await async_client.post([m
+[36m@@ -1000,7 +1005,7 @@[m [mclass TestPreOrderUpdate:[m
+             cafe_id=test_cafe.id,[m
+             table_id=test_slots[0]['table_id'],[m
+             slot_id=test_slots[0]['slot_id'],[m
+[31m-            booking_date='2026-05-20',[m
+[32m+[m[32m            booking_date=test_date,[m
+         )[m
+         create_resp = await async_client.post([m
+             '/bookings/',[m
+[36m@@ -1064,7 +1069,7 @@[m [mclass TestPreOrderUpdate:[m
+             cafe_id=test_cafe.id,[m
+             table_id=test_slots[0]['table_id'],[m
+             slot_id=test_slots[0]['slot_id'],[m
+[31m-            booking_date='2026-05-20',[m
+[32m+[m[32m            booking_date=test_date,[m
+         )[m
+         create_resp = await async_client.post([m
+             '/bookings/',[m
+[36m@@ -1137,7 +1142,7 @@[m [mclass TestPreOrderUpdate:[m
+             cafe_id=test_cafe.id,[m
+             table_id=test_slots[0]['table_id'],[m
+             slot_id=test_slots[0]['slot_id'],[m
+[31m-            booking_date='2026-05-20',[m
+[32m+[m[32m            booking_date=test_date,[m
+         )[m
+         create_resp = await async_client.post([m
+             '/bookings/',[m
+[36m@@ -1192,7 +1197,7 @@[m [mclass TestPreOrderUpdate:[m
+             cafe_id=test_cafe.id,[m
+             table_id=test_slots[0]['table_id'],[m
+             slot_id=test_slots[0]['slot_id'],[m
+[31m-            booking_date='2026-05-20',[m
+[32m+[m[32m            booking_date=test_date,[m
+         )[m
+         create_resp = await async_client.post([m
+             '/bookings/',[m
+[36m@@ -1246,7 +1251,7 @@[m [mclass TestPreOrderUpdate:[m
+             cafe_id=test_cafe.id,[m
+             table_id=test_slots[0]['table_id'],[m
+             slot_id=test_slots[0]['slot_id'],[m
+[31m-            booking_date='2026-05-20',[m
+[32m+[m[32m            booking_date=test_date,[m
+             items=items,[m
+         )[m
+         create_resp = await async_client.post([m
+[36m@@ -1301,7 +1306,7 @@[m [mclass TestPreOrderUpdate:[m
+             cafe_id=test_cafe.id,[m
+             table_id=test_slots[0]['table_id'],[m
+             slot_id=test_slots[0]['slot_id'],[m
+[31m-            booking_date='2026-05-20',[m
+[32m+[m[32m            booking_date=test_date,[m
+             items=items,[m
+         )[m
+         create_resp = await async_client.post([m
