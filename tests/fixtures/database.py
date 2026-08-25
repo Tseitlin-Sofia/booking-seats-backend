@@ -1,5 +1,6 @@
 import uuid
-from datetime import time as time_type, timedelta
+from datetime import time as time_type
+from datetime import timedelta
 
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -81,8 +82,69 @@ async def test_slots(session: AsyncSession, test_cafe: Cafe) -> list[dict]:
 
 
 @pytest_asyncio.fixture(scope='function')
+async def test_back_to_back_slots(session: AsyncSession, test_cafe: Cafe) -> list[dict]:
+    """Создаёт и возвращает два последовательных слота для тестов."""
+    table = Table(
+        cafe_id=test_cafe.id,
+        seat_number=4,
+        description='Автотест',
+        is_active=True,
+    )
+    session.add(table)
+
+    slot1 = Slot(
+        cafe_id=test_cafe.id,
+        start_time=time_type(18, 0),
+        end_time=time_type(19, 0),
+        is_active=True,
+    )
+    session.add(slot1)
+
+    slot2 = Slot(
+        cafe_id=test_cafe.id,
+        start_time=time_type(19, 0),
+        end_time=time_type(20, 0),
+        is_active=True,
+    )
+    session.add(slot2)
+
+    await session.flush()
+    return [
+        {'table_id': table.id, 'slot_id': slot1.id},
+        {'table_id': table.id, 'slot_id': slot2.id},
+    ]
+
+
+@pytest_asyncio.fixture(scope='function')
 async def test_date(session: AsyncSession, test_slots: list[dict]) -> str:
     """Возвращает дату в формате YYYY-MM-DD для тестов."""
     # Здесь можно использовать текущую дату или любую другую фиксированную дату
     from datetime import date
     return (date.today() + timedelta(days=1)).isoformat()
+
+
+@pytest_asyncio.fixture(scope='function')
+async def test_multiple_tables_slot(session: AsyncSession, test_cafe: Cafe) -> list[dict]:
+    """Создаёт и возвращает несколько столов на один слот для тестов."""
+    tables_slots = []
+    for i in range(2):  # Создаём 2 стола
+        table = Table(
+            cafe_id=test_cafe.id,
+            seat_number=4,
+            description=f'Автотест стол {i + 1}',
+            is_active=True,
+        )
+        session.add(table)
+
+    slot = Slot(
+        cafe_id=test_cafe.id,
+        start_time=time_type(18, 0),
+        end_time=time_type(20, 0),
+        is_active=True,
+    )
+    session.add(slot)
+
+    await session.flush()
+    tables_slots.append({'table_id': table.id, 'slot_id': slot.id})
+
+    return tables_slots
